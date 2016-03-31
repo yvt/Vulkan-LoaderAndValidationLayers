@@ -274,6 +274,9 @@ vkCreateInstance(const VkInstanceCreateInfo *pCreateInfo,
      * Look for one or more debug report create info structures
      * and setup a callback(s) for each one found.
      */
+    ptr_instance->num_tmp_callbacks = 0;
+    ptr_instance->tmp_dbg_create_infos = NULL;
+    ptr_instance->tmp_callbacks = NULL;
     if (util_CopyDebugReportCreateInfos(pCreateInfo->pNext,
                                         pAllocator,
                                         &ptr_instance->num_tmp_callbacks,
@@ -509,6 +512,9 @@ vkDestroyInstance(VkInstance instance,
                                          pAllocator,
                                          ptr_instance->num_tmp_callbacks,
                                          ptr_instance->tmp_callbacks);
+        util_FreeDebugReportCreateInfos(pAllocator,
+                                        ptr_instance->tmp_dbg_create_infos,
+                                        ptr_instance->tmp_callbacks);
     }
     loader_heap_free(ptr_instance, ptr_instance->disp);
     loader_heap_free(ptr_instance, ptr_instance);

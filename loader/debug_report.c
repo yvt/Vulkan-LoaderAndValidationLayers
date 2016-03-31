@@ -168,7 +168,7 @@ util_CopyDebugReportCreateInfos(const void *pChain,
                                 VkDebugReportCallbackCreateInfoEXT **infos,
                                 VkDebugReportCallbackEXT **callbacks)
 {
-    *num_callbacks = 0;
+    uint32_t n = *num_callbacks = 0;
 
     // NOTE: The loader is not using pAllocator, and so this function doesn't
     // either.
@@ -178,43 +178,44 @@ util_CopyDebugReportCreateInfos(const void *pChain,
         // 1st, count the number VkDebugReportCallbackCreateInfoEXT:
         if (((VkDebugReportCallbackCreateInfoEXT *)pNext)->sType ==
             VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT) {
-            (*num_callbacks)++;
+            n++;
         }
         pNext = (void *)((VkDebugReportCallbackCreateInfoEXT *)pNext)->pNext;
     }
-    if (*num_callbacks) {
-        // 2nd, allocate memory for each VkDebugReportCallbackCreateInfoEXT:
-        VkDebugReportCallbackCreateInfoEXT *pInfos =
-            *infos = ((VkDebugReportCallbackCreateInfoEXT *)
-                      malloc((*num_callbacks) *
-                             sizeof(VkDebugReportCallbackCreateInfoEXT)));
-        if (!pInfos) {
-            return VK_ERROR_OUT_OF_HOST_MEMORY;
-        }
-        // 3rd, allocate memory for a unique handle for each callback:
-        VkDebugReportCallbackEXT *pCallbacks =
-            *callbacks = ((VkDebugReportCallbackEXT *)
-                          malloc((*num_callbacks) *
-                                 sizeof(VkDebugReportCallbackEXT)));
-        if (!pCallbacks) {
-            free(pInfos);
-            return VK_ERROR_OUT_OF_HOST_MEMORY;
-        }
-        // 4th, copy each VkDebugReportCallbackCreateInfoEXT for use by
-        // vkDestroyInstance, and assign a unique handle to each callback (just
-        // use the address of the copied VkDebugReportCallbackCreateInfoEXT):
-        pNext = pChain;
-        while (pNext) {
-            if (((VkInstanceCreateInfo *)pNext)->sType ==
-                VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT) {
-                memcpy(pInfos, pNext,
-                       sizeof(VkDebugReportCallbackCreateInfoEXT));
-                *pCallbacks++ = (VkDebugReportCallbackEXT)pInfos++;
-            }
-            pNext = (void *)((VkInstanceCreateInfo *)pNext)->pNext;
-        }
+    if (n == 0) {
+        return VK_SUCCESS;
     }
 
+    // 2nd, allocate memory for each VkDebugReportCallbackCreateInfoEXT:
+    VkDebugReportCallbackCreateInfoEXT *pInfos =
+        *infos = ((VkDebugReportCallbackCreateInfoEXT *)
+                  malloc(n * sizeof(VkDebugReportCallbackCreateInfoEXT)));
+    if (!pInfos) {
+        return VK_ERROR_OUT_OF_HOST_MEMORY;
+    }
+    // 3rd, allocate memory for a unique handle for each callback:
+    VkDebugReportCallbackEXT *pCallbacks =
+        *callbacks = ((VkDebugReportCallbackEXT *)
+                      malloc(n * sizeof(VkDebugReportCallbackEXT)));
+    if (!pCallbacks) {
+        free(pInfos);
+        return VK_ERROR_OUT_OF_HOST_MEMORY;
+    }
+    // 4th, copy each VkDebugReportCallbackCreateInfoEXT for use by
+    // vkDestroyInstance, and assign a unique handle to each callback (just
+    // use the address of the copied VkDebugReportCallbackCreateInfoEXT):
+    pNext = pChain;
+    while (pNext) {
+        if (((VkInstanceCreateInfo *)pNext)->sType ==
+            VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT) {
+            memcpy(pInfos, pNext,
+                   sizeof(VkDebugReportCallbackCreateInfoEXT));
+            *pCallbacks++ = (VkDebugReportCallbackEXT)pInfos++;
+        }
+        pNext = (void *)((VkInstanceCreateInfo *)pNext)->pNext;
+    }
+
+    *num_callbacks = n;
     return VK_SUCCESS;
 }
 
