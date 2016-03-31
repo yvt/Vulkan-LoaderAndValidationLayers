@@ -511,7 +511,7 @@ vkEnumeratePhysicalDevices(VkInstance instance, uint32_t *pPhysicalDeviceCount,
     }
     if (inst->phys_devs)
         loader_heap_free(inst, inst->phys_devs);
-    count = *pPhysicalDeviceCount;
+    count = inst->total_gpu_count;
     inst->phys_devs = (struct loader_physical_device_tramp *)loader_heap_alloc(
         inst, count * sizeof(struct loader_physical_device_tramp),
         VK_SYSTEM_ALLOCATION_SCOPE_INSTANCE);
