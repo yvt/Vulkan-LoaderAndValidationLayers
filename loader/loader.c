@@ -3559,7 +3559,9 @@ VkResult loader_create_device_chain(const struct loader_physical_device_tramp *p
         loader_create_info.pNext = &create_info_disp;
         res = fpCreateDevice(pd->phys_dev, &loader_create_info, pAllocator,
                              &created_device);
-        dev->device = created_device;
+        if (res == VK_SUCCESS) {
+            dev->device = created_device;
+        }
     } else {
         // Couldn't find CreateDevice function!
         return VK_ERROR_INITIALIZATION_FAILED;
