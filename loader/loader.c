@@ -480,12 +480,14 @@ bool has_vk_dev_ext_property(
     return false;
 }
 
+#if 0 // remove _is_layer_type_device()
 static inline bool loader_is_layer_type_device(const enum layer_type type) {
     if ((type & VK_LAYER_TYPE_DEVICE_EXPLICIT) ||
         (type & VK_LAYER_TYPE_DEVICE_IMPLICIT))
         return true;
     return false;
 }
+#endif
 
 /*
  * Search the given layer list for a layer matching the given layer name
@@ -1692,6 +1694,7 @@ void loader_expand_layer_names(
     *layer_count = dst_index;
 }
 
+#if 0 // remove delete_shadow_dev_layer_names())
 void loader_delete_shadow_dev_layer_names(const struct loader_instance *inst,
                                           const VkDeviceCreateInfo *orig,
                                           VkDeviceCreateInfo *ours) {
@@ -1700,6 +1703,7 @@ void loader_delete_shadow_dev_layer_names(const struct loader_instance *inst,
         loader_heap_free(inst, (void *)ours->ppEnabledLayerNames);
     }
 }
+#endif
 
 void loader_delete_shadow_inst_layer_names(const struct loader_instance *inst,
                                            const VkInstanceCreateInfo *orig,
@@ -1875,9 +1879,10 @@ loader_add_layer_properties(const struct loader_instance *inst,
                 layer_node = layer_node->next;
                 continue;
             }
-            props = loader_get_next_layer_property(inst, layer_device_list);
-            props->type = (is_implicit) ? VK_LAYER_TYPE_DEVICE_IMPLICIT
-                                        : VK_LAYER_TYPE_DEVICE_EXPLICIT;
+            // TODO error out if device or global layer
+            //props = loader_get_next_layer_property(inst, layer_device_list);
+            //props->type = (is_implicit) ? VK_LAYER_TYPE_DEVICE_IMPLICIT
+            //                            : VK_LAYER_TYPE_DEVICE_EXPLICIT;
         }
         if (!strcmp(type, "INSTANCE")) {
             if (layer_instance_list == NULL) {
@@ -1898,8 +1903,9 @@ loader_add_layer_properties(const struct loader_instance *inst,
                 layer_node = layer_node->next;
                 continue;
             }
-            props->type = (is_implicit) ? VK_LAYER_TYPE_GLOBAL_IMPLICIT
-                                        : VK_LAYER_TYPE_GLOBAL_EXPLICIT;
+            // TODO error out if type GLOBAL
+            //props->type = (is_implicit) ? VK_LAYER_TYPE_GLOBAL_IMPLICIT
+            //                           : VK_LAYER_TYPE_GLOBAL_EXPLICIT;
         }
 
         if (props == NULL) {
@@ -2721,11 +2727,12 @@ loader_check_layers_for_address(const struct loader_instance *const inst,
                                             funcName)) {
         return true;
     }
-
+#if 0 // remove device_layer_list from check_for_layers_address
     if (loader_check_layer_list_for_address(&inst->device_layer_list,
                                             funcName)) {
         return true;
     }
+#endif
 
     return false;
 }
@@ -3194,6 +3201,7 @@ void loader_activate_instance_layer_extensions(struct loader_instance *inst,
         inst->disp, inst->disp->GetInstanceProcAddr, created_inst);
 }
 
+#if 0  // remove enable_device_layers()
 VkResult
 loader_enable_device_layers(const struct loader_instance *inst,
                             struct loader_layer_list *activated_layer_list,
@@ -3232,6 +3240,7 @@ loader_enable_device_layers(const struct loader_instance *inst,
 
     return err;
 }
+#endif
 
 VkResult
 loader_create_device_chain(const struct loader_physical_device_tramp *pd,
@@ -3629,8 +3638,8 @@ terminator_DestroyInstance(VkInstance instance,
 
         icds = next_icd;
     }
-    loader_delete_layer_properties(ptr_instance,
-                                   &ptr_instance->device_layer_list);
+    //loader_delete_layer_properties(ptr_instance,
+    //                               &ptr_instance->device_layer_list);
     loader_delete_layer_properties(ptr_instance,
                                    &ptr_instance->instance_layer_list);
     loader_scanned_icd_clear(ptr_instance, &ptr_instance->icd_libs);

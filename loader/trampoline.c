@@ -330,13 +330,13 @@ vkCreateInstance(const VkInstanceCreateInfo *pCreateInfo,
 
     /* Due to implicit layers need to get layer list even if
      * enabledLayerCount == 0 and VK_INSTANCE_LAYERS is unset. For now always
-     * get layer list (both instance and device) via loader_layer_scan(). */
+     * get layer list via loader_layer_scan(). */
     memset(&ptr_instance->instance_layer_list, 0,
            sizeof(ptr_instance->instance_layer_list));
-    memset(&ptr_instance->device_layer_list, 0,
-           sizeof(ptr_instance->device_layer_list));
+    //memset(&ptr_instance->device_layer_list, 0,
+    //       sizeof(ptr_instance->device_layer_list));
     loader_layer_scan(ptr_instance, &ptr_instance->instance_layer_list,
-                      &ptr_instance->device_layer_list);
+                      NULL);
 
     /* validate the app requested layers to be enabled */
     if (pCreateInfo->enabledLayerCount > 0) {
@@ -376,8 +376,8 @@ vkCreateInstance(const VkInstanceCreateInfo *pCreateInfo,
         &ptr_instance->instance_layer_list, &ici);
     if (res != VK_SUCCESS) {
         loader_delete_shadow_inst_layer_names(ptr_instance, pCreateInfo, &ici);
-        loader_delete_layer_properties(ptr_instance,
-                                       &ptr_instance->device_layer_list);
+        //loader_delete_layer_properties(ptr_instance,
+        //                               &ptr_instance->device_layer_list);
         loader_delete_layer_properties(ptr_instance,
                                        &ptr_instance->instance_layer_list);
         loader_scanned_icd_clear(ptr_instance, &ptr_instance->icd_libs);
@@ -400,8 +400,8 @@ vkCreateInstance(const VkInstanceCreateInfo *pCreateInfo,
                           VK_SYSTEM_ALLOCATION_SCOPE_INSTANCE);
     if (ptr_instance->disp == NULL) {
         loader_delete_shadow_inst_layer_names(ptr_instance, pCreateInfo, &ici);
-        loader_delete_layer_properties(ptr_instance,
-                                       &ptr_instance->device_layer_list);
+        //loader_delete_layer_properties(ptr_instance,
+        //                               &ptr_instance->device_layer_list);
         loader_delete_layer_properties(ptr_instance,
                                        &ptr_instance->instance_layer_list);
         loader_scanned_icd_clear(ptr_instance, &ptr_instance->icd_libs);
@@ -427,8 +427,8 @@ vkCreateInstance(const VkInstanceCreateInfo *pCreateInfo,
                                         &ptr_instance->instance_layer_list);
     if (res != VK_SUCCESS) {
         loader_delete_shadow_inst_layer_names(ptr_instance, pCreateInfo, &ici);
-        loader_delete_layer_properties(ptr_instance,
-                                       &ptr_instance->device_layer_list);
+        //loader_delete_layer_properties(ptr_instance,
+        //                               &ptr_instance->device_layer_list);
         loader_delete_layer_properties(ptr_instance,
                                        &ptr_instance->instance_layer_list);
         loader_scanned_icd_clear(ptr_instance, &ptr_instance->icd_libs);
@@ -654,7 +654,7 @@ vkCreateDevice(VkPhysicalDevice physicalDevice,
     struct loader_physical_device_tramp *phys_dev;
     struct loader_device *dev;
     struct loader_instance *inst;
-    struct loader_layer_list activated_layer_list = {0};
+    //struct loader_layer_list activated_layer_list = {0};
 
     assert(pCreateInfo->queueCreateInfoCount >= 1);
 
@@ -663,6 +663,8 @@ vkCreateDevice(VkPhysicalDevice physicalDevice,
     phys_dev = (struct loader_physical_device_tramp *)physicalDevice;
     inst = (struct loader_instance *)phys_dev->this_instance;
 
+    //TODO Warn if device layers != instance layers
+#if 0  // removed validate_layers() in vkCreateDevice()
     /* validate any app enabled layers are available */
     if (pCreateInfo->enabledLayerCount > 0) {
         res = loader_validate_layers(inst, pCreateInfo->enabledLayerCount,
@@ -673,6 +675,7 @@ vkCreateDevice(VkPhysicalDevice physicalDevice,
             return res;
         }
     }
+#endif
 
     /* Get the physical device (ICD) extensions  */
     struct loader_extension_list icd_exts;
@@ -690,6 +693,7 @@ vkCreateDevice(VkPhysicalDevice physicalDevice,
         return res;
     }
 
+#if 0  // removed expand_layer_names() and enable_device_layers()  in vkCreateDevice()
     /* convert any meta layers to the actual layers makes a copy of layer name*/
     VkDeviceCreateInfo dci = *pCreateInfo;
     loader_expand_layer_names(
@@ -705,34 +709,42 @@ vkCreateDevice(VkPhysicalDevice physicalDevice,
         loader_platform_thread_unlock_mutex(&loader_lock);
         return res;
     }
+#endif
 
     /* make sure requested extensions to be enabled are supported */
-    res = loader_validate_device_extensions(phys_dev, &activated_layer_list,
-                                            &icd_exts, &dci);
+    res = loader_validate_device_extensions(phys_dev, &inst->activated_layer_list,
+                                            &icd_exts, pCreateInfo);
     if (res != VK_SUCCESS) {
-        loader_delete_shadow_dev_layer_names(inst, pCreateInfo, &dci);
-        loader_destroy_generic_list(
-            inst, (struct loader_generic_list *)&activated_layer_list);
+        //loader_delete_shadow_dev_layer_names(inst, pCreateInfo, &dci);
+        //loader_destroy_generic_list(
+        //    inst, (struct loader_generic_list *)&activated_layer_list);
         loader_platform_thread_unlock_mutex(&loader_lock);
         return res;
     }
 
     dev = loader_create_logical_device(inst);
     if (dev == NULL) {
-        loader_delete_shadow_dev_layer_names(inst, pCreateInfo, &dci);
-        loader_destroy_generic_list(
-            inst, (struct loader_generic_list *)&activated_layer_list);
+        //loader_delete_shadow_dev_layer_names(inst, pCreateInfo, &dci);
+        //loader_destroy_generic_list(
+        //    inst, (struct loader_generic_list *)&activated_layer_list);
         loader_platform_thread_unlock_mutex(&loader_lock);
         return VK_ERROR_OUT_OF_HOST_MEMORY;
     }
 
-    /* move the locally filled layer list into the device, and pass ownership of
-     * the memory */
-    dev->activated_layer_list.capacity = activated_layer_list.capacity;
-    dev->activated_layer_list.count = activated_layer_list.count;
-    dev->activated_layer_list.list = activated_layer_list.list;
-    memset(&activated_layer_list, 0, sizeof(activated_layer_list));
+    /* copy the instance layer list into the device */
+    dev->activated_layer_list.capacity = inst->activated_layer_list.capacity;
+    dev->activated_layer_list.count = inst->activated_layer_list.count;
+    dev->activated_layer_list.list = loader_heap_alloc(inst,
+                            inst->activated_layer_list.capacity,
+                            VK_SYSTEM_ALLOCATION_SCOPE_INSTANCE);
+    if (dev->activated_layer_list.list == NULL) {
+        loader_platform_thread_unlock_mutex(&loader_lock);
+        return VK_ERROR_OUT_OF_HOST_MEMORY;
+    }
+    memcpy(dev->activated_layer_list.list, inst->activated_layer_list.list,
+            sizeof(*dev->activated_layer_list.list) * dev->activated_layer_list.count);
 
+#if 0 // remove call to enable_device_layers() in vkCreateDevice()
     /* activate any layers on device chain which terminates with device*/
     res = loader_enable_device_layers(inst, &dev->activated_layer_list, &dci,
                                       &inst->device_layer_list);
@@ -741,10 +753,11 @@ vkCreateDevice(VkPhysicalDevice physicalDevice,
         loader_platform_thread_unlock_mutex(&loader_lock);
         return res;
     }
+#endif
 
-    res = loader_create_device_chain(phys_dev, &dci, pAllocator, inst, dev);
+    res = loader_create_device_chain(phys_dev, pCreateInfo, pAllocator, inst, dev);
     if (res != VK_SUCCESS) {
-        loader_delete_shadow_dev_layer_names(inst, pCreateInfo, &dci);
+        //loader_delete_shadow_dev_layer_names(inst, pCreateInfo, &dci);
         loader_platform_thread_unlock_mutex(&loader_lock);
         return res;
     }
@@ -761,7 +774,7 @@ vkCreateDevice(VkPhysicalDevice physicalDevice,
         &dev->loader_dispatch,
         dev->loader_dispatch.core_dispatch.GetDeviceProcAddr, *pDevice);
 
-    loader_delete_shadow_dev_layer_names(inst, pCreateInfo, &dci);
+    //loader_delete_shadow_dev_layer_names(inst, pCreateInfo, &dci);
 
     loader_platform_thread_unlock_mutex(&loader_lock);
     return res;
@@ -824,7 +837,7 @@ vkEnumerateDeviceExtensionProperties(VkPhysicalDevice physicalDevice,
                      i++) {
                     loader_find_layer_name_add_list(
                         NULL, std_validation_names[i],
-                        VK_LAYER_TYPE_DEVICE_EXPLICIT, &inst->device_layer_list,
+                        VK_LAYER_TYPE_INSTANCE_EXPLICIT, &inst->instance_layer_list,
                         &local_list);
                 }
                 for (uint32_t i = 0; i < local_list.count; i++) {
@@ -839,9 +852,9 @@ vkEnumerateDeviceExtensionProperties(VkPhysicalDevice physicalDevice,
                 dev_ext_list = &local_ext_list;
 
             } else {
-                for (uint32_t i = 0; i < inst->device_layer_list.count; i++) {
+                for (uint32_t i = 0; i < inst->instance_layer_list.count; i++) {
                     struct loader_layer_properties *props =
-                        &inst->device_layer_list.list[i];
+                        &inst->instance_layer_list.list[i];
                     if (strcmp(props->info.layerName, pLayerName) == 0) {
                         dev_ext_list = &props->device_extension_list;
                     }
@@ -894,10 +907,10 @@ vkEnumerateDeviceLayerProperties(VkPhysicalDevice physicalDevice,
 
     /* Don't dispatch this call down the instance chain, want all device layers
        enumerated and instance chain may not contain all device layers */
-
+    //TODO revisit above statement, can we start dispatching this down chain?
     phys_dev = (struct loader_physical_device_tramp *)physicalDevice;
     const struct loader_instance *inst = phys_dev->this_instance;
-    uint32_t count = inst->device_layer_list.count;
+    uint32_t count = inst->instance_layer_list.count;
 
     if (pProperties == NULL) {
         *pPropertyCount = count;
@@ -907,7 +920,7 @@ vkEnumerateDeviceLayerProperties(VkPhysicalDevice physicalDevice,
 
     copy_size = (*pPropertyCount < count) ? *pPropertyCount : count;
     for (uint32_t i = 0; i < copy_size; i++) {
-        memcpy(&pProperties[i], &(inst->device_layer_list.list[i].info),
+        memcpy(&pProperties[i], &(inst->instance_layer_list.list[i].info),
                sizeof(VkLayerProperties));
     }
     *pPropertyCount = copy_size;

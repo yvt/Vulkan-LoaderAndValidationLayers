@@ -49,13 +49,13 @@
 #define VK_PATCH(version) (version & 0xfff)
 
 enum layer_type {
-    VK_LAYER_TYPE_DEVICE_EXPLICIT = 0x1,
-    VK_LAYER_TYPE_INSTANCE_EXPLICIT = 0x2,
-    VK_LAYER_TYPE_GLOBAL_EXPLICIT = 0x3, // instance and device layer, bitwise
-    VK_LAYER_TYPE_DEVICE_IMPLICIT = 0x4,
-    VK_LAYER_TYPE_INSTANCE_IMPLICIT = 0x8,
-    VK_LAYER_TYPE_GLOBAL_IMPLICIT = 0xc, // instance and device layer, bitwise
-    VK_LAYER_TYPE_META_EXPLICT = 0x10,
+    //VK_LAYER_TYPE_DEVICE_EXPLICIT = 0x1,
+    VK_LAYER_TYPE_INSTANCE_EXPLICIT = 0x1,
+    //VK_LAYER_TYPE_GLOBAL_EXPLICIT = 0x3, // instance and device layer, bitwise
+    //VK_LAYER_TYPE_DEVICE_IMPLICIT = 0x4,
+    VK_LAYER_TYPE_INSTANCE_IMPLICIT = 0x2,
+    //VK_LAYER_TYPE_GLOBAL_IMPLICIT = 0xc, // instance and device layer, bitwise
+    VK_LAYER_TYPE_META_EXPLICT = 0x4,
 };
 
 typedef enum VkStringErrorFlagBits {
@@ -262,7 +262,7 @@ struct loader_instance {
     struct loader_extension_list ext_list; // icds and loaders extensions
     struct loader_icd_libs icd_libs;
     struct loader_layer_list instance_layer_list;
-    struct loader_layer_list device_layer_list;
+    //struct loader_layer_list device_layer_list;
     struct loader_dispatch_hash_entry disp_hash[MAX_NUM_DEV_EXTS];
 
     struct loader_msg_callback_map_entry *icd_msg_callback_map;
