@@ -160,6 +160,10 @@ struct _SwpInstance {
     // remembered:
     unordered_map<const void *, SwpPhysicalDevice *> physicalDevices;
 
+    uint32_t num_tmp_callbacks;
+    VkDebugReportCallbackCreateInfoEXT *tmp_dbg_create_infos;
+    VkDebugReportCallbackEXT *tmp_callbacks;
+
     // Set to true if VK_KHR_SURFACE_EXTENSION_NAME was enabled for this VkInstance:
     bool surfaceExtensionEnabled;
 
