@@ -156,9 +156,6 @@ static void createInstanceRegisterExtensions(const VkInstanceCreateInfo *pCreate
     // Remember this instance, and whether the VK_KHR_surface extension
     // was enabled for it:
     my_data->instanceMap[instance].instance = instance;
-    my_data->instanceMap[instance].num_tmp_callbacks = 0;
-    my_data->instanceMap[instance].tmp_dbg_create_infos = NULL;
-    my_data->instanceMap[instance].tmp_callbacks = NULL;
     my_data->instanceMap[instance].surfaceExtensionEnabled = false;
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
     my_data->instanceMap[instance].androidSurfaceExtensionEnabled = false;
@@ -185,27 +182,27 @@ static void createInstanceRegisterExtensions(const VkInstanceCreateInfo *pCreate
 // TODO: ONLY COPY DATA FOR THE SWAPCHAIN LAYER, BECAUSE IT DOESN'T NEED TO LOG
 // ANY MESSAGES DURING vkCreateInstance
     if (!layer_copy_tmp_callbacks(pCreateInfo->pNext,
-                                  &pInstance->num_tmp_callbacks,
-                                  &pInstance->tmp_dbg_create_infos,
-                                  &pInstance->tmp_callbacks)) {
-        if (pInstance->num_tmp_callbacks > 0) {
+                                  &my_data->num_tmp_callbacks,
+                                  &my_data->tmp_dbg_create_infos,
+                                  &my_data->tmp_callbacks)) {
+        if (my_data->num_tmp_callbacks > 0) {
             // Setup the temporary callback(s) here to catch early issues:
             if (layer_enable_tmp_callbacks(my_data->report_data,
-                                           pInstance->num_tmp_callbacks,
-                                           pInstance->tmp_dbg_create_infos,
-                                           pInstance->tmp_callbacks)) {
+                                           my_data->num_tmp_callbacks,
+                                           my_data->tmp_dbg_create_infos,
+                                           my_data->tmp_callbacks)) {
                 // Failure of setting up one or more of the callback.
                 // Therefore, clean up and don't use those callbacks:
-                layer_free_tmp_callbacks(pInstance->tmp_dbg_create_infos,
-                                         pInstance->tmp_callbacks);
-                pInstance->num_tmp_callbacks = 0;
+                layer_free_tmp_callbacks(my_data->tmp_dbg_create_infos,
+                                         my_data->tmp_callbacks);
+                my_data->num_tmp_callbacks = 0;
             }
         }
     }
-    if (pInstance->num_tmp_callbacks > 0) {
+    if (my_data->num_tmp_callbacks > 0) {
         layer_disable_tmp_callbacks(my_data->report_data,
-                                    pInstance->num_tmp_callbacks,
-                                    pInstance->tmp_callbacks);
+                                    my_data->num_tmp_callbacks,
+                                    my_data->tmp_callbacks);
     }
 
 
@@ -325,13 +322,13 @@ VK_LAYER_EXPORT VKAPI_ATTR void VKAPI_CALL vkDestroyInstance(VkInstance instance
 
     std::lock_guard<std::mutex> lock(global_lock);
 
+    // Enable the temporary callback(s) here to catch cleanup issues:
     bool callback_setup = false;
-    if (pInstance->num_tmp_callbacks > 0) {
-        // Setup the temporary callback(s) here to catch cleanup issues:
+    if (my_data->num_tmp_callbacks > 0) {
         if (!layer_enable_tmp_callbacks(my_data->report_data,
-                                        pInstance->num_tmp_callbacks,
-                                        pInstance->tmp_dbg_create_infos,
-                                        pInstance->tmp_callbacks)) {
+                                        my_data->num_tmp_callbacks,
+                                        my_data->tmp_dbg_create_infos,
+                                        my_data->tmp_callbacks)) {
             callback_setup = true;
         }
     }
@@ -373,15 +370,16 @@ VK_LAYER_EXPORT VKAPI_ATTR void VKAPI_CALL vkDestroyInstance(VkInstance instance
         my_data->instanceMap.erase(instance);
     }
 
+    // Disable and cleanup the temporary callback(s):
     if (callback_setup) {
         layer_disable_tmp_callbacks(my_data->report_data,
-                                    pInstance->num_tmp_callbacks,
-                                    pInstance->tmp_callbacks);
+                                    my_data->num_tmp_callbacks,
+                                    my_data->tmp_callbacks);
     }
-    if (pInstance->num_tmp_callbacks > 0) {
-        layer_free_tmp_callbacks(pInstance->tmp_dbg_create_infos,
-                                 pInstance->tmp_callbacks);
-        pInstance->num_tmp_callbacks = 0;
+    if (my_data->num_tmp_callbacks > 0) {
+        layer_free_tmp_callbacks(my_data->tmp_dbg_create_infos,
+                                 my_data->tmp_callbacks);
+        my_data->num_tmp_callbacks = 0;
     }
 
     // Clean up logging callback, if any

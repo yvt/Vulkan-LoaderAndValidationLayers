@@ -160,10 +160,6 @@ struct _SwpInstance {
     // remembered:
     unordered_map<const void *, SwpPhysicalDevice *> physicalDevices;
 
-    uint32_t num_tmp_callbacks;
-    VkDebugReportCallbackCreateInfoEXT *tmp_dbg_create_infos;
-    VkDebugReportCallbackEXT *tmp_callbacks;
-
     // Set to true if VK_KHR_SURFACE_EXTENSION_NAME was enabled for this VkInstance:
     bool surfaceExtensionEnabled;
 
@@ -328,6 +324,13 @@ struct layer_data {
     std::vector<VkDebugReportCallbackEXT> logging_callback;
     VkLayerDispatchTable *device_dispatch_table;
     VkLayerInstanceDispatchTable *instance_dispatch_table;
+
+    // The following are for keeping track of the temporary callbacks that can
+    // be used in vkCreateInstance and vkDestroyInstance:
+    uint32_t num_tmp_callbacks;
+    VkDebugReportCallbackCreateInfoEXT *tmp_dbg_create_infos;
+    VkDebugReportCallbackEXT *tmp_callbacks;
+
     // NOTE: The following are for keeping track of info that is used for
     // validating the WSI extensions.
     std::unordered_map<void *, SwpInstance> instanceMap;
@@ -337,7 +340,7 @@ struct layer_data {
     std::unordered_map<VkSwapchainKHR, SwpSwapchain> swapchainMap;
     std::unordered_map<void *, SwpQueue> queueMap;
 
-    layer_data() : report_data(nullptr), device_dispatch_table(nullptr), instance_dispatch_table(nullptr){};
+    layer_data() : report_data(nullptr), device_dispatch_table(nullptr), instance_dispatch_table(nullptr), num_tmp_callbacks(0), tmp_dbg_create_infos(nullptr), tmp_callbacks(nullptr){};
 };
 
 #endif // SWAPCHAIN_H
