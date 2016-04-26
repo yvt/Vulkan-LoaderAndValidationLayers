@@ -1829,11 +1829,11 @@ static void demo_cleanup(struct demo *demo) {
     free(demo->queue_props);
 
     vkDestroyCommandPool(demo->device, demo->cmd_pool, NULL);
-    vkDestroyDevice(demo->device, NULL);
+//    vkDestroyDevice(demo->device, NULL);
     if (demo->validate) {
         demo->DestroyDebugReportCallback(demo->inst, demo->msg_callback, NULL);
     }
-    vkDestroySurfaceKHR(demo->inst, demo->surface, NULL);
+//    vkDestroySurfaceKHR(demo->inst, demo->surface, NULL);
     vkDestroyInstance(demo->inst, NULL);
 
 #ifndef _WIN32
