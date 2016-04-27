@@ -178,7 +178,6 @@ static void createInstanceRegisterExtensions(const VkInstanceCreateInfo *pCreate
 
     // Look for one or more debug report create info structures
     // and setup a callback(s) for each one found.
-    SwpInstance *pInstance = &(my_data->instanceMap[instance]);
 // TODO: ONLY COPY DATA FOR THE SWAPCHAIN LAYER, BECAUSE IT DOESN'T NEED TO LOG
 // ANY MESSAGES DURING vkCreateInstance
     if (!layer_copy_tmp_callbacks(pCreateInfo->pNext,
