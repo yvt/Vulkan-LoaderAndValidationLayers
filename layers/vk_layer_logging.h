@@ -247,12 +247,15 @@ static VkResult layer_copy_tmp_callbacks(
     return VK_SUCCESS;
 }
 
+// This utility frees the arrays allocated by layer_copy_tmp_callbacks()
 static void layer_free_tmp_callbacks(VkDebugReportCallbackCreateInfoEXT *infos,
                                      VkDebugReportCallbackEXT *callbacks) {
     free(infos);
     free(callbacks);
 }
 
+// This utility enables all of the VkDebugReportCallbackCreateInfoEXT structs
+// that were copied by layer_copy_tmp_callbacks()
 static VkResult layer_enable_tmp_callbacks(
     debug_report_data *debug_data,
     uint32_t num_callbacks,
@@ -271,6 +274,8 @@ static VkResult layer_enable_tmp_callbacks(
     return rtn;
 }
 
+// This utility disables all of the VkDebugReportCallbackCreateInfoEXT structs
+// that were copied by layer_copy_tmp_callbacks()
 static void layer_disable_tmp_callbacks(debug_report_data *debug_data,
                                         uint32_t num_callbacks,
                                         VkDebugReportCallbackEXT *callbacks) {
