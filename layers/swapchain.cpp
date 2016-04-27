@@ -176,34 +176,12 @@ static void createInstanceRegisterExtensions(const VkInstanceCreateInfo *pCreate
     my_data->instanceMap[instance].xlibSurfaceExtensionEnabled = false;
 #endif // VK_USE_PLATFORM_XLIB_KHR
 
-    // Look for one or more debug report create info structures
-    // and setup a callback(s) for each one found.
-// TODO: ONLY COPY DATA FOR THE SWAPCHAIN LAYER, BECAUSE IT DOESN'T NEED TO LOG
-// ANY MESSAGES DURING vkCreateInstance
-    if (!layer_copy_tmp_callbacks(pCreateInfo->pNext,
-                                  &my_data->num_tmp_callbacks,
-                                  &my_data->tmp_dbg_create_infos,
-                                  &my_data->tmp_callbacks)) {
-        if (my_data->num_tmp_callbacks > 0) {
-            // Setup the temporary callback(s) here to catch early issues:
-            if (layer_enable_tmp_callbacks(my_data->report_data,
-                                           my_data->num_tmp_callbacks,
-                                           my_data->tmp_dbg_create_infos,
-                                           my_data->tmp_callbacks)) {
-                // Failure of setting up one or more of the callback.
-                // Therefore, clean up and don't use those callbacks:
-                layer_free_tmp_callbacks(my_data->tmp_dbg_create_infos,
-                                         my_data->tmp_callbacks);
-                my_data->num_tmp_callbacks = 0;
-            }
-        }
-    }
-    if (my_data->num_tmp_callbacks > 0) {
-        layer_disable_tmp_callbacks(my_data->report_data,
-                                    my_data->num_tmp_callbacks,
-                                    my_data->tmp_callbacks);
-    }
-
+    // Look for one or more debug report create info structures, and copy the
+    // callback(s) for each one found (for use by vkDestroyInstance)
+    layer_copy_tmp_callbacks(pCreateInfo->pNext,
+                             &my_data->num_tmp_callbacks,
+                             &my_data->tmp_dbg_create_infos,
+                             &my_data->tmp_callbacks);
 
     // Record whether the WSI instance extension was enabled for this
     // VkInstance.  No need to check if the extension was advertised by
