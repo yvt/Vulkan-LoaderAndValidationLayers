@@ -639,7 +639,74 @@ TEST_F(VkLayerTest, EnableWsiBeforeUse) {
     pass = (err != VK_SUCCESS);
     ASSERT_TRUE(pass);
     m_errorMonitor->VerifyFound();
+
+    // Tell whether an xcb_visualid_t supports presentation:
+    xcb_connection_t *connection = NULL;
+    xcb_visualid_t visual_id = 0;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "extension was not enabled for this");
+    vkGetPhysicalDeviceXcbPresentationSupportKHR(gpu(), 0, connection,
+        visual_id);
+    m_errorMonitor->VerifyFound();
 #endif // VK_USE_PLATFORM_XCB_KHR
+
+
+    // Use the functions from the VK_KHR_surface extension without enabling
+    // that extension:
+
+    // Destroy a surface:
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "extension was not enabled for this");
+    vkDestroySurfaceKHR(instance(), surface, NULL);
+    m_errorMonitor->VerifyFound();
+
+    // Check if surface supports presentation:
+    VkBool32 supported = false;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "extension was not enabled for this");
+    err = vkGetPhysicalDeviceSurfaceSupportKHR(gpu(), 0, surface, &supported);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+    // Check surface capabilities:
+    VkSurfaceCapabilitiesKHR capabilities = {};
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "extension was not enabled for this");
+    err = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu(), surface,
+        &capabilities);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+    // Check surface formats:
+    uint32_t format_count = 0;
+    VkSurfaceFormatKHR *formats = NULL;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "extension was not enabled for this");
+    err = vkGetPhysicalDeviceSurfaceFormatsKHR(gpu(), surface,
+        &format_count, formats);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+    // Check surface present modes:
+    uint32_t present_mode_count = 0;
+    VkSurfaceFormatKHR *present_modes = NULL;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "extension was not enabled for this");
+    err = vkGetPhysicalDeviceSurfaceFormatsKHR(gpu(), surface,
+        &present_mode_count, present_modes);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
 
     // Use the functions from the VK_KHR_swapchain extension without enabling
     // that extension:
