@@ -262,6 +262,7 @@ class VkLayerTest : public VkRenderFramework {
 
   protected:
     ErrorMonitor *m_errorMonitor;
+    bool m_enableWSI;
 
     virtual void SetUp() {
         std::vector<const char *> instance_layer_names;
@@ -295,6 +296,30 @@ class VkLayerTest : public VkRenderFramework {
         device_layer_names.push_back("VK_LAYER_LUNARG_swapchain");
         device_layer_names.push_back("VK_LAYER_GOOGLE_unique_objects");
 
+        if (m_enableWSI) {
+            instance_extension_names.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+            device_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+#ifdef NEED_TO_TEST_THIS_ON_PLATFORM
+#if defined(VK_USE_PLATFORM_ANDROID_KHR)
+            instance_extension_names.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+#endif // VK_USE_PLATFORM_ANDROID_KHR
+#if defined(VK_USE_PLATFORM_MIR_KHR)
+            instance_extension_names.push_back(VK_KHR_MIR_SURFACE_EXTENSION_NAME);
+#endif // VK_USE_PLATFORM_MIR_KHR
+#if defined(VK_USE_PLATFORM_WAYLAND_KHR)
+            instance_extension_names.push_back(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
+#endif // VK_USE_PLATFORM_WAYLAND_KHR
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+            instance_extension_names.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+#endif // VK_USE_PLATFORM_WIN32_KHR
+#endif // NEED_TO_TEST_THIS_ON_PLATFORM
+#if defined(VK_USE_PLATFORM_XCB_KHR)
+            instance_extension_names.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
+#elif defined(VK_USE_PLATFORM_XLIB_KHR)
+            instance_extension_names.push_back(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
+#endif // VK_USE_PLATFORM_XLIB_KHR
+        }
+
         this->app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         this->app_info.pNext = NULL;
         this->app_info.pApplicationName = "layer_tests";
@@ -313,6 +338,10 @@ class VkLayerTest : public VkRenderFramework {
         // Clean up resources before we reset
         ShutdownFramework();
         delete m_errorMonitor;
+    }
+
+    VkLayerTest() {
+        m_enableWSI = false;
     }
 };
 
@@ -505,6 +534,14 @@ void VkLayerTest::GenericDrawPreparation(VkCommandBufferObj *commandBuffer,
     commandBuffer->BindPipeline(pipelineobj);
     commandBuffer->BindDescriptorSet(descriptorSet);
 }
+
+class VkWsiEnabledLayerTest : public VkLayerTest {
+  public:
+protected:
+    VkWsiEnabledLayerTest() {
+        m_enableWSI = true;
+    }
+};
 
 // ********************************************************************************************************************
 // ********************************************************************************************************************
@@ -915,6 +952,70 @@ TEST_F(VkLayerTest, EnableWsiBeforeUse) {
         "extension was not enabled for this");
     vkDestroySwapchainKHR(m_device->device(), swapchain, NULL);
     m_errorMonitor->VerifyFound();
+}
+
+TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
+    VkResult err;
+    bool pass;
+
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
+//    VkSwapchainKHR swapchain = VK_NULL_HANDLE;
+//    VkSwapchainCreateInfoKHR swapchain_create_info = {};
+//    uint32_t swapchain_image_count = 0;
+//    VkImage swapchain_images[1] = {VK_NULL_HANDLE};
+//    uint32_t image_index = 0;
+//    VkPresentInfoKHR present_info = {};
+
+    ASSERT_NO_FATAL_FAILURE(InitState());
+
+    // Use the create function from one of the VK_KHR_*_surface extension in
+    // order to create a surface, testing all known errors in the process,
+    // before successfully creating a surface:
+#if defined(VK_USE_PLATFORM_XCB_KHR)
+    // First, try to create a surface without a VkXcbSurfaceCreateInfoKHR:
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "called with NULL pointer");
+    err = vkCreateXcbSurfaceKHR(instance(), NULL, NULL, &surface);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+    // Next, try to create a surface with the wrong
+    // VkXcbSurfaceCreateInfoKHR::sType:
+    VkXcbSurfaceCreateInfoKHR xcb_create_info = {};
+    xcb_create_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "called with the wrong value for");
+    err = vkCreateXcbSurfaceKHR(instance(), &xcb_create_info, NULL, &surface);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+#if 0   // NOTE: The following message doesn't get logged, because it's an
+        // INFORMATION message:
+    // Next, try to create a surface with the a non-NULL
+    // VkXcbSurfaceCreateInfoKHR::pNext:
+    xcb_create_info.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+    xcb_create_info.pNext = (void *) 0xffffffff;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_INFORMATION_BIT_EXT,
+        "called with non-NULL value for");
+    err = vkCreateXcbSurfaceKHR(instance(), &xcb_create_info, NULL, &surface);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+#endif
+
+    // Finally, try to correctly create a surface:
+// TODO: MUST CREATE AN XCB WINDOW
+    xcb_create_info.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+    xcb_create_info.pNext = NULL;
+    xcb_create_info.flags = 0;
+//    xcb_create_info.connection = ??;
+//    xcb_create_info.window = ??;
+#endif // VK_USE_PLATFORM_XCB_KHR
 }
 
 TEST_F(VkLayerTest, MapMemWithoutHostVisibleBit) {
