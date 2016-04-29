@@ -614,6 +614,7 @@ TEST_F(VkLayerTest, EnableWsiBeforeUse) {
     VkResult err;
     bool pass;
 
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
     VkSwapchainKHR swapchain = VK_NULL_HANDLE;
     VkSwapchainCreateInfoKHR swapchain_create_info = {};
     uint32_t swapchain_image_count = 0;
@@ -622,6 +623,23 @@ TEST_F(VkLayerTest, EnableWsiBeforeUse) {
 //    VkPresentInfoKHR present_info = {};
 
     ASSERT_NO_FATAL_FAILURE(InitState());
+
+#if defined(VK_USE_PLATFORM_XCB_KHR)
+    // Use the functions from the VK_KHR_xcb_surface extension without enabling
+    // that extension:
+
+    // Create a surface:
+    VkXcbSurfaceCreateInfoKHR xcb_create_info = {};
+#if 0
+#endif
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "extension was not enabled for this");
+    err = vkCreateXcbSurfaceKHR(instance(), &xcb_create_info, NULL, &surface);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+#endif // VK_USE_PLATFORM_XCB_KHR
 
     // Use the functions from the VK_KHR_swapchain extension without enabling
     // that extension:
