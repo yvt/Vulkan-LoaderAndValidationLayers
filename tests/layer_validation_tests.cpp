@@ -1018,11 +1018,98 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
 
     // Finally, try to correctly create a surface:
 // TODO: MUST CREATE AN XCB WINDOW
+    xcb_connection_t *connection;
+    xcb_screen_t *screen;
+    xcb_window_t xcb_window;
+    xcb_intern_atom_reply_t *atom_wm_delete_window;
+
+    const xcb_setup_t *setup;
+    xcb_screen_iterator_t iter;
+    int scr;
+    uint32_t value_mask, value_list[32];
+    int width = 1;
+    int height = 1;
+
+    connection = xcb_connect(NULL, &scr);
+    ASSERT_TRUE(connection != NULL);
+    setup = xcb_get_setup(connection);
+    iter = xcb_setup_roots_iterator(setup);
+    while (scr-- > 0)
+        xcb_screen_next(&iter);
+    screen = iter.data;
+
+    xcb_window = xcb_generate_id(connection);
+
+    value_mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
+    value_list[0] = screen->black_pixel;
+    value_list[1] = XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_EXPOSURE |
+                    XCB_EVENT_MASK_STRUCTURE_NOTIFY;
+
+    xcb_create_window(connection, XCB_COPY_FROM_PARENT, xcb_window,
+                      screen->root, 0, 0, width, height, 0,
+                      XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual,
+                      value_mask, value_list);
+
+    /* Magic code that will send notification when window is destroyed */
+    xcb_intern_atom_cookie_t cookie =
+        xcb_intern_atom(connection, 1, 12, "WM_PROTOCOLS");
+    xcb_intern_atom_reply_t *reply =
+        xcb_intern_atom_reply(connection, cookie, 0);
+
+    xcb_intern_atom_cookie_t cookie2 =
+        xcb_intern_atom(connection, 0, 16, "WM_DELETE_WINDOW");
+    atom_wm_delete_window =
+        xcb_intern_atom_reply(connection, cookie2, 0);
+    xcb_change_property(connection, XCB_PROP_MODE_REPLACE, xcb_window,
+                        (*reply).atom, 4, 32, 1,
+                        &(*atom_wm_delete_window).atom);
+    free(reply);
+
+    xcb_map_window(connection, xcb_window);
+
+    // Force the x/y coordinates to 100,100 results are identical in consecutive
+    // runs
+    const uint32_t coords[] = {100, 100};
+    xcb_configure_window(connection, xcb_window,
+                         XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, coords);
+
+
+
+    // Finally, try to correctly create a surface:
     xcb_create_info.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
     xcb_create_info.pNext = NULL;
     xcb_create_info.flags = 0;
-//    xcb_create_info.connection = ??;
-//    xcb_create_info.window = ??;
+    xcb_create_info.connection = connection;
+    xcb_create_info.window = xcb_window;
+    err = vkCreateXcbSurfaceKHR(instance(), &xcb_create_info, NULL, &surface);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
+
+
+
+#if 0 // The following doesn't get the error
+    // Check if surface supports presentation:
+    VkBool32 supported = false;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "called before calling the vkGetPhysicalDeviceQueueFamilyProperties "
+        "function");
+    err = vkGetPhysicalDeviceSurfaceSupportKHR(gpu(), 0, surface, &supported);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+#endif
+
+
+
+    // Destroy the surface:
+    vkDestroySurfaceKHR(instance(), surface, NULL);
+
+
+    // Tear down the window:
+    xcb_destroy_window(connection, xcb_window);
+    xcb_disconnect(connection);
+
 #endif // VK_USE_PLATFORM_XCB_KHR
 }
 
