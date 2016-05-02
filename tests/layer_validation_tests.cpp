@@ -1079,15 +1079,82 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
 
 
 
-#if 0 // The following doesn't get the error
     // Check if surface supports presentation:
+
+    // 1st, do so without having queried the queue families:
     VkBool32 supported = false;
+#if 0 // The following doesn't get the error
     m_errorMonitor->SetDesiredFailureMsg(
         VK_DEBUG_REPORT_ERROR_BIT_EXT,
         "called before calling the vkGetPhysicalDeviceQueueFamilyProperties "
         "function");
     err = vkGetPhysicalDeviceSurfaceSupportKHR(gpu(), 0, surface, &supported);
     pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+#endif
+
+    // Next, query a queue family index that's too large:
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "called with a queueFamilyIndex that is too large");
+    err = vkGetPhysicalDeviceSurfaceSupportKHR(gpu(), 100000, surface, &supported);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+    // Finally, do so correctly:
+    err = vkGetPhysicalDeviceSurfaceSupportKHR(gpu(), 0, surface, &supported);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
+
+
+
+    // Get the surface capabilities:
+    VkSurfaceCapabilitiesKHR surface_capabilities;
+
+    // Do so correctly (only error logged by this entrypoint is if the
+    // extension isn't enabled):
+    err = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu(), surface,
+                                                    &surface_capabilities);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
+
+
+
+    // Get the surface formats:
+    uint32_t surface_format_count;
+
+    // First, try without a pointer to surface_format_count:
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "called with NULL pointer");
+    vkGetPhysicalDeviceSurfaceFormatsKHR(gpu(), surface, NULL, NULL);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+    // Next, correctly do a 1st try (with a NULL pointer to surface_formats):
+    vkGetPhysicalDeviceSurfaceFormatsKHR(gpu(), surface,
+                                         &surface_format_count, NULL);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
+
+#if 0 // Need to fix the layer
+    // Allocate memory for the correct number of VkSurfaceFormatKHR's:
+    VkSurfaceFormatKHR *surface_formats =
+        (VkSurfaceFormatKHR *)malloc(surface_format_count *
+                                     sizeof(VkSurfaceFormatKHR));
+
+    // Next, do so with surface_format_count being set too high:
+    surface_format_count += 5;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "that is greater than the value");
+    vkGetPhysicalDeviceSurfaceFormatsKHR(gpu(), surface,
+                                         &surface_format_count,
+                                         surface_formats);
+    pass = (err == VK_SUCCESS);
     ASSERT_TRUE(pass);
     m_errorMonitor->VerifyFound();
 #endif
