@@ -653,7 +653,9 @@ TEST_F(VkLayerTest, EnableWsiBeforeUse) {
     VkResult err;
     bool pass;
 
-    VkSurfaceKHR surface = VK_NULL_HANDLE;
+// FIXME: After we turn on this code for non-Linux platforms, uncomment the
+// following declaration (which is temporarily being moved below):
+//    VkSurfaceKHR surface = VK_NULL_HANDLE;
     VkSwapchainKHR swapchain = VK_NULL_HANDLE;
     VkSwapchainCreateInfoKHR swapchain_create_info = {};
     uint32_t swapchain_image_count = 0;
@@ -768,6 +770,9 @@ TEST_F(VkLayerTest, EnableWsiBeforeUse) {
 
 
 #if defined(VK_USE_PLATFORM_XCB_KHR)
+// FIXME: REMOVE THIS HERE, AND UNCOMMENT ABOVE, WHEN THIS TEST HAS BEEN PORTED
+// TO NON-LINUX PLATFORMS:
+VkSurfaceKHR surface = VK_NULL_HANDLE;
     // Use the functions from the VK_KHR_xcb_surface extension without enabling
     // that extension:
 
@@ -1177,6 +1182,10 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
     xcb_destroy_window(connection, xcb_window);
     xcb_disconnect(connection);
 
+#else  // VK_USE_PLATFORM_XCB_KHR
+    err = (surface == VK_NULL_HANDLE) ? VK_SUCCESS : VK_SUCCESS;
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
 #endif // VK_USE_PLATFORM_XCB_KHR
 }
 
