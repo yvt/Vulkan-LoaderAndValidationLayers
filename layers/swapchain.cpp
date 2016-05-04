@@ -858,8 +858,17 @@ vkDestroySurfaceKHR(VkInstance instance, VkSurfaceKHR surface, const VkAllocatio
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(instance), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
+#ifdef OLD_CODE
+#else  // OLD_CODE
+#endif // OLD_CODE
+#ifdef OLD_CODE
     SwpSurface *pSurface = &my_data->surfaceMap[surface];
     SwpInstance *pInstance = &(my_data->instanceMap[instance]);
+#else  // OLD_CODE
+    auto surfIt = my_data->surfaceMap.find(surface);
+    SwpSurface *pSurface = (surfIt == my_data->surfaceMap.end()) ? NULL : &surfIt->second ;
+    SwpInstance *pInstance = &(my_data->instanceMap[instance]);
+#endif // OLD_CODE
 
     // Validate that the platform extension was enabled:
     if (pInstance && !pInstance->surfaceExtensionEnabled) {
