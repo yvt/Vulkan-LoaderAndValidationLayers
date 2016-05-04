@@ -85,7 +85,9 @@ static void createDeviceRegisterExtensions(VkPhysicalDevice physicalDevice, cons
     pDisp->QueuePresentKHR = (PFN_vkQueuePresentKHR)gpa(device, "vkQueuePresentKHR");
     pDisp->GetDeviceQueue = (PFN_vkGetDeviceQueue)gpa(device, "vkGetDeviceQueue");
 
-    SwpPhysicalDevice *pPhysicalDevice = &my_instance_data->physicalDeviceMap[physicalDevice];
+    DECLARE_AND_FIND_IN_MAP(SwpPhysicalDevice, pPhysicalDevice,
+                            my_instance_data->physicalDeviceMap,
+                            physicalDevice);
     if (pPhysicalDevice) {
         my_device_data->deviceMap[device].pPhysicalDevice = pPhysicalDevice;
         pPhysicalDevice->pDevice = &my_device_data->deviceMap[device];
