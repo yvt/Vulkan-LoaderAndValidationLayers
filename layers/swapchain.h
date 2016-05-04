@@ -30,11 +30,10 @@
 
 using namespace std;
 
-#define MAP_FIND(var, map, key)                       \
-{                                                     \
-    auto it = (map).find((key));                      \
-    (var) = (it == (map).end()) ? NULL : &it->second; \
-}
+#define DECLARE_AND_FIND_IN_MAP(type, var, map, key)          \
+    auto it = (map).find((key));                              \
+    type *var = (it == (map).end()) ? NULL : &it->second;
+
     
 
 // Swapchain ERROR codes

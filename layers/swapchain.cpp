@@ -859,9 +859,6 @@ vkDestroySurfaceKHR(VkInstance instance, VkSurfaceKHR surface, const VkAllocatio
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(instance), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
 #ifdef OLD_CODE
-#else  // OLD_CODE
-#endif // OLD_CODE
-#ifdef OLD_CODE
     SwpSurface *pSurface = &my_data->surfaceMap[surface];
     SwpInstance *pInstance = &(my_data->instanceMap[instance]);
 #else  // OLD_CODE
@@ -1647,22 +1644,8 @@ vkDestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAllocat
     }
 
     // Regardless of skipCall value, do some internal cleanup:
-#ifdef OLD_CODE
-    SwpSwapchain *pSwapchain = &my_data->swapchainMap[swapchain];
-#else  // OLD_CODE
-#ifdef SORTOF_OLD_CODE
-my_data->swapchainMap.erase(NULL);
-    auto scIt = my_data->swapchainMap.find(swapchain);
-//    SwpSwapchain *pSwapchain = (scIt == my_data->swapchainMap.end()) ? NULL : &scIt->second ;
-    SwpSwapchain *pSwapchain = NULL;
-    if (scIt != my_data->swapchainMap.end()) {
-        pSwapchain = &scIt->second;
-    }
-#else  // SORTOF_OLD_CODE
-    SwpSwapchain *pSwapchain = NULL;
-    MAP_FIND(pSwapchain, my_data->swapchainMap, swapchain);
-#endif // SORTOF_OLD_CODE
-#endif // OLD_CODE
+    DECLARE_AND_FIND_IN_MAP(SwpSwapchain, pSwapchain,
+                            my_data->swapchainMap, swapchain);
     if (pSwapchain) {
         // Delete the SwpSwapchain associated with this swapchain:
         if (pSwapchain->pDevice) {
