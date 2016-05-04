@@ -30,9 +30,12 @@
 
 using namespace std;
 
-#define DECLARE_AND_FIND_IN_MAP(type, var, map, key)          \
-    auto it = (map).find((key));                              \
-    type *var = (it == (map).end()) ? NULL : &it->second;
+#define DECLARE_AND_FIND_IN_MAP(type, var, map, key)    \
+    type *var = NULL;                                   \
+    {                                                   \
+        auto it = (map).find((key));                    \
+        var = (it == (map).end()) ? NULL : &it->second; \
+    }
 
     
 

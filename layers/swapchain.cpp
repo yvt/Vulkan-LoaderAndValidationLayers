@@ -990,7 +990,8 @@ VK_LAYER_EXPORT VKAPI_ATTR void VKAPI_CALL vkDestroyDevice(VkDevice device, cons
 
     // Do some internal cleanup:
     std::lock_guard<std::mutex> lock(global_lock);
-    SwpDevice *pDevice = &my_data->deviceMap[device];
+    DECLARE_AND_FIND_IN_MAP(SwpDevice, pDevice,
+                            my_data->deviceMap, device);
     if (pDevice) {
         // Delete the SwpDevice associated with this device:
         if (pDevice->pPhysicalDevice) {
@@ -1271,7 +1272,8 @@ static bool validateCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateI
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(device), layer_data_map);
     char fn[] = "vkCreateSwapchainKHR";
-    SwpDevice *pDevice = &my_data->deviceMap[device];
+    DECLARE_AND_FIND_IN_MAP(SwpDevice, pDevice,
+                            my_data->deviceMap, device);
 
     // Validate that the swapchain extension was enabled:
     if (pDevice && !pDevice->swapchainExtensionEnabled) {
@@ -1599,7 +1601,8 @@ VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkCreateSwapchainKHR(VkDevice dev
 
         if (result == VK_SUCCESS) {
             // Remember the swapchain's handle, and link it to the device:
-            SwpDevice *pDevice = &my_data->deviceMap[device];
+            DECLARE_AND_FIND_IN_MAP(SwpDevice, pDevice,
+                                    my_data->deviceMap, device);
 
             my_data->swapchainMap[*pSwapchain].swapchain = *pSwapchain;
             if (pDevice) {
@@ -1634,7 +1637,8 @@ vkDestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAllocat
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(device), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpDevice *pDevice = &my_data->deviceMap[device];
+    DECLARE_AND_FIND_IN_MAP(SwpDevice, pDevice,
+                            my_data->deviceMap, device);
 
     // Validate that the swapchain extension was enabled:
     if (pDevice && !pDevice->swapchainExtensionEnabled) {
@@ -1685,7 +1689,8 @@ vkGetSwapchainImagesKHR(VkDevice device, VkSwapchainKHR swapchain, uint32_t *pSw
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(device), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpDevice *pDevice = &my_data->deviceMap[device];
+    DECLARE_AND_FIND_IN_MAP(SwpDevice, pDevice,
+                            my_data->deviceMap, device);
 
     // Validate that the swapchain extension was enabled:
     if (pDevice && !pDevice->swapchainExtensionEnabled) {
@@ -1759,7 +1764,8 @@ VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkAcquireNextImageKHR(VkDevice de
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(device), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpDevice *pDevice = &my_data->deviceMap[device];
+    DECLARE_AND_FIND_IN_MAP(SwpDevice, pDevice,
+                            my_data->deviceMap, device);
 
     // Validate that the swapchain extension was enabled:
     if (pDevice && !pDevice->swapchainExtensionEnabled) {
@@ -1938,7 +1944,8 @@ vkGetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex
 
         // Remember the queue's handle, and link it to the device:
         std::lock_guard<std::mutex> lock(global_lock);
-        SwpDevice *pDevice = &my_data->deviceMap[device];
+        DECLARE_AND_FIND_IN_MAP(SwpDevice, pDevice,
+                                my_data->deviceMap, device);
         my_data->queueMap[&pQueue].queue = *pQueue;
         if (pDevice) {
             pDevice->queues[*pQueue] = &my_data->queueMap[*pQueue];
