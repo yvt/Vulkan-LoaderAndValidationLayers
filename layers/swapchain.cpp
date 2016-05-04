@@ -1647,7 +1647,12 @@ vkDestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAllocat
     }
 
     // Regardless of skipCall value, do some internal cleanup:
+#ifdef OLD_CODE
     SwpSwapchain *pSwapchain = &my_data->swapchainMap[swapchain];
+#else  // OLD_CODE
+    auto scIt = my_data->swapchainMap.find(swapchain);
+    SwpSwapchain *pSwapchain = (scIt == my_data->swapchainMap.end()) ? NULL : &scIt->second ;
+#endif // OLD_CODE
     if (pSwapchain) {
         // Delete the SwpSwapchain associated with this swapchain:
         if (pSwapchain->pDevice) {
