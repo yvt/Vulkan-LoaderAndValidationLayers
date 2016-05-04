@@ -290,7 +290,12 @@ vkCreateInstance(const VkInstanceCreateInfo *pCreateInfo, const VkAllocationCall
 VK_LAYER_EXPORT VKAPI_ATTR void VKAPI_CALL vkDestroyInstance(VkInstance instance, const VkAllocationCallbacks *pAllocator) {
     dispatch_key key = get_dispatch_key(instance);
     layer_data *my_data = get_my_data_ptr(key, layer_data_map);
+#ifdef OLD_CODE
     SwpInstance *pInstance = &(my_data->instanceMap[instance]);
+#else  // OLD_CODE
+    DECLARE_AND_FIND_IN_MAP(SwpInstance, pInstance,
+                            my_data->instanceMap, instance);
+#endif // OLD_CODE
 
     // Call down the call chain:
     my_data->instance_dispatch_table->DestroyInstance(instance, pAllocator);
