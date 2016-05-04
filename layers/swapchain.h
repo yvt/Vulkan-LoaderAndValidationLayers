@@ -37,7 +37,11 @@ using namespace std;
         var = (it == (map).end()) ? NULL : &it->second; \
     }
 
-    
+#define FIND_IN_MAP(var, map, key)                      \
+    {                                                   \
+        auto it = (map).find((key));                    \
+        var = (it == (map).end()) ? NULL : &it->second; \
+    }
 
 // Swapchain ERROR codes
 typedef enum _SWAPCHAIN_ERROR {

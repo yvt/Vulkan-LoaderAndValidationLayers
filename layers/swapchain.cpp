@@ -378,7 +378,9 @@ vkGetPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice physicalDevice, uint32
 
     // Record the result of this query:
     std::lock_guard<std::mutex> lock(global_lock);
-    SwpPhysicalDevice *pPhysicalDevice = &my_data->physicalDeviceMap[physicalDevice];
+    DECLARE_AND_FIND_IN_MAP(SwpPhysicalDevice, pPhysicalDevice,
+                            my_data->physicalDeviceMap,
+                            physicalDevice);
     if (pPhysicalDevice && pQueueFamilyPropertyCount && !pQueueFamilyProperties) {
         pPhysicalDevice->gotQueueFamilyPropertyCount = true;
         pPhysicalDevice->numOfQueueFamilies = *pQueueFamilyPropertyCount;
@@ -422,7 +424,7 @@ vkCreateAndroidSurfaceKHR(VkInstance instance, const VkAndroidSurfaceCreateInfoK
         lock.lock();
 
         // Obtain this pointer again after locking:
-        pInstance = &(my_data->instanceMap[instance]);
+        FIND_IN_MAP(pInstance, my_data->instanceMap, instance);
         if ((result == VK_SUCCESS) && pInstance && pSurface) {
             // Record the VkSurfaceKHR returned by the ICD:
             my_data->surfaceMap[*pSurface].surface = *pSurface;
@@ -476,7 +478,7 @@ vkCreateMirSurfaceKHR(VkInstance instance, const VkMirSurfaceCreateInfoKHR *pCre
         lock.lock();
 
         // Obtain this pointer again after locking:
-        pInstance = &(my_data->instanceMap[instance]);
+        FIND_IN_MAP(pInstance, my_data->instanceMap, instance);
         if ((result == VK_SUCCESS) && pInstance && pSurface) {
             // Record the VkSurfaceKHR returned by the ICD:
             my_data->surfaceMap[*pSurface].surface = *pSurface;
@@ -499,7 +501,9 @@ VK_LAYER_EXPORT VKAPI_ATTR VkBool32 VKAPI_CALL vkGetPhysicalDeviceMirPresentatio
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpPhysicalDevice *pPhysicalDevice = &my_data->physicalDeviceMap[physicalDevice];
+    DECLARE_AND_FIND_IN_MAP(SwpPhysicalDevice, pPhysicalDevice,
+                            my_data->physicalDeviceMap,
+                            physicalDevice);
 
     // Validate that the platform extension was enabled:
     if (pPhysicalDevice && pPhysicalDevice->pInstance && !pPhysicalDevice->pInstance->mirSurfaceExtensionEnabled) {
@@ -561,7 +565,7 @@ vkCreateWaylandSurfaceKHR(VkInstance instance, const VkWaylandSurfaceCreateInfoK
         lock.lock();
 
         // Obtain this pointer again after locking:
-        pInstance = &(my_data->instanceMap[instance]);
+        FIND_IN_MAP(pInstance, my_data->instanceMap, instance);
         if ((result == VK_SUCCESS) && pInstance && pSurface) {
             // Record the VkSurfaceKHR returned by the ICD:
             my_data->surfaceMap[*pSurface].surface = *pSurface;
@@ -584,7 +588,9 @@ VK_LAYER_EXPORT VKAPI_ATTR VkBool32 VKAPI_CALL vkGetPhysicalDeviceWaylandPresent
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpPhysicalDevice *pPhysicalDevice = &my_data->physicalDeviceMap[physicalDevice];
+    DECLARE_AND_FIND_IN_MAP(SwpPhysicalDevice, pPhysicalDevice,
+                            my_data->physicalDeviceMap,
+                            physicalDevice);
 
     // Validate that the platform extension was enabled:
     if (pPhysicalDevice && pPhysicalDevice->pInstance && !pPhysicalDevice->pInstance->waylandSurfaceExtensionEnabled) {
@@ -646,7 +652,7 @@ vkCreateWin32SurfaceKHR(VkInstance instance, const VkWin32SurfaceCreateInfoKHR *
         lock.lock();
 
         // Obtain this pointer again after locking:
-        pInstance = &(my_data->instanceMap[instance]);
+        FIND_IN_MAP(pInstance, my_data->instanceMap, instance);
         if ((result == VK_SUCCESS) && pInstance && pSurface) {
             // Record the VkSurfaceKHR returned by the ICD:
             my_data->surfaceMap[*pSurface].surface = *pSurface;
@@ -668,7 +674,9 @@ vkGetPhysicalDeviceWin32PresentationSupportKHR(VkPhysicalDevice physicalDevice, 
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpPhysicalDevice *pPhysicalDevice = &my_data->physicalDeviceMap[physicalDevice];
+    DECLARE_AND_FIND_IN_MAP(SwpPhysicalDevice, pPhysicalDevice,
+                            my_data->physicalDeviceMap,
+                            physicalDevice);
 
     // Validate that the platform extension was enabled:
     if (pPhysicalDevice && pPhysicalDevice->pInstance && !pPhysicalDevice->pInstance->win32SurfaceExtensionEnabled) {
@@ -729,7 +737,7 @@ vkCreateXcbSurfaceKHR(VkInstance instance, const VkXcbSurfaceCreateInfoKHR *pCre
         lock.lock();
 
         // Obtain this pointer again after locking:
-        pInstance = &(my_data->instanceMap[instance]);
+        FIND_IN_MAP(pInstance, my_data->instanceMap, instance);
         if ((result == VK_SUCCESS) && pInstance && pSurface) {
             // Record the VkSurfaceKHR returned by the ICD:
             my_data->surfaceMap[*pSurface].surface = *pSurface;
@@ -752,7 +760,9 @@ vkGetPhysicalDeviceXcbPresentationSupportKHR(VkPhysicalDevice physicalDevice, ui
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpPhysicalDevice *pPhysicalDevice = &my_data->physicalDeviceMap[physicalDevice];
+    DECLARE_AND_FIND_IN_MAP(SwpPhysicalDevice, pPhysicalDevice,
+                            my_data->physicalDeviceMap,
+                            physicalDevice);
 
     // Validate that the platform extension was enabled:
     if (pPhysicalDevice && pPhysicalDevice->pInstance && !pPhysicalDevice->pInstance->xcbSurfaceExtensionEnabled) {
@@ -814,7 +824,7 @@ vkCreateXlibSurfaceKHR(VkInstance instance, const VkXlibSurfaceCreateInfoKHR *pC
         lock.lock();
 
         // Obtain this pointer again after locking:
-        pInstance = &(my_data->instanceMap[instance]);
+        FIND_IN_MAP(pInstance, my_data->instanceMap, instance);
         if ((result == VK_SUCCESS) && pInstance && pSurface) {
             // Record the VkSurfaceKHR returned by the ICD:
             my_data->surfaceMap[*pSurface].surface = *pSurface;
@@ -837,7 +847,9 @@ VK_LAYER_EXPORT VKAPI_ATTR VkBool32 VKAPI_CALL vkGetPhysicalDeviceXlibPresentati
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpPhysicalDevice *pPhysicalDevice = &my_data->physicalDeviceMap[physicalDevice];
+    DECLARE_AND_FIND_IN_MAP(SwpPhysicalDevice, pPhysicalDevice,
+                            my_data->physicalDeviceMap,
+                            physicalDevice);
 
     // Validate that the platform extension was enabled:
     if (pPhysicalDevice && pPhysicalDevice->pInstance && !pPhysicalDevice->pInstance->xlibSurfaceExtensionEnabled) {
@@ -1035,7 +1047,9 @@ VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkGetPhysicalDeviceSurfaceSupport
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpPhysicalDevice *pPhysicalDevice = &my_data->physicalDeviceMap[physicalDevice];
+    DECLARE_AND_FIND_IN_MAP(SwpPhysicalDevice, pPhysicalDevice,
+                            my_data->physicalDeviceMap,
+                            physicalDevice);
 
     // Validate that the surface extension was enabled:
     if (pPhysicalDevice && pPhysicalDevice->pInstance && !pPhysicalDevice->pInstance->surfaceExtensionEnabled) {
@@ -1067,7 +1081,7 @@ VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkGetPhysicalDeviceSurfaceSupport
         lock.lock();
 
         // Obtain this pointer again after locking:
-        pPhysicalDevice = &my_data->physicalDeviceMap[physicalDevice];
+        FIND_IN_MAP(pPhysicalDevice, my_data->physicalDeviceMap, physicalDevice);
         if ((result == VK_SUCCESS) && pSupported && pPhysicalDevice) {
             // Record the result of this query:
             SwpInstance *pInstance = pPhysicalDevice->pInstance;
@@ -1100,7 +1114,9 @@ vkGetPhysicalDeviceSurfaceCapabilitiesKHR(VkPhysicalDevice physicalDevice, VkSur
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpPhysicalDevice *pPhysicalDevice = &my_data->physicalDeviceMap[physicalDevice];
+    DECLARE_AND_FIND_IN_MAP(SwpPhysicalDevice, pPhysicalDevice,
+                            my_data->physicalDeviceMap,
+                            physicalDevice);
 
     // Validate that the surface extension was enabled:
     if (pPhysicalDevice && pPhysicalDevice->pInstance && !pPhysicalDevice->pInstance->surfaceExtensionEnabled) {
@@ -1121,7 +1137,7 @@ vkGetPhysicalDeviceSurfaceCapabilitiesKHR(VkPhysicalDevice physicalDevice, VkSur
         lock.lock();
 
         // Obtain this pointer again after locking:
-        pPhysicalDevice = &my_data->physicalDeviceMap[physicalDevice];
+        FIND_IN_MAP(pPhysicalDevice, my_data->physicalDeviceMap, physicalDevice);
         if ((result == VK_SUCCESS) && pPhysicalDevice) {
             // Record the result of this query:
             pPhysicalDevice->gotSurfaceCapabilities = true;
@@ -1140,7 +1156,9 @@ vkGetPhysicalDeviceSurfaceFormatsKHR(VkPhysicalDevice physicalDevice, VkSurfaceK
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpPhysicalDevice *pPhysicalDevice = &my_data->physicalDeviceMap[physicalDevice];
+    DECLARE_AND_FIND_IN_MAP(SwpPhysicalDevice, pPhysicalDevice,
+                            my_data->physicalDeviceMap,
+                            physicalDevice);
 
     // Validate that the surface extension was enabled:
     if (pPhysicalDevice && pPhysicalDevice->pInstance && !pPhysicalDevice->pInstance->surfaceExtensionEnabled) {
@@ -1178,7 +1196,7 @@ vkGetPhysicalDeviceSurfaceFormatsKHR(VkPhysicalDevice physicalDevice, VkSurfaceK
         lock.lock();
 
         // Obtain this pointer again after locking:
-        pPhysicalDevice = &my_data->physicalDeviceMap[physicalDevice];
+        FIND_IN_MAP(pPhysicalDevice, my_data->physicalDeviceMap, physicalDevice);
         if ((result == VK_SUCCESS) && pPhysicalDevice && !pSurfaceFormats && pSurfaceFormatCount) {
             // Record the result of this preliminary query:
             pPhysicalDevice->surfaceFormatCount = *pSurfaceFormatCount;
@@ -1208,7 +1226,9 @@ vkGetPhysicalDeviceSurfacePresentModesKHR(VkPhysicalDevice physicalDevice, VkSur
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpPhysicalDevice *pPhysicalDevice = &my_data->physicalDeviceMap[physicalDevice];
+    DECLARE_AND_FIND_IN_MAP(SwpPhysicalDevice, pPhysicalDevice,
+                            my_data->physicalDeviceMap,
+                            physicalDevice);
 
     // Validate that the surface extension was enabled:
     if (pPhysicalDevice && pPhysicalDevice->pInstance && !pPhysicalDevice->pInstance->surfaceExtensionEnabled) {
@@ -1246,7 +1266,7 @@ vkGetPhysicalDeviceSurfacePresentModesKHR(VkPhysicalDevice physicalDevice, VkSur
         lock.lock();
 
         // Obtain this pointer again after locking:
-        pPhysicalDevice = &my_data->physicalDeviceMap[physicalDevice];
+        FIND_IN_MAP(pPhysicalDevice, my_data->physicalDeviceMap, physicalDevice);
         if ((result == VK_SUCCESS) && pPhysicalDevice && !pPresentModes && pPresentModeCount) {
             // Record the result of this preliminary query:
             pPhysicalDevice->presentModeCount = *pPresentModeCount;
@@ -1735,7 +1755,7 @@ vkGetSwapchainImagesKHR(VkDevice device, VkSwapchainKHR swapchain, uint32_t *pSw
         lock.lock();
 
         // Obtain this pointer again after locking:
-        pSwapchain = &my_data->swapchainMap[swapchain];
+        FIND_IN_MAP(pSwapchain, my_data->swapchainMap, swapchain);
         if ((result == VK_SUCCESS) && pSwapchain && !pSwapchainImages && pSwapchainImageCount) {
             // Record the result of this preliminary query:
             pSwapchain->imageCount = *pSwapchainImageCount;
@@ -1828,7 +1848,7 @@ VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkAcquireNextImageKHR(VkDevice de
         lock.lock();
 
         // Obtain this pointer again after locking:
-        pSwapchain = &my_data->swapchainMap[swapchain];
+        FIND_IN_MAP(pSwapchain, my_data->swapchainMap, swapchain);
         if (((result == VK_SUCCESS) || (result == VK_SUBOPTIMAL_KHR)) && pSwapchain) {
             // Change the state of the image (now acquired by the application):
             pSwapchain->images[*pImageIndex].acquiredByApp = true;
@@ -1876,7 +1896,9 @@ VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkQueuePresentKHR(VkQueue queue, 
     std::unique_lock<std::mutex> lock(global_lock);
     for (uint32_t i = 0; pPresentInfo && (i < pPresentInfo->swapchainCount); i++) {
         uint32_t index = pPresentInfo->pImageIndices[i];
-        SwpSwapchain *pSwapchain = &my_data->swapchainMap[pPresentInfo->pSwapchains[i]];
+        DECLARE_AND_FIND_IN_MAP(SwpSwapchain, pSwapchain,
+                                my_data->swapchainMap,
+                                pPresentInfo->pSwapchains[i]);
         if (pSwapchain) {
             if (!pSwapchain->pDevice->swapchainExtensionEnabled) {
                 skipCall |= LOG_ERROR(VK_DEBUG_REPORT_OBJECT_TYPE_DEVICE_EXT, pSwapchain->pDevice, "VkDevice",
@@ -1930,7 +1952,9 @@ VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkQueuePresentKHR(VkQueue queue, 
         if (pPresentInfo && ((result == VK_SUCCESS) || (result == VK_SUBOPTIMAL_KHR))) {
             for (uint32_t i = 0; i < pPresentInfo->swapchainCount; i++) {
                 int index = pPresentInfo->pImageIndices[i];
-                SwpSwapchain *pSwapchain = &my_data->swapchainMap[pPresentInfo->pSwapchains[i]];
+                DECLARE_AND_FIND_IN_MAP(SwpSwapchain, pSwapchain,
+                                        my_data->swapchainMap,
+                                        pPresentInfo->pSwapchains[i]);
                 if (pSwapchain) {
                     // Change the state of the image (no longer acquired by the
                     // application):
