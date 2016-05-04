@@ -311,10 +311,10 @@ class VkLayerTest : public VkRenderFramework {
 #if defined(VK_USE_PLATFORM_WAYLAND_KHR)
             instance_extension_names.push_back(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
 #endif // VK_USE_PLATFORM_WAYLAND_KHR
+#endif // NEED_TO_TEST_THIS_ON_PLATFORM
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
             instance_extension_names.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 #endif // VK_USE_PLATFORM_WIN32_KHR
-#endif // NEED_TO_TEST_THIS_ON_PLATFORM
 #if defined(VK_USE_PLATFORM_XCB_KHR)
             instance_extension_names.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
 #elif defined(VK_USE_PLATFORM_XLIB_KHR)
@@ -738,9 +738,13 @@ TEST_F(VkLayerTest, EnableWsiBeforeUse) {
                                                      &wayland_display);
     m_errorMonitor->VerifyFound();
 #endif // VK_USE_PLATFORM_WAYLAND_KHR
+#endif // NEED_TO_TEST_THIS_ON_PLATFORM
 
 
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
+// FIXME: REMOVE THIS HERE, AND UNCOMMENT ABOVE, WHEN THIS TEST HAS BEEN PORTED
+// TO NON-LINUX PLATFORMS:
+VkSurfaceKHR surface = VK_NULL_HANDLE;
     // Use the functions from the VK_KHR_win32_surface extension without
     // enabling that extension:
 
@@ -758,15 +762,14 @@ TEST_F(VkLayerTest, EnableWsiBeforeUse) {
     m_errorMonitor->VerifyFound();
 
     // Tell whether win32 supports presentation:
-    struct wl_display win32_display = {};
     m_errorMonitor->SetDesiredFailureMsg(
         VK_DEBUG_REPORT_ERROR_BIT_EXT,
         "extension was not enabled for this");
-    vkGetPhysicalDeviceWin32PresentationSupportKHR(gpu(), 0,
-                                                     &win32_display);
+    vkGetPhysicalDeviceWin32PresentationSupportKHR(gpu(), 0);
     m_errorMonitor->VerifyFound();
-#endif // VK_USE_PLATFORM_WAYLAND_KHR
-#endif // NEED_TO_TEST_THIS_ON_PLATFORM
+// Set this (for now, until all platforms are supported and tested):
+#define NEED_TO_TEST_THIS_ON_PLATFORM
+#endif // VK_USE_PLATFORM_WIN32_KHR
 
 
 #if defined(VK_USE_PLATFORM_XCB_KHR)
