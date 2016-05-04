@@ -290,12 +290,8 @@ vkCreateInstance(const VkInstanceCreateInfo *pCreateInfo, const VkAllocationCall
 VK_LAYER_EXPORT VKAPI_ATTR void VKAPI_CALL vkDestroyInstance(VkInstance instance, const VkAllocationCallbacks *pAllocator) {
     dispatch_key key = get_dispatch_key(instance);
     layer_data *my_data = get_my_data_ptr(key, layer_data_map);
-#ifdef OLD_CODE
-    SwpInstance *pInstance = &(my_data->instanceMap[instance]);
-#else  // OLD_CODE
     DECLARE_AND_FIND_IN_MAP(SwpInstance, pInstance,
                             my_data->instanceMap, instance);
-#endif // OLD_CODE
 
     // Call down the call chain:
     my_data->instance_dispatch_table->DestroyInstance(instance, pAllocator);
@@ -395,7 +391,8 @@ vkCreateAndroidSurfaceKHR(VkInstance instance, const VkAndroidSurfaceCreateInfoK
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(instance), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpInstance *pInstance = &(my_data->instanceMap[instance]);
+    DECLARE_AND_FIND_IN_MAP(SwpInstance, pInstance,
+                            my_data->instanceMap, instance);
 
     // Validate that the platform extension was enabled:
     if (pInstance && !pInstance->androidSurfaceExtensionEnabled) {
@@ -448,7 +445,8 @@ vkCreateMirSurfaceKHR(VkInstance instance, const VkMirSurfaceCreateInfoKHR *pCre
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(instance), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpInstance *pInstance = &(my_data->instanceMap[instance]);
+    DECLARE_AND_FIND_IN_MAP(SwpInstance, pInstance,
+                            my_data->instanceMap, instance);
 
     // Validate that the platform extension was enabled:
     if (pInstance && !pInstance->mirSurfaceExtensionEnabled) {
@@ -532,7 +530,8 @@ vkCreateWaylandSurfaceKHR(VkInstance instance, const VkWaylandSurfaceCreateInfoK
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(instance), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpInstance *pInstance = &(my_data->instanceMap[instance]);
+    DECLARE_AND_FIND_IN_MAP(SwpInstance, pInstance,
+                            my_data->instanceMap, instance);
 
     // Validate that the platform extension was enabled:
     if (pInstance && !pInstance->waylandSurfaceExtensionEnabled) {
@@ -616,7 +615,8 @@ vkCreateWin32SurfaceKHR(VkInstance instance, const VkWin32SurfaceCreateInfoKHR *
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(instance), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpInstance *pInstance = &(my_data->instanceMap[instance]);
+    DECLARE_AND_FIND_IN_MAP(SwpInstance, pInstance,
+                            my_data->instanceMap, instance);
 
     // Validate that the platform extension was enabled:
     if (pInstance && !pInstance->win32SurfaceExtensionEnabled) {
@@ -698,7 +698,8 @@ vkCreateXcbSurfaceKHR(VkInstance instance, const VkXcbSurfaceCreateInfoKHR *pCre
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(instance), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpInstance *pInstance = &(my_data->instanceMap[instance]);
+    DECLARE_AND_FIND_IN_MAP(SwpInstance, pInstance,
+                            my_data->instanceMap, instance);
 
     // Validate that the platform extension was enabled:
     if (pInstance && !pInstance->xcbSurfaceExtensionEnabled) {
@@ -782,7 +783,8 @@ vkCreateXlibSurfaceKHR(VkInstance instance, const VkXlibSurfaceCreateInfoKHR *pC
     bool skipCall = false;
     layer_data *my_data = get_my_data_ptr(get_dispatch_key(instance), layer_data_map);
     std::unique_lock<std::mutex> lock(global_lock);
-    SwpInstance *pInstance = &(my_data->instanceMap[instance]);
+    DECLARE_AND_FIND_IN_MAP(SwpInstance, pInstance,
+                            my_data->instanceMap, instance);
 
     // Validate that the platform extension was enabled:
     if (pInstance && !pInstance->xlibSurfaceExtensionEnabled) {
@@ -865,11 +867,13 @@ vkDestroySurfaceKHR(VkInstance instance, VkSurfaceKHR surface, const VkAllocatio
     std::unique_lock<std::mutex> lock(global_lock);
 #ifdef OLD_CODE
     SwpSurface *pSurface = &my_data->surfaceMap[surface];
-    SwpInstance *pInstance = &(my_data->instanceMap[instance]);
+    DECLARE_AND_FIND_IN_MAP(SwpInstance, pInstance,
+                            my_data->instanceMap, instance);
 #else  // OLD_CODE
     auto surfIt = my_data->surfaceMap.find(surface);
     SwpSurface *pSurface = (surfIt == my_data->surfaceMap.end()) ? NULL : &surfIt->second ;
-    SwpInstance *pInstance = &(my_data->instanceMap[instance]);
+    DECLARE_AND_FIND_IN_MAP(SwpInstance, pInstance,
+                            my_data->instanceMap, instance);
 #endif // OLD_CODE
 
     // Validate that the platform extension was enabled:
@@ -929,7 +933,8 @@ vkEnumeratePhysicalDevices(VkInstance instance, uint32_t *pPhysicalDeviceCount, 
     result = my_data->instance_dispatch_table->EnumeratePhysicalDevices(instance, pPhysicalDeviceCount, pPhysicalDevices);
 
     std::lock_guard<std::mutex> lock(global_lock);
-    SwpInstance *pInstance = &(my_data->instanceMap[instance]);
+    DECLARE_AND_FIND_IN_MAP(SwpInstance, pInstance,
+                            my_data->instanceMap, instance);
     if ((result == VK_SUCCESS) && pInstance && pPhysicalDevices && (*pPhysicalDeviceCount > 0)) {
         // Record the VkPhysicalDevices returned by the ICD:
         for (uint32_t i = 0; i < *pPhysicalDeviceCount; i++) {
