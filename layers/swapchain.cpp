@@ -1899,7 +1899,8 @@ VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkQueuePresentKHR(VkQueue queue, 
                                           __FUNCTION__, index);
                 }
             }
-            SwpQueue *pQueue = &my_data->queueMap[queue];
+            DECLARE_AND_FIND_IN_MAP(SwpQueue, pQueue,
+                                    my_data->queueMap, queue);
             SwpSurface *pSurface = pSwapchain->pSurface;
             if (pQueue && pSurface && pSurface->numQueueFamilyIndexSupport) {
                 uint32_t queueFamilyIndex = pQueue->queueFamilyIndex;
