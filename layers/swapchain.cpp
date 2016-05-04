@@ -1566,7 +1566,8 @@ static bool validateCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateI
 
     // Validate pCreateInfo->oldSwapchain:
     if (pCreateInfo && pCreateInfo->oldSwapchain) {
-        SwpSwapchain *pOldSwapchain = &my_data->swapchainMap[pCreateInfo->oldSwapchain];
+        DECLARE_AND_FIND_IN_MAP(SwpSwapchain, pOldSwapchain,
+                                my_data->swapchainMap, pCreateInfo->oldSwapchain);
         if (pOldSwapchain) {
             if (device != pOldSwapchain->pDevice->device) {
                 skipCall |= LOG_ERROR(VK_DEBUG_REPORT_OBJECT_TYPE_DEVICE_EXT, device, "VkDevice",
@@ -1704,7 +1705,8 @@ vkGetSwapchainImagesKHR(VkDevice device, VkSwapchainKHR swapchain, uint32_t *pSw
                               "%s() called even though the %s extension was not enabled for this VkDevice.", __FUNCTION__,
                               VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     }
-    SwpSwapchain *pSwapchain = &my_data->swapchainMap[swapchain];
+    DECLARE_AND_FIND_IN_MAP(SwpSwapchain, pSwapchain,
+                            my_data->swapchainMap, swapchain);
     if (!pSwapchainImageCount) {
         skipCall |= LOG_ERROR_NULL_POINTER(VK_DEBUG_REPORT_OBJECT_TYPE_DEVICE_EXT, device, "pSwapchainImageCount");
     } else if (pSwapchain && pSwapchainImages) {
@@ -1784,7 +1786,8 @@ VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkAcquireNextImageKHR(VkDevice de
                               "%s() called with both the semaphore and fence parameters set to "
                               "VK_NULL_HANDLE (at least one should be used)\n.", __FUNCTION__);
     }
-    SwpSwapchain *pSwapchain = &my_data->swapchainMap[swapchain];
+    DECLARE_AND_FIND_IN_MAP(SwpSwapchain, pSwapchain,
+                            my_data->swapchainMap, swapchain);
     SwpPhysicalDevice *pPhysicalDevice = pDevice->pPhysicalDevice;
     if (pSwapchain && pPhysicalDevice && pPhysicalDevice->gotSurfaceCapabilities) {
         // Look to see if the application has already acquired the maximum
