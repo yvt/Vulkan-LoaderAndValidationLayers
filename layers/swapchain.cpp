@@ -1650,6 +1650,7 @@ vkDestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAllocat
 #ifdef OLD_CODE
     SwpSwapchain *pSwapchain = &my_data->swapchainMap[swapchain];
 #else  // OLD_CODE
+#ifdef SORTOF_OLD_CODE
 my_data->swapchainMap.erase(NULL);
     auto scIt = my_data->swapchainMap.find(swapchain);
 //    SwpSwapchain *pSwapchain = (scIt == my_data->swapchainMap.end()) ? NULL : &scIt->second ;
@@ -1657,6 +1658,10 @@ my_data->swapchainMap.erase(NULL);
     if (scIt != my_data->swapchainMap.end()) {
         pSwapchain = &scIt->second;
     }
+#else  // SORTOF_OLD_CODE
+    SwpSwapchain *pSwapchain = NULL;
+    MAP_FIND(pSwapchain, my_data->swapchainMap, swapchain);
+#endif // SORTOF_OLD_CODE
 #endif // OLD_CODE
     if (pSwapchain) {
         // Delete the SwpSwapchain associated with this swapchain:

@@ -30,6 +30,13 @@
 
 using namespace std;
 
+#define MAP_FIND(var, map, key)                       \
+{                                                     \
+    auto it = (map).find((key));                      \
+    (var) = (it == (map).end()) ? NULL : &it->second; \
+}
+    
+
 // Swapchain ERROR codes
 typedef enum _SWAPCHAIN_ERROR {
     SWAPCHAIN_INVALID_HANDLE,             // Handle used that isn't currently valid
