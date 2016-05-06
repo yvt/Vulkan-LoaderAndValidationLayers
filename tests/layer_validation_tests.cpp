@@ -1270,6 +1270,21 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
     ASSERT_TRUE(pass);
     m_errorMonitor->VerifyFound();
 
+    // Next, call with a non-NULL pSurfaceFormats, even though we haven't
+    // correctly done a 1st try (to get the count):
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "but no prior positive value has been seen for");
+    surface_format_count = 0;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(
+            gpu(),
+            surface,
+            &surface_format_count,
+            (VkSurfaceFormatKHR *) &surface_format_count);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
     // Next, correctly do a 1st try (with a NULL pointer to surface_formats):
     vkGetPhysicalDeviceSurfaceFormatsKHR(gpu(), surface,
                                          &surface_format_count, NULL);
@@ -1281,11 +1296,23 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
         (VkSurfaceFormatKHR *)malloc(surface_format_count *
                                      sizeof(VkSurfaceFormatKHR));
 
-    // Next, do so with surface_format_count being set too high:
+    // Next, do a 2nd try with surface_format_count being set too high:
     surface_format_count += 5;
     m_errorMonitor->SetDesiredFailureMsg(
         VK_DEBUG_REPORT_ERROR_BIT_EXT,
         "that is greater than the value");
+    vkGetPhysicalDeviceSurfaceFormatsKHR(gpu(), surface,
+                                         &surface_format_count,
+                                         surface_formats);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+    // Finally, do a correct 1st and 2nd try:
+    vkGetPhysicalDeviceSurfaceFormatsKHR(gpu(), surface,
+                                         &surface_format_count, NULL);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
     vkGetPhysicalDeviceSurfaceFormatsKHR(gpu(), surface,
                                          &surface_format_count,
                                          surface_formats);
