@@ -1318,7 +1318,71 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
                                          surface_formats);
     pass = (err == VK_SUCCESS);
     ASSERT_TRUE(pass);
+
+
+
+    // Get the surface present modes:
+    uint32_t surface_present_mode_count;
+
+    // First, try without a pointer to surface_format_count:
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "called with NULL pointer");
+    vkGetPhysicalDeviceSurfacePresentModesKHR(gpu(), surface, NULL, NULL);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
     m_errorMonitor->VerifyFound();
+
+    // Next, call with a non-NULL VkPresentModeKHR, even though we haven't
+    // correctly done a 1st try (to get the count):
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "but no prior positive value has been seen for");
+    surface_present_mode_count = 0;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(
+            gpu(),
+            surface,
+            &surface_present_mode_count,
+            (VkPresentModeKHR *) &surface_present_mode_count);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+    // Next, correctly do a 1st try (with a NULL pointer to surface_formats):
+    vkGetPhysicalDeviceSurfacePresentModesKHR(gpu(), surface,
+                                              &surface_present_mode_count,
+                                              NULL);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
+
+    // Allocate memory for the correct number of VkSurfaceFormatKHR's:
+    VkPresentModeKHR *surface_present_modes =
+        (VkPresentModeKHR *)malloc(surface_present_mode_count *
+                                     sizeof(VkPresentModeKHR));
+
+    // Next, do a 2nd try with surface_format_count being set too high:
+    surface_present_mode_count += 5;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "that is greater than the value");
+    vkGetPhysicalDeviceSurfacePresentModesKHR(gpu(), surface,
+                                              &surface_present_mode_count,
+                                              surface_present_modes);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+    // Finally, do a correct 1st and 2nd try:
+    vkGetPhysicalDeviceSurfacePresentModesKHR(gpu(), surface,
+                                              &surface_present_mode_count,
+                                              NULL);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(gpu(), surface,
+                                              &surface_present_mode_count,
+                                              surface_present_modes);
+    pass = (err == VK_SUCCESS);
+    ASSERT_TRUE(pass);
 
 
 
