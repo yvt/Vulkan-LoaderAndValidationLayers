@@ -1386,6 +1386,35 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
 
 
 
+    // Create a swapchain:
+
+
+
+    // Get the images from a swapchain:
+
+
+
+    // Acquire an image from a swapchain:
+
+
+
+    // Present an image to a swapchain:
+
+
+
+    // Destroy the swapchain:
+
+
+
+// TODOs:
+//
+// - Try destroying the device without first destroying the swapchain
+//
+// - Try destroying the device without first destroying the surface
+//
+// - Try destroying the surface without first destroying the swapchain
+
+
     // Destroy the surface:
     vkDestroySurfaceKHR(instance(), surface, NULL);
 
