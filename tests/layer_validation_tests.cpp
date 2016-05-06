@@ -1144,8 +1144,8 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
     m_errorMonitor->VerifyFound();
 #endif
 
-    // Finally, try to correctly create a surface:
-// TODO: MUST CREATE AN XCB WINDOW
+
+    // Create a native window, and then correctly create a surface:
     xcb_connection_t *connection;
     xcb_screen_t *screen;
     xcb_window_t xcb_window;
@@ -1276,7 +1276,6 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
     pass = (err == VK_SUCCESS);
     ASSERT_TRUE(pass);
 
-#if 0 // Need to fix the layer
     // Allocate memory for the correct number of VkSurfaceFormatKHR's:
     VkSurfaceFormatKHR *surface_formats =
         (VkSurfaceFormatKHR *)malloc(surface_format_count *
@@ -1293,7 +1292,6 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
     pass = (err == VK_SUCCESS);
     ASSERT_TRUE(pass);
     m_errorMonitor->VerifyFound();
-#endif
 
 
 
