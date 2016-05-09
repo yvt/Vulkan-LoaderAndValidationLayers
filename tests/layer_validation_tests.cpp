@@ -1502,13 +1502,7 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
     queueFamilyIndex[0] = 0;
     swapchain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    // Next, call
-
-
-
-
-
-    swapchain_create_info.queueFamilyIndexCount = 0;
+// TODO: CONTINUE TESTING VALIDATION OF vkCreateSwapchainKHR() ...
 
 
 #if 0
