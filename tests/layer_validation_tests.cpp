@@ -1095,8 +1095,8 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
     bool pass;
 
     VkSurfaceKHR surface = VK_NULL_HANDLE;
-//    VkSwapchainKHR swapchain = VK_NULL_HANDLE;
-//    VkSwapchainCreateInfoKHR swapchain_create_info = {};
+    VkSwapchainKHR swapchain = VK_NULL_HANDLE;
+    VkSwapchainCreateInfoKHR swapchain_create_info = {};
 //    uint32_t swapchain_image_count = 0;
 //    VkImage swapchain_images[1] = {VK_NULL_HANDLE};
 //    uint32_t image_index = 0;
@@ -1240,9 +1240,26 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
     m_errorMonitor->VerifyFound();
 
     // Finally, do so correctly:
+// FIXME: THIS ISN'T CORRECT--MUST QUERY UNTIL WE FIND A QUEUE FAMILY THAT'S SUPPORTED
     err = vkGetPhysicalDeviceSurfaceSupportKHR(gpu(), 0, surface, &supported);
     pass = (err == VK_SUCCESS);
     ASSERT_TRUE(pass);
+
+
+
+    // Before proceeding, try to create a swapchain without having called
+    // vkGetPhysicalDeviceSurfaceCapabilitiesKHR():
+    swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    swapchain_create_info.pNext = NULL;
+    swapchain_create_info.flags = 0;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "called before calling vkGetPhysicalDeviceSurfaceCapabilitiesKHR().");
+    err = vkCreateSwapchainKHR(m_device->device(), &swapchain_create_info,
+                               NULL, &swapchain);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
 
 
 
@@ -1387,6 +1404,128 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
 
 
     // Create a swapchain:
+
+    // First, try without a pointer to swapchain_create_info:
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "called with NULL pointer");
+    err = vkCreateSwapchainKHR(m_device->device(), NULL, NULL, &swapchain);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+    // Next, call with a non-NULL swapchain_create_info, that has the wrong
+    // sType:
+    swapchain_create_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "called with the wrong value for");
+    err = vkCreateSwapchainKHR(m_device->device(), &swapchain_create_info,
+                               NULL, &swapchain);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+#if 0   // NOTE: The following message doesn't get logged, because it's an
+        // INFORMATION message:
+    // Next, call with a non-NULL swapchain_create_info, that has an invalid
+    // pNext:
+    swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    swapchain_create_info.pNext = (void *) 0xffffffff;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_INFORMATION_BIT_EXT,
+        "called with non-NULL value for");
+    err = vkCreateSwapchainKHR(m_device->device(), &swapchain_create_info,
+                               NULL, &swapchain);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+#endif
+
+    // Next, call with a NULL swapchain pointer:
+    swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    swapchain_create_info.pNext = NULL;
+    swapchain_create_info.flags = 0;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "called with NULL pointer");
+    err = vkCreateSwapchainKHR(m_device->device(), &swapchain_create_info,
+                               NULL, NULL);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+// TODO: Enhance swapchain layer so that
+// swapchain_create_info.queueFamilyIndexCount is checked against something?
+
+    // Next, call with a queue family index that's too large:
+    uint32_t queueFamilyIndex[2] = {100000, 0};
+    swapchain_create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+    swapchain_create_info.queueFamilyIndexCount = 2;
+    swapchain_create_info.pQueueFamilyIndices = queueFamilyIndex;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "called with a queueFamilyIndex that is too large");
+    err = vkCreateSwapchainKHR(m_device->device(), &swapchain_create_info,
+                               NULL, &swapchain);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+    // Next, call a queueFamilyIndexCount that's too small for CONCURRENT:
+    swapchain_create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+    swapchain_create_info.queueFamilyIndexCount = 1;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "but with a bad value(s) for pCreateInfo->queueFamilyIndexCount or "
+        "pCreateInfo->pQueueFamilyIndices).");
+    err = vkCreateSwapchainKHR(m_device->device(), &swapchain_create_info,
+                               NULL, &swapchain);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+
+    // Next, call with an invalid imageSharingMode:
+    swapchain_create_info.imageSharingMode = VK_SHARING_MODE_MAX_ENUM;
+    swapchain_create_info.queueFamilyIndexCount = 1;
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "called with a non-supported pCreateInfo->imageSharingMode (i.e.");
+    err = vkCreateSwapchainKHR(m_device->device(), &swapchain_create_info,
+                               NULL, &swapchain);
+    pass = (err != VK_SUCCESS);
+    ASSERT_TRUE(pass);
+    m_errorMonitor->VerifyFound();
+    // Fix for the future:
+// FIXME: THIS ISN'T CORRECT--MUST QUERY UNTIL WE FIND A QUEUE FAMILY THAT'S SUPPORTED
+    swapchain_create_info.queueFamilyIndexCount = 0;
+    queueFamilyIndex[0] = 0;
+    swapchain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    // Next, call
+
+
+
+
+
+    swapchain_create_info.queueFamilyIndexCount = 0;
+
+
+#if 0
+    swapchain_create_info.surface = 0;
+    swapchain_create_info.minImageCount = 0;
+    swapchain_create_info.imageFormat = 0;
+    swapchain_create_info.imageColorSpace = 0;
+    swapchain_create_info.imageExtent.width = 0;
+    swapchain_create_info.imageExtent.height = 0;
+    swapchain_create_info.imageArrayLayers = 0;
+    swapchain_create_info.imageUsage = 0;
+    swapchain_create_info.preTransform = 0;
+    swapchain_create_info.compositeAlpha = 0;
+    swapchain_create_info.presentMode = 0;
+    swapchain_create_info.clipped = 0;
+    swapchain_create_info.oldSwapchain = NULL;
+#endif
 
 
 
