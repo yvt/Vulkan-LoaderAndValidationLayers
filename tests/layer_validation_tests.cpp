@@ -888,8 +888,6 @@ TEST_F(VkLayerTest, EnableWsiBeforeUse) {
 
     // Create a surface:
     VkAndroidSurfaceCreateInfoKHR android_create_info = {};
-#if 0
-#endif
     m_errorMonitor->SetDesiredFailureMsg(
         VK_DEBUG_REPORT_ERROR_BIT_EXT,
         "extension was not enabled for this");
@@ -907,8 +905,6 @@ TEST_F(VkLayerTest, EnableWsiBeforeUse) {
 
     // Create a surface:
     VkMirSurfaceCreateInfoKHR mir_create_info = {};
-#if 0
-#endif
     m_errorMonitor->SetDesiredFailureMsg(
         VK_DEBUG_REPORT_ERROR_BIT_EXT,
         "extension was not enabled for this");
@@ -934,8 +930,6 @@ TEST_F(VkLayerTest, EnableWsiBeforeUse) {
 
     // Create a surface:
     VkWaylandSurfaceCreateInfoKHR wayland_create_info = {};
-#if 0
-#endif
     m_errorMonitor->SetDesiredFailureMsg(
         VK_DEBUG_REPORT_ERROR_BIT_EXT,
         "extension was not enabled for this");
@@ -966,8 +960,6 @@ VkSurfaceKHR surface = VK_NULL_HANDLE;
 
     // Create a surface:
     VkWin32SurfaceCreateInfoKHR win32_create_info = {};
-#if 0
-#endif
     m_errorMonitor->SetDesiredFailureMsg(
         VK_DEBUG_REPORT_ERROR_BIT_EXT,
         "extension was not enabled for this");
@@ -997,8 +989,6 @@ VkSurfaceKHR surface = VK_NULL_HANDLE;
 
     // Create a surface:
     VkXcbSurfaceCreateInfoKHR xcb_create_info = {};
-#if 0
-#endif
     m_errorMonitor->SetDesiredFailureMsg(
         VK_DEBUG_REPORT_ERROR_BIT_EXT,
         "extension was not enabled for this");
@@ -1027,8 +1017,6 @@ VkSurfaceKHR surface = VK_NULL_HANDLE;
 
     // Create a surface:
     VkXlibSurfaceCreateInfoKHR xlib_create_info = {};
-#if 0
-#endif
     m_errorMonitor->SetDesiredFailureMsg(
         VK_DEBUG_REPORT_ERROR_BIT_EXT,
         "extension was not enabled for this");
@@ -1117,24 +1105,6 @@ VkSurfaceKHR surface = VK_NULL_HANDLE;
         "extension was not enabled for this");
     swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     swapchain_create_info.pNext = NULL;
-#if 0
-    swapchain_create_info.flags = 0;
-    swapchain_create_info.surface = 0;
-    swapchain_create_info.minImageCount = 0;
-    swapchain_create_info.imageFormat = 0;
-    swapchain_create_info.imageColorSpace = 0;
-    swapchain_create_info.imageExtent.width = 0;
-    swapchain_create_info.imageExtent.height = 0;
-    swapchain_create_info.imageArrayLayers = 0;
-    swapchain_create_info.imageUsage = 0;
-    swapchain_create_info.imageSharingMode = 0;
-    swapchain_create_info.queueFamilyIndexCount = 0;
-    swapchain_create_info.preTransform = 0;
-    swapchain_create_info.compositeAlpha = 0;
-    swapchain_create_info.presentMode = 0;
-    swapchain_create_info.clipped = 0;
-    swapchain_create_info.oldSwapchain = NULL;
-#endif
     err = vkCreateSwapchainKHR(m_device->device(), &swapchain_create_info,
                                NULL, &swapchain);
     pass = (err != VK_SUCCESS);
@@ -1599,23 +1569,6 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
     swapchain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 // TODO: CONTINUE TESTING VALIDATION OF vkCreateSwapchainKHR() ...
-
-
-#if 0
-    swapchain_create_info.surface = 0;
-    swapchain_create_info.minImageCount = 0;
-    swapchain_create_info.imageFormat = 0;
-    swapchain_create_info.imageColorSpace = 0;
-    swapchain_create_info.imageExtent.width = 0;
-    swapchain_create_info.imageExtent.height = 0;
-    swapchain_create_info.imageArrayLayers = 0;
-    swapchain_create_info.imageUsage = 0;
-    swapchain_create_info.preTransform = 0;
-    swapchain_create_info.compositeAlpha = 0;
-    swapchain_create_info.presentMode = 0;
-    swapchain_create_info.clipped = 0;
-    swapchain_create_info.oldSwapchain = NULL;
-#endif
 
 
 
