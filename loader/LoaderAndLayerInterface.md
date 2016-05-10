@@ -1203,7 +1203,7 @@ The layer libraries and the manifest files must be kept in sync.
 The following table associates the desktop JSON nodes with the Android layer library queries. It also indicates requirements.
 
 | Property | JSON node | Android library query | Notes |
-|----------|
+|----------|-----------|-----------------------|-------|
 | layers in library | layer | vkEnumerate*LayerProperties | one node required for each layer in the library |
 |layer name | name | vkEnumerate*LayerProperties | one node is required |
 | layer type | type | vkEnumerate*LayerProperties | one node is required |
@@ -1213,8 +1213,7 @@ The following table associates the desktop JSON nodes with the Android layer lib
 | layer description | description | vkEnumerate*LayerProperties | one node is required |
 | chaining functions | functions | vkGet*ProcAddr | see Note 1 |
 | instance extensions | instance_extensions | vkEnumerateInstanceExtensionProperties | see Note 2 |
-| device extensions | device_extensions | vkEnumerateDeviceExtensionProperties |
- see Note 3 |
+| device extensions | device_extensions | vkEnumerateDeviceExtensionProperties | see Note 3 |
 
 Note 1: The "functions" node is required if the layer is using alternative
 names for vkGetInstanceProcAddr or vkGetDeviceProcAddr. vkGetInstanceProcAddr is
