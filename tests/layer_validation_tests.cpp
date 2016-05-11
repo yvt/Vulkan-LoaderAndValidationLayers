@@ -1132,21 +1132,10 @@ VkSurfaceKHR surface = VK_NULL_HANDLE;
     m_errorMonitor->VerifyFound();
 
     // Try to present an image:
-#if 0   // NOTE: Currently can't test this because a real swapchain is needed
-        // (as opposed to the fake one we created) in order for the layer to
-        // lookup the VkDevice used to enable the extension:
-    m_errorMonitor->SetDesiredFailureMsg(
-        VK_DEBUG_REPORT_ERROR_BIT_EXT,
-        "extension was not enabled for this");
-    present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    present_info.pNext = NULL;
-#if 0
-#endif
-    err = vkQueuePresentKHR(m_device->m_queue, &present_info);
-    pass = (err != VK_SUCCESS);
-    ASSERT_TRUE(pass);
-    m_errorMonitor->VerifyFound();
-#endif
+    //
+    // NOTE: Currently can't test this because a real swapchain is needed (as
+    // opposed to the fake one we created) in order for the layer to lookup the
+    // VkDevice used to enable the extension:
 
     // Destroy the swapchain:
     m_errorMonitor->SetDesiredFailureMsg(
@@ -1194,21 +1183,6 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
     pass = (err != VK_SUCCESS);
     ASSERT_TRUE(pass);
     m_errorMonitor->VerifyFound();
-
-#if 0   // NOTE: The following message doesn't get logged, because it's an
-        // INFORMATION message:
-    // Next, try to create a surface with the a non-NULL
-    // VkXcbSurfaceCreateInfoKHR::pNext:
-    xcb_create_info.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
-    xcb_create_info.pNext = (void *) 0xffffffff;
-    m_errorMonitor->SetDesiredFailureMsg(
-        VK_DEBUG_REPORT_INFORMATION_BIT_EXT,
-        "called with non-NULL value for");
-    err = vkCreateXcbSurfaceKHR(instance(), &xcb_create_info, NULL, &surface);
-    pass = (err == VK_SUCCESS);
-    ASSERT_TRUE(pass);
-    m_errorMonitor->VerifyFound();
-#endif
 
 
     // Create a native window, and then correctly create a surface:
@@ -1285,16 +1259,15 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
 
     // 1st, do so without having queried the queue families:
     VkBool32 supported = false;
-#if 0 // The following doesn't get the error
+    // TODO: Get the following error to come out:
     m_errorMonitor->SetDesiredFailureMsg(
         VK_DEBUG_REPORT_ERROR_BIT_EXT,
         "called before calling the vkGetPhysicalDeviceQueueFamilyProperties "
         "function");
     err = vkGetPhysicalDeviceSurfaceSupportKHR(gpu(), 0, surface, &supported);
     pass = (err != VK_SUCCESS);
-    ASSERT_TRUE(pass);
-    m_errorMonitor->VerifyFound();
-#endif
+//    ASSERT_TRUE(pass);
+//    m_errorMonitor->VerifyFound();
 
     // Next, query a queue family index that's too large:
     m_errorMonitor->SetDesiredFailureMsg(
@@ -1491,22 +1464,6 @@ TEST_F(VkWsiEnabledLayerTest, TestEnabledWsi) {
     pass = (err != VK_SUCCESS);
     ASSERT_TRUE(pass);
     m_errorMonitor->VerifyFound();
-
-#if 0   // NOTE: The following message doesn't get logged, because it's an
-        // INFORMATION message:
-    // Next, call with a non-NULL swapchain_create_info, that has an invalid
-    // pNext:
-    swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    swapchain_create_info.pNext = (void *) 0xffffffff;
-    m_errorMonitor->SetDesiredFailureMsg(
-        VK_DEBUG_REPORT_INFORMATION_BIT_EXT,
-        "called with non-NULL value for");
-    err = vkCreateSwapchainKHR(m_device->device(), &swapchain_create_info,
-                               NULL, &swapchain);
-    pass = (err != VK_SUCCESS);
-    ASSERT_TRUE(pass);
-    m_errorMonitor->VerifyFound();
-#endif
 
     // Next, call with a NULL swapchain pointer:
     swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
