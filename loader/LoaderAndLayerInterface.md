@@ -1020,11 +1020,29 @@ is itself.  In other cases, it should normally chain to other layers.
 extension names.  It may assume the layer names and extension names have been
 validated.
 
-`vkGetInstanceProcAddr` can intercept a command by returning the function
-pointer of the layer's associated intercept function, otherwise it should return the value obtained through chaining or NULL.
+`vkGetInstanceProcAddr` intercepts a Vulkan command by returning a local entry point,
+otherwise it returns the value obtained by calling down the instance chain.
+   Detailed specification of this function,
+   - when `pName` is `vkEnumerateInstanceLayerProperties`,
+     `vkEnumerateInstanceExtensionProperties`, or
+     `vkEnumerateDeviceLayerProperties` (but _not_
+     `vkEnumerateDeviceExtensionProperties`), it returns a function pointer to
+     the corresponding introspection function defined by this interface.
+   - when `pName` is `vkGetInstanceProcAddr`, it returns a function pointer
+     to itself.
+   - when `pName` is `vkCreateInstance`, it returns a function pointer to the
+     layer's vkCreateInstance, which is required for instance chaining.
+   - when `pName` is `vkCreateDevice`, it returns a function pointer to the
+     layer's vkCreateDevice, which is only required for any device chaining.
 
-`vkGetDeviceProcAddr` can intercept a command by returning the function pointer
-of the layer's associated intercept function, otherwise it should return the value obtained through chaining or NULL.
+   For compatibility with older layer libraries,
+   - when `pName` is `vkCreateDevice`, it ignores `instance`.
+
+`vkGetDeviceProcAddr` intercepts a Vulkan command by returning a local entry point,
+otherwise it returns the value obtained by calling down the device chain.
+
+Vulkan commands that are defined by an extension that is disabled, must not be intercepted in either
+`vkGetInstanceProcAddr` or `vkGetDeviceProcAddr`.
 
 [\*]: The intention is for layers to have a well-defined baseline behavior.
 Some of the conventions or rules, for example, may be considered abuses of the
@@ -1064,42 +1082,12 @@ The introspection functions are not used by the desktop loader.
 
 It must also define and export these functions one for each layer in the library:
 
- - `<layerName>GetInstanceProcAddr(instance, pName)` either returns NULL, a local entry point or the value obtained
-    by calling down the instance chain (the next layer/ICD's GetInstanceProcAddr).
-
-   Detailed specification of this function,
-   - when `pName` is `vkEnumerateInstanceLayerProperties`,
-     `vkEnumerateInstanceExtensionProperties`, or
-     `vkEnumerateDeviceLayerProperties` (but _not_
-     `vkEnumerateDeviceExtensionProperties`), it returns a function pointer to
-     the corresponding introspection function defined by this interface.
-   - when `pName` is `vkGetInstanceProcAddr`, it returns a function pointer
-     to itself.
-   - when `pName` is `vkCreateInstance`, it returns a function pointer to the
-     layer's vkCreateInstance, which is required for instance chaining.
-   - when `pName` is `vkCreateDevice`, it returns a function pointer to the
-     layer's vkCreateDevice, which is only required for any device chaining.
-   - when `pName` is any Vulkan command including any enabled Vulkan extension command that the layer intercepts,
-     it returns a function pointer to the intercept routine.
-   - when `pName` is any disabled Vulkan extension command that the layer intercepts, it returns NULL.
-   - when `pName` is any Vulkan command that the layer does NOT intercept,
-     it returns the value from calling the next entity's GetInstanceProcAddr.
-
-   For compatibility with older layer libraries,
-   - when `pName` is `vkCreateDevice`, it ignores `instance`.
+ - `<layerName>GetInstanceProcAddr(instance, pName)` behaves identically to a <layerName>'s vkGetInstanceProcAddr except it is exported.
 
    When a layer library contains only one layer, this function may
    alternatively be named `vkGetInstanceProcAddr`.
 
- - `<layerName>GetDeviceProcAddr` either returns NULL, a local entry point or the value obtained
-    by calling down the device chain (the next layer/ICD's GetDeviceProcAddr).
-
-   Detailed specification of this function,
-   - when `pName` is a device level Vulkan command including any enabled Vulkan extension command that the layer intercepts,
-     it returns a function pointer to the intercept routine.
-   - when `pName` is any disabled Vulkan extension command that the layer intercepts, it returns NULL.
-   - when `pName` is an device level Vulkan command that the layer does NOT intercept,
-     it returns the value from calling the next entity's GetDeviceProcAddr.
+ - `<layerName>GetDeviceProcAddr`  behaves identically to a <layerName>'s vkGetDeviceProcAddr except it is exported.
 
    When a layer library contains only one layer, this function may
    alternatively be named `vkGetDeviceProcAddr`.
@@ -1143,7 +1131,7 @@ of the "file_format_version" and includes the semantics of the nodes in the JSON
 For interface version 0 the file format version must be "1.0.0"
 
 Note 1: Prior to deprecation, the "type" node was used to indicate which layer chain(s)
-to activate the layer upon: instnace, device, or both.
+to activate the layer upon: instance, device, or both.
 Distinct instance and device layers are deprecated; there are now just layers.
 Allowable values for type (both before and after deprecation) are "INSTANCE", "GLOBAL" and, "DEVICE."
 "DEVICE" layers are skipped over by the loader as if they were not found.
