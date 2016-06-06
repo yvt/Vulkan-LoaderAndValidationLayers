@@ -1022,18 +1022,10 @@ validated.
 
 `vkGetInstanceProcAddr` intercepts a Vulkan command by returning a local entry point,
 otherwise it returns the value obtained by calling down the instance chain.
-   Detailed specification of this function,
-   - when `pName` is `vkEnumerateInstanceLayerProperties`,
-     `vkEnumerateInstanceExtensionProperties`, or
-     `vkEnumerateDeviceLayerProperties` (but _not_
-     `vkEnumerateDeviceExtensionProperties`), it returns a function pointer to
-     the corresponding introspection function defined by this interface.
-   - when `pName` is `vkGetInstanceProcAddr`, it returns a function pointer
-     to itself.
-   - when `pName` is `vkCreateInstance`, it returns a function pointer to the
-     layer's vkCreateInstance, which is required for instance chaining.
-   - when `pName` is `vkCreateDevice`, it returns a function pointer to the
-     layer's vkCreateDevice, which is only required for any device chaining.
+    These commands must be intercepted
+   - vkGetInstanceProcAddr
+   - vkCreateInstance
+   - vkCreateDevice (only required for any device-level chaining)
 
    For compatibility with older layer libraries,
    - when `pName` is `vkCreateDevice`, it ignores `instance`.
@@ -1041,8 +1033,9 @@ otherwise it returns the value obtained by calling down the instance chain.
 `vkGetDeviceProcAddr` intercepts a Vulkan command by returning a local entry point,
 otherwise it returns the value obtained by calling down the device chain.
 
-Vulkan commands that are defined by an extension that is disabled, must not be intercepted in either
-`vkGetInstanceProcAddr` or `vkGetDeviceProcAddr`.
+The specification requires `NULL` to be returned from `vkGetInstanceProcAddr` and
+`vkGetDeviceProcAddr` for disabled commands.  A layer may return `NULL` itself or
+rely on the following layers to do so.
 
 [\*]: The intention is for layers to have a well-defined baseline behavior.
 Some of the conventions or rules, for example, may be considered abuses of the
@@ -1082,12 +1075,12 @@ The introspection functions are not used by the desktop loader.
 
 It must also define and export these functions one for each layer in the library:
 
- - `<layerName>GetInstanceProcAddr(instance, pName)` behaves identically to a <layerName>'s vkGetInstanceProcAddr except it is exported.
+ - `<layerName>GetInstanceProcAddr(instance, pName)` behaves identically to a layer's vkGetInstanceProcAddr except it is exported.
 
    When a layer library contains only one layer, this function may
    alternatively be named `vkGetInstanceProcAddr`.
 
- - `<layerName>GetDeviceProcAddr`  behaves identically to a <layerName>'s vkGetDeviceProcAddr except it is exported.
+ - `<layerName>GetDeviceProcAddr`  behaves identically to a layer's vkGetDeviceProcAddr except it is exported.
 
    When a layer library contains only one layer, this function may
    alternatively be named `vkGetDeviceProcAddr`.
