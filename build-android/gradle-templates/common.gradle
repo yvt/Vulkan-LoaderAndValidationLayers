@@ -1,4 +1,5 @@
 apply plugin: 'com.android.model.native'
+apply plugin: 'com.android.model.application'
 
 // To detect host operating system
 import org.apache.tools.ant.taskdefs.condition.Os
@@ -7,16 +8,33 @@ Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 def ndkDir = properties.getProperty('ndk.dir')
 
+def projectRoot = "../../../../.."  // This is top level of repo
+
 model {
+
+    repositories {
+        libs(PrebuiltLibraries) {
+            spirv-tools {
+                //headers.srcDir '${projectRoot}/external/spirv-tools/include'
+                headers.srcDir '/home/buildbot/Vulkan-LoaderAndValidationLayers/external/spirv-tools/include'
+                binaries.withType(StaticLibraryBinary) {
+                    //staticLibraryFile = file("${projectRoot}/external/shaderc/android_test/obj/local/${targetPlatform.getName()}/libSPIRV-Tools.a")
+                    staticLibraryFile = file("/home/buildbot/Vulkan-LoaderAndValidationLayers/external/shaderc/android_test/obj/local/${targetPlatform.getName()}/libSPIRV-Tools.a")
+                }
+            }
+        }
+    }
+
+
     android {
         compileSdkVersion = 23
-        buildToolsVersion = "23.0.2"
+        buildToolsVersion = "23.0.3"
 
         defaultConfig.with {
             minSdkVersion.apiLevel = 22
             targetSdkVersion.apiLevel = 24
             versionCode = 1
-            versionName = "0.0.1"
+            versionName = "1.0"
         }
     }
 
@@ -41,7 +59,8 @@ model {
                          "-I${file("../../../../include")}".toString(),
                          "-I${file("../../../../loader")}".toString(),
                          "-I${file("../../include")}".toString(),
-                         "-I${file("../../../../external/glslang")}".toString()])
+                         "-I${file("../../../../external/glslang")}".toString(),
+                         "-I${file("../../../../external/spirv-tools/include")}".toString()])
     }
 
     // Turn on hard float support in armeabi-v7a
@@ -56,6 +75,9 @@ model {
     android.sources {
         main {
             jni {
+                dependencies {
+                    library 'spirv-tools' linkage 'static'
+                }
                 source {
                     srcDir "../../layer-src/${project.name}"
                     srcDir '../../common'
