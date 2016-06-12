@@ -40,6 +40,11 @@
 #undef max
 #endif
 
+struct VkJsonLayer {
+  VkLayerProperties properties;
+  std::vector<VkExtensionProperties> extensions;
+};
+
 struct VkJsonDevice {
   VkJsonDevice() {
           memset(&properties, 0, sizeof(VkPhysicalDeviceProperties));
@@ -56,6 +61,8 @@ struct VkJsonDevice {
 };
 
 struct VkJsonInstance {
+  std::vector<VkJsonLayer> layers;
+  std::vector<VkExtensionProperties> extensions;
   std::vector<VkJsonDevice> devices;
 };
 
