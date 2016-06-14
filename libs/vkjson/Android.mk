@@ -26,7 +26,7 @@ LOCAL_C_INCLUDES := \
 
 LOCAL_SRC_FILES := \
 	vkjson.cc \
-	vkjson_device.cc \
+	vkjson_instance.cc \
 	../../loader/cJSON.c
 
 LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
