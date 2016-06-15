@@ -951,8 +951,6 @@ GetPhysicalDeviceDisplayPropertiesKHR(VkPhysicalDevice physicalDevice, uint32_t 
     return VK_ERROR_VALIDATION_FAILED_EXT;
 }
 
-static uint32_t gDisplayPlanePropertyCount = 0;
-static bool gDisplayPlanePropertyCountInit = false;
 VKAPI_ATTR VkResult VKAPI_CALL 
 GetPhysicalDeviceDisplayPlanePropertiesKHR(VkPhysicalDevice physicalDevice, uint32_t *pPropertyCount, VkDisplayPlanePropertiesKHR *pProperties) {
     VkResult result = VK_SUCCESS;
@@ -1016,7 +1014,7 @@ GetDisplayPlaneSupportedDisplaysKHR(VkPhysicalDevice physicalDevice, uint32_t pl
         skipCall |= LOG_ERROR_NULL_POINTER(VK_DEBUG_REPORT_OBJECT_TYPE_INSTANCE_EXT, pPhysicalDevice->pInstance, "pDisplayCount");
     }
 
-    if (!gDisplayPlanePropertyCountInit)
+    if (!pPhysicalDevice->gotDisplayPlanePropertyCount)
     {
         LOG_WARNING(VK_DEBUG_REPORT_OBJECT_TYPE_INSTANCE_EXT, pPhysicalDevice->pInstance, "planeIndex",
                 SWAPCHAIN_GET_SUPPORTED_DISPLAYS_WITHOUT_QUERY,
@@ -1024,14 +1022,14 @@ GetDisplayPlaneSupportedDisplaysKHR(VkPhysicalDevice physicalDevice, uint32_t pl
                 __FUNCTION__);
     }
 
-    if (gDisplayPlanePropertyCountInit && planeIndex >= gDisplayPlanePropertyCount)
+    if (pPhysicalDevice->gotDisplayPlanePropertyCount && planeIndex >= pPhysicalDevice->gotDisplayPlanePropertyCount)
     {
         skipCall |= LOG_ERROR(VK_DEBUG_REPORT_OBJECT_TYPE_INSTANCE_EXT, pPhysicalDevice->pInstance, "planeIndex",
                 SWAPCHAIN_PLANE_INDEX_TOO_LARGE,
                 "%s(): %s must be in the range [0, %d] that was returned by vkGetPhysicalDeviceDisplayPlanePropertiesKHR. Do you have the plane index hardcoded?",
                 __FUNCTION__,
                 "planeIndex",
-                gDisplayPlanePropertyCount - 1);
+                pPhysicalDevice->displayPlanePropertyCount - 1);
     }
     lock.unlock();
 
@@ -1125,7 +1123,7 @@ GetDisplayPlaneCapabilitiesKHR(VkPhysicalDevice physicalDevice, VkDisplayModeKHR
                               VK_KHR_DISPLAY_EXTENSION_NAME);
     }
 
-    if (!gDisplayPlanePropertyCountInit)
+    if (!pPhysicalDevice->gotDisplayPlanePropertyCount)
     {
         LOG_WARNING(VK_DEBUG_REPORT_OBJECT_TYPE_INSTANCE_EXT, pPhysicalDevice->pInstance, "planeIndex",
                 SWAPCHAIN_GET_SUPPORTED_DISPLAYS_WITHOUT_QUERY,
@@ -1133,14 +1131,14 @@ GetDisplayPlaneCapabilitiesKHR(VkPhysicalDevice physicalDevice, VkDisplayModeKHR
                 __FUNCTION__);
     }
 
-    if (gDisplayPlanePropertyCountInit && planeIndex >= gDisplayPlanePropertyCount)
+    if (pPhysicalDevice->gotDisplayPlanePropertyCount && planeIndex >= pPhysicalDevice->displayPlanePropertyCount)
     {
         skipCall |= LOG_ERROR(VK_DEBUG_REPORT_OBJECT_TYPE_INSTANCE_EXT, pPhysicalDevice->pInstance, "planeIndex",
                 SWAPCHAIN_PLANE_INDEX_TOO_LARGE,
                 "%s(): %s must be in the range [0, %d] that was returned by vkGetPhysicalDeviceDisplayPlanePropertiesKHR. Do you have the plane index hardcoded?",
                 __FUNCTION__,
                 "planeIndex",
-                gDisplayPlanePropertyCount - 1);
+                pPhysicalDevice->displayPlanePropertyCount - 1);
     }
 
     if (!pCapabilities) {
