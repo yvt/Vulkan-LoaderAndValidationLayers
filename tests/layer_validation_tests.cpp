@@ -10776,7 +10776,11 @@ TEST_F(VkLayerTest, CreatePipelineRelaxedTypeMatch)
     descriptorSet.AppendDummy();
     descriptorSet.CreateVKDescriptorSet(m_commandBuffer);
 
-    pipe.CreateVKPipeline(descriptorSet.GetPipelineLayout(), renderPass());
+    VkResult err = VK_SUCCESS;
+    err =
+        pipe.CreateVKPipeline(descriptorSet.GetPipelineLayout(), renderPass());
+    ASSERT_VK_SUCCESS(err);
+
 
     m_errorMonitor->VerifyNotFound();
 }
