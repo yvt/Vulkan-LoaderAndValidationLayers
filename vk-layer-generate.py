@@ -1501,6 +1501,7 @@ class UniqueObjectsSubcommand(Subcommand):
                                              'DestroyDevice',
                                              'CreateComputePipelines',
                                              'CreateGraphicsPipelines',
+                                             'GetPhysicalDeviceDisplayPropertiesKHR',
                                              'GetDisplayPlaneSupportedDisplaysKHR',
                                              'GetDisplayModePropertiesKHR'
                                              ]
