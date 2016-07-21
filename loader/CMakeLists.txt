@@ -21,6 +21,7 @@ set(NORMAL_LOADER_SRCS
     trampoline.c
     wsi.c
     wsi.h
+    phys_dev_ext.c
     extensions.c
     extensions.h
     debug_report.c

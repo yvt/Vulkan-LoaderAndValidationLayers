@@ -43,7 +43,7 @@ static const VkExtensionProperties debug_report_extension_info = {
 
 void debug_report_add_instance_extensions(
     const struct loader_instance *inst,
-    struct loader_extension_list *ext_list) {
+    struct loader_extension_entry_list *ext_list) {
     loader_add_to_ext_list(inst, ext_list, 1, &debug_report_extension_info);
 }
 

@@ -118,9 +118,9 @@ LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL
 vkEnumerateInstanceExtensionProperties(const char *pLayerName,
                                        uint32_t *pPropertyCount,
                                        VkExtensionProperties *pProperties) {
-    struct loader_extension_list *global_ext_list = NULL;
+    struct loader_extension_entry_list *global_ext_list = NULL;
     struct loader_layer_list instance_layers;
-    struct loader_extension_list local_ext_list;
+    struct loader_extension_entry_list local_ext_list;
     struct loader_icd_libs icd_libs;
     uint32_t copy_size;
     VkResult res = VK_SUCCESS;
@@ -152,10 +152,12 @@ vkEnumerateInstanceExtensionProperties(const char *pLayerName,
                                                 &instance_layers, &local_list);
             }
             for (uint32_t i = 0; i < local_list.count; i++) {
-                struct loader_extension_list *ext_list =
+                struct loader_extension_entry_list *ext_list =
                     &local_list.list[i].instance_extension_list;
-                loader_add_to_ext_list(NULL, &local_ext_list, ext_list->count,
-                                       ext_list->list);
+                for (uint32_t j = 0; j < ext_list->count; j++) {
+                    loader_add_to_ext_list(NULL, &local_ext_list, 1,
+                                           &ext_list->list[j].props);
+                }
             }
             loader_destroy_layer_list(NULL, NULL, &local_list);
             global_ext_list = &local_ext_list;
@@ -188,10 +190,12 @@ vkEnumerateInstanceExtensionProperties(const char *pLayerName,
         // Append implicit layers.
         loader_implicit_layer_scan(NULL, &instance_layers);
         for (uint32_t i = 0; i < instance_layers.count; i++) {
-            struct loader_extension_list *ext_list =
+            struct loader_extension_entry_list *ext_list =
                 &instance_layers.list[i].instance_extension_list;
-            loader_add_to_ext_list(NULL, &local_ext_list, ext_list->count,
-                                   ext_list->list);
+            for (uint32_t j = 0; j < ext_list->count; j++) {
+                loader_add_to_ext_list(NULL, &local_ext_list, 1,
+                                       &ext_list->list[j].props);
+            }
         }
 
         global_ext_list = &local_ext_list;
@@ -574,6 +578,7 @@ vkEnumeratePhysicalDevices(VkInstance instance, uint32_t *pPhysicalDeviceCount,
         // copy wrapped object into Application provided array
         pPhysicalDevices[i] = (VkPhysicalDevice)&inst->phys_devs[i];
     }
+
     loader_platform_thread_unlock_mutex(&loader_lock);
     return res;
 }
@@ -662,7 +667,7 @@ LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkCreateDevice(
     inst = (struct loader_instance *)phys_dev->this_instance;
 
     /* Get the physical device (ICD) extensions  */
-    struct loader_extension_list icd_exts;
+    struct loader_extension_entry_list icd_exts;
     icd_exts.list = NULL;
     res =
         loader_init_generic_list(inst, (struct loader_generic_list *)&icd_exts,
@@ -788,8 +793,8 @@ vkEnumerateDeviceExtensionProperties(VkPhysicalDevice physicalDevice,
         uint32_t count;
         uint32_t copy_size;
         const struct loader_instance *inst = phys_dev->this_instance;
-        struct loader_device_extension_list *dev_ext_list = NULL;
-        struct loader_device_extension_list local_ext_list;
+        struct loader_extension_entry_list *dev_ext_list = NULL;
+        struct loader_extension_entry_list local_ext_list;
         memset(&local_ext_list, 0, sizeof(local_ext_list));
         if (vk_string_validate(MaxLoaderStringLength, pLayerName) ==
             VK_STRING_ERROR_NONE) {
@@ -805,10 +810,10 @@ vkEnumerateDeviceExtensionProperties(VkPhysicalDevice physicalDevice,
                         &local_list);
                 }
                 for (uint32_t i = 0; i < local_list.count; i++) {
-                    struct loader_device_extension_list *ext_list =
+                    struct loader_extension_entry_list *ext_list =
                         &local_list.list[i].device_extension_list;
                     for (uint32_t j = 0; j < ext_list->count; j++) {
-                        loader_add_to_dev_ext_list(NULL, &local_ext_list,
+                        loader_add_entrypoints_to_ext_list(NULL, &local_ext_list,
                                                    &ext_list->list[j].props, 0,
                                                    NULL);
                     }

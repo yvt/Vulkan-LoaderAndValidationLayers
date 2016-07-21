@@ -30,6 +30,7 @@
  */
 #define CURRENT_LOADER_ICD_INTERFACE_VERSION 3
 #define MIN_SUPPORTED_LOADER_ICD_INTERFACE_VERSION 0
+#define INST_EXTENSION_ICD_MIN_VERSION 3
 typedef VkResult (VKAPI_PTR *PFN_vkNegotiateLoaderICDInterfaceVersion)(uint32_t *pVersion);
 /*
  * The ICD must reserve space for a pointer for the loader's dispatch

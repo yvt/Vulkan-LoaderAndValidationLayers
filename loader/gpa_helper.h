@@ -297,17 +297,24 @@ static inline void *trampolineGetProcAddr(struct loader_instance *inst,
     if (!strcmp(funcName, "vkCmdExecuteCommands"))
         return (PFN_vkVoidFunction)vkCmdExecuteCommands;
 
-    // Instance extensions
+    // Debug report extensions
     void *addr;
     if (debug_report_instance_gpa(inst, funcName, &addr))
         return addr;
 
+    // WSI extensions`
     if (wsi_swapchain_instance_gpa(inst, funcName, &addr))
         return addr;
 
+    // Other instance extensions known and handled by the loader
     if (extension_instance_gpa(inst, funcName, &addr))
         return addr;
 
+    // Unhandled instance extensions
+    if (loader_phys_dev_ext_gpa(inst, funcName, &addr))
+        return addr;
+
+    // Device extensions
     addr = loader_dev_ext_gpa(inst, funcName);
     return addr;
 }

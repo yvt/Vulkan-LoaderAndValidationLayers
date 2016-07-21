@@ -16,6 +16,7 @@
  * limitations under the License.
  *
  * Author: Jon Ashburn <jon@lunarg.com>
+ * Author: Mark Young <marky@lunarg.com>
  */
 
 #include "vk_loader_platform.h"

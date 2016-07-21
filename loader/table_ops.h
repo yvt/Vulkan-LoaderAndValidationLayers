@@ -35,7 +35,7 @@ static VkResult vkDevExtError(VkDevice dev) {
 
     if (icd)
         loader_log(icd->this_instance, VK_DEBUG_REPORT_ERROR_BIT_EXT, 0,
-                   "Bad destination in loader trampoline dispatch,"
+                   "Bad destination in loader trampoline device dispatch,"
                    "Are layers and extensions that you are calling enabled?");
     return VK_ERROR_EXTENSION_NOT_PRESENT;
 }
@@ -44,8 +44,10 @@ static inline void
 loader_init_device_dispatch_table(struct loader_dev_dispatch_table *dev_table,
                                   PFN_vkGetDeviceProcAddr gpa, VkDevice dev) {
     VkLayerDispatchTable *table = &dev_table->core_dispatch;
-    for (uint32_t i = 0; i < MAX_NUM_DEV_EXTS; i++)
+    // Initialize dispatch table for device extensions
+    for (uint32_t i = 0; i < MAX_NUM_DEV_EXTS; i++) {
         dev_table->ext_dispatch.dev_ext[i] = (PFN_vkDevExt)vkDevExtError;
+    }
 
     table->GetDeviceProcAddr =
         (PFN_vkGetDeviceProcAddr)gpa(dev, "vkGetDeviceProcAddr");
