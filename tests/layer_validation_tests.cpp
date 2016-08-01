@@ -42,7 +42,12 @@
 
 #define PARAMETER_VALIDATION_TESTS 1
 #define MEM_TRACKER_TESTS 1
+#if defined(ANDROID) && defined(WIN32)
+// Disable Object Tracker tests until the Windows NDK build is fixed
+#define OBJ_TRACKER_TESTS 0
+#else
 #define OBJ_TRACKER_TESTS 1
+#endif
 #define DRAW_STATE_TESTS 1
 #define THREADING_TESTS 1
 #define SHADER_CHECKER_TESTS 1
