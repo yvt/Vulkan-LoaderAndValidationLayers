@@ -318,7 +318,7 @@ def main():
   ]
 
   print('Building Vulkan validation layers for ABIs:' +
-    ' {}'.format(', '.join(abis)))
+    ' {}'.format(', '.join(abis)) + "...")
   print(' '.join(build_cmd))
 
   subprocess.check_call(build_cmd)
