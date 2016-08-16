@@ -169,6 +169,8 @@ def main():
   print('obj_out: %s' % obj_out)
   print('lib_out: %s' % lib_out)
 
+  return
+
   print('Constructing shaderc build tree...')
   shaderc_root_dir = os.path.join(THIS_DIR, '../../shaderc')
 
