@@ -169,15 +169,13 @@ def main():
   print('obj_out: %s' % obj_out)
   print('lib_out: %s' % lib_out)
 
-  return
-
   print('Constructing shaderc build tree...')
   shaderc_root_dir = os.path.join(THIS_DIR, '../../shaderc')
 
   copies = [
       {
           'source_dir': os.path.join(shaderc_root_dir, 'shaderc'),
-          'dest_dir': 'shaderc',
+          'dest_dir': 'third_party/shaderc',
           'files': [
               'Android.mk', 'libshaderc/Android.mk',
               'libshaderc_util/Android.mk',
@@ -193,7 +191,7 @@ def main():
       },
       {
           'source_dir': os.path.join(shaderc_root_dir, 'spirv-tools'),
-          'dest_dir': 'shaderc/third_party/spirv-tools',
+          'dest_dir': 'third_party/shaderc/third_party/spirv-tools',
           'files': [
               'utils/generate_grammar_tables.py',
               'utils/update_build_version.py',
@@ -204,7 +202,7 @@ def main():
       {
           'source_dir': os.path.join(shaderc_root_dir, 'spirv-headers'),
           'dest_dir':
-              'shaderc/third_party/spirv-tools/external/spirv-headers',
+              'third_party/shaderc/third_party/spirv-tools/external/spirv-headers',
           'dirs': ['include',],
           'files': [
               'include/spirv/1.0/spirv.py',
@@ -213,7 +211,7 @@ def main():
       },
       {
           'source_dir': os.path.join(shaderc_root_dir, 'glslang'),
-          'dest_dir': 'shaderc/third_party/glslang',
+          'dest_dir': 'third_party/shaderc/third_party/glslang',
           'files': ['glslang/OSDependent/osinclude.h'],
           'dirs': [
               'SPIRV',
@@ -253,36 +251,6 @@ def main():
           else:
               print(source_dir, ':', dest_dir, ":", f, "SKIPPED")
 
-  print('Building shader toolchain...')
-  build_cmd = [
-    'bash', ndk_build, '-C', shaderc_path,
-    jobs_arg(),
-    'APP_ABI=' + ' '.join(abis),
-    # Use the prebuilt platforms and toolchains.
-    'NDK_PLATFORMS_ROOT=' + platforms_root,
-    'NDK_TOOLCHAINS_ROOT=' + toolchains_root,
-    'GNUSTL_PREFIX=',
-
-    # Tell ndk-build where all of our makefiles are and where outputs
-    # should go. The defaults in ndk-build are only valid if we have a
-    # typical ndk-build layout with a jni/{Android,Application}.mk.
-    'NDK_PROJECT_PATH=null',
-    'NDK_TOOLCHAIN_VERSION=' + compiler,
-    'APP_BUILD_SCRIPT=' + os.path.join(shaderc_path, 'jni', 'Android.mk'),
-    'APP_STL=' + stl,
-    'NDK_APPLICATION_MK=' + os.path.join(shaderc_path, 'jni', 'Application.mk'),
-    'NDK_OUT=' + os.path.join(shaderc_path, 'obj'),
-    'NDK_LIBS_OUT=' + os.path.join(shaderc_path, 'jniLibs'),
-    'THIRD_PARTY_PATH=../third_party',
-
-    # Put armeabi-v7a-hard in its own directory.
-    '_NDK_TESTING_ALL_=yes'
-  ]
-  print(' '.join(build_cmd))
-
-  subprocess.check_call(build_cmd)
-  print('Finished shader toolchain build')
-
   print('Constructing Vulkan validation layer source...')
 
   build_cmd = [
@@ -299,24 +267,14 @@ def main():
     # Use the prebuilt platforms and toolchains.
     'NDK_PLATFORMS_ROOT=' + platforms_root,
     'NDK_TOOLCHAINS_ROOT=' + toolchains_root,
+    'NDK_MODULE_PATH=' + installdir,
     'GNUSTL_PREFIX=',
-
-    # Tell ndk-build where all of our makefiles are and where outputs
-    # should go. The defaults in ndk-build are only valid if we have a
-    # typical ndk-build layout with a jni/{Android,Application}.mk.
-    'NDK_PROJECT_PATH=null',
-    'NDK_TOOLCHAIN_VERSION=' + compiler,
-    'APP_BUILD_SCRIPT=' + os.path.join(build_dir, 'jni', 'Android.mk'),
     'APP_STL=' + stl,
-    'NDK_APPLICATION_MK=' + os.path.join(build_dir, 'jni', 'Application.mk'),
+    'NDK_TOOLCHAIN_VERSION=' + compiler,
+
+    # Tell ndk-build where to put the results
     'NDK_OUT=' + obj_out,
     'NDK_LIBS_OUT=' + lib_out,
-    'THIRD_PARTY_PATH=',
-    'SHADERC_OBJ_PATH=' + shaderc_path + '/obj',
-    'EXTERNAL_INCLUDE_PATH=' + installdir + '/shaderc',
-
-    # Put armeabi-v7a-hard in its own directory.
-    '_NDK_TESTING_ALL_=yes'
   ]
 
   print('Building Vulkan validation layers for ABIs:' +
@@ -337,7 +295,8 @@ def main():
   print('Finished Packaging Vulkan validation layers')
 
   # clean install directory
-  shutil.rmtree(installdir)
+  #shutil.rmtree(installdir)
+  sleep 600
 
 if __name__ == '__main__':
   main()
