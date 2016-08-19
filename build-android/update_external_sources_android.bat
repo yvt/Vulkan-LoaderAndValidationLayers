@@ -21,12 +21,13 @@ REM
 setlocal EnableDelayedExpansion
 set errorCode=0
 set ANDROID_BUILD_DIR=%~dp0
-set BUILD_DIR=%ANDROID_BUILD_DIR%..
-set BASE_DIR=%BUILD_DIR%\external
-set GLSLANG_DIR=%BASE_DIR%\glslang
-set SPIRV_TOOLS_DIR=%BASE_DIR%\spirv-tools
-set SPIRV_HEADERS_DIR=%BASE_DIR%\spirv-tools\external\spirv-headers
+set BUILD_DIR=%ANDROID_BUILD_DIR%\..
+set BASE_DIR=%BUILD_DIR%\third_party
 set SHADERC_DIR=%BASE_DIR%\shaderc
+set SHADERC_THIRD_PARTY=%BASE_DIR%\shaderc\third_party
+set GLSLANG_DIR=%SHADERC_THIRD_PARTH%\glslang
+set SPIRV_TOOLS_DIR=%SHADERC_THIRD_PARTH%\spirv-tools
+set SPIRV_HEADERS_DIR=%SHADERC_THIRD_PARTH%\spirv-tools\external\spirv-headers
 
 for %%X in (where.exe) do (set FOUND=%%~$PATH:X)
 if not defined FOUND (
@@ -111,6 +112,20 @@ set sync-spirv-headers=1
 set sync-shaderc=1
 set build-shaderc=1
 
+REM Must be first as we create directories used by glslang and spriv-tools
+
+if %sync-shaderc% equ 1 (
+   if exist %SHADERC_DIR% (
+      rd /S /Q %SHADERC_DIR%
+   )
+   if not exist %SHADERC_DIR% (
+      call:create_shaderc
+   )
+   if %errorCode% neq 0 (goto:error)
+   call:update_shaderc
+   if %errorCode% neq 0 (goto:error)
+)
+
 if %sync-glslang% equ 1 (
    if exist %GLSLANG_DIR% (
       rd /S /Q %GLSLANG_DIR%
@@ -146,18 +161,6 @@ if %sync-spirv-headers% equ 1 (
    )
    if %errorCode% neq 0 (goto:error)
    call:update_spirv-headers
-   if %errorCode% neq 0 (goto:error)
-)
-
-if %sync-shaderc% equ 1 (
-   if exist %SHADERC_DIR% (
-      rd /S /Q %SHADERC_DIR%
-   )
-   if not exist %SHADERC_DIR% (
-      call:create_shaderc
-   )
-   if %errorCode% neq 0 (goto:error)
-   call:update_shaderc
    if %errorCode% neq 0 (goto:error)
 )
 

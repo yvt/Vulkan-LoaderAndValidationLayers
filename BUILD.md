@@ -160,21 +160,42 @@ brew install cmake python python3 git
 ```
 ### Build steps for Android
 Use the following to ensure the Android build works.
-#### Linux and OSX
+
+There are two options for building the Android layers. One using the SPIRV tools
+provided as part of the Android NDK or build using upstream sources.
+
+#### Building with NDK SPIRV tools
+##### Linux and OSX
+Follow the setup steps for Linux or OSX above, then from your terminal:
+```
+cd build-android
+./android-generate.sh
+ndk-build -j $(sysctl -n hw.ncpu)
+```
+##### Windows
+Follow the setup steps for Windows above, then from Developer Command Prompt for VS2013:
+```
+cd build-android
+android-generate.bat
+ndk-build
+```
+
+#### Building with upstream sources
+##### Linux and OSX
 Follow the setup steps for Linux or OSX above, then from your terminal:
 ```
 cd build-android
 ./update_external_sources_android.sh
 ./android-generate.sh
-ndk-build -j $(sysctl -n hw.ncpu)
+ndk-build -j $(sysctl -n hw.ncpu) NDK_MODULE_PATH=..
 ```
-#### Windows
+##### Windows
 Follow the setup steps for Windows above, then from Developer Command Prompt for VS2013:
 ```
 cd build-android
 update_external_sources_android.bat
 android-generate.bat
-ndk-build
+ndk-build NDK_MODULE_PATH=..
 ```
 
 ## Ninja Builds - All Platforms
