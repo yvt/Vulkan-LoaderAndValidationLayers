@@ -18,9 +18,10 @@
 import argparse
 import multiprocessing
 import os
+import shutil
 import subprocess
 import sys
-import shutil
+import time
 
 from subprocess import PIPE, STDOUT
 
@@ -296,7 +297,7 @@ def main():
 
   # clean install directory
   #shutil.rmtree(installdir)
-  sleep 600
+  time.sleep(600)
 
 if __name__ == '__main__':
   main()
