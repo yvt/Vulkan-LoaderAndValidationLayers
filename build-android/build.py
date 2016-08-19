@@ -295,9 +295,8 @@ def main():
   subprocess.check_call(build_cmd)
   print('Finished Packaging Vulkan validation layers')
 
-  # clean install directory
-  #shutil.rmtree(installdir)
-  time.sleep(600)
+  return 0
+
 
 if __name__ == '__main__':
   main()
