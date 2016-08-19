@@ -130,13 +130,6 @@ def main():
   # Make paths absolute, and ensure directories exist.
   installdir = os.path.abspath(args.installdir)
 
-  # clean install directory
-  if os.path.exists(installdir):
-    shutil.rmtree(installdir)
-
-  # create install directory
-  os.makedirs(args.installdir)
-
   abis = []
   for arch in arches:
     abis.extend(arch_to_abis(arch))
