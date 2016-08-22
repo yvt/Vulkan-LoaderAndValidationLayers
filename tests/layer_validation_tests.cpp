@@ -408,7 +408,6 @@ void VkLayerTest::VKTriangleTest(const char *vertShaderText,
         data.color[i][3] = tri_data[i].a;
     }
 
-    ASSERT_NO_FATAL_FAILURE(InitState());
     ASSERT_NO_FATAL_FAILURE(InitViewport());
 
     VkConstantBufferObj constantBuffer(m_device, bufSize * 2, sizeof(float),
@@ -12076,6 +12075,7 @@ TEST_F(VkLayerTest, NumBlendAttachMismatch) {
 TEST_F(VkLayerTest, MissingClearAttachment) {
     TEST_DESCRIPTION("Points to a wrong colorAttachment index in a VkClearAttachment "
                      "structure passed to vkCmdClearAttachments");
+    ASSERT_NO_FATAL_FAILURE(InitState());
     m_errorMonitor->SetDesiredFailureMsg(VK_DEBUG_REPORT_ERROR_BIT_EXT,
                                          "vkCmdClearAttachments() attachment index 1 not found in attachment "
                                          "reference array of active subpass 0");
