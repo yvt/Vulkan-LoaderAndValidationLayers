@@ -288,6 +288,13 @@ def main():
   subprocess.check_call(build_cmd)
   print('Finished Packaging Vulkan validation layers')
 
+  for properties in copies:
+      dest_dir = os.path.join(installdir, properties['dest_dir'])
+      for d in properties['dirs']:
+          dst = os.path.join(dest_dir, d)
+          print('Remove: %s' % dst)
+          shutil.rmtree(dst)
+
   return 0
 
 
