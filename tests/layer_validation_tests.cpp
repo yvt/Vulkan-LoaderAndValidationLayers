@@ -13485,6 +13485,113 @@ TEST_F(VkLayerTest, CreatePipelineCheckShaderBadSpecialization) {
     vkDestroyPipelineLayout(m_device->device(), pipeline_layout, nullptr);
 }
 
+TEST_F(VkLayerTest, CreatePipelineCheckShaderDescriptorNotAccessible) {
+    TEST_DESCRIPTION("Challenge core_validation with shader validation issues related to vkCreateGraphicsPipelines.");
+
+    ASSERT_NO_FATAL_FAILURE(InitState());
+    ASSERT_NO_FATAL_FAILURE(InitRenderTarget());
+
+    const char *descriptor_not_accessible_message = "Shader uses descriptor slot 0.0 (used as type ";
+
+    VkDescriptorPoolSize descriptor_pool_type_count = {};
+    descriptor_pool_type_count.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptor_pool_type_count.descriptorCount = 1;
+
+    VkDescriptorPoolCreateInfo descriptor_pool_create_info = {};
+    descriptor_pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    descriptor_pool_create_info.maxSets = 1;
+    descriptor_pool_create_info.poolSizeCount = 1;
+    descriptor_pool_create_info.pPoolSizes = &descriptor_pool_type_count;
+    descriptor_pool_create_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+
+    VkDescriptorPool descriptorset_pool;
+    ASSERT_VK_SUCCESS(vkCreateDescriptorPool(m_device->device(), &descriptor_pool_create_info, nullptr, &descriptorset_pool));
+
+    VkDescriptorSetLayoutBinding descriptorset_layout_binding = {};
+    descriptorset_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorset_layout_binding.descriptorCount = 1;
+    // Intentionally make the uniform buffer inaccessible to the vertex shader to challenge core_validation
+    descriptorset_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo descriptorset_layout_create_info = {};
+    descriptorset_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    descriptorset_layout_create_info.bindingCount = 1;
+    descriptorset_layout_create_info.pBindings = &descriptorset_layout_binding;
+
+    VkDescriptorSetLayout descriptorset_layout;
+    ASSERT_VK_SUCCESS(vkCreateDescriptorSetLayout(m_device->device(), &descriptorset_layout_create_info,
+                                                  nullptr, &descriptorset_layout));
+
+    VkDescriptorSetAllocateInfo descriptorset_allocate_info = {};
+    descriptorset_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    descriptorset_allocate_info.descriptorSetCount = 1;
+    descriptorset_allocate_info.descriptorPool = descriptorset_pool;
+    descriptorset_allocate_info.pSetLayouts = &descriptorset_layout;
+    VkDescriptorSet descriptorset;
+    ASSERT_VK_SUCCESS(vkAllocateDescriptorSets(m_device->device(), &descriptorset_allocate_info, &descriptorset));
+
+    VkBufferTest buffer_test(m_device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+
+    VkDescriptorBufferInfo buffer_info = {};
+    buffer_info.buffer = buffer_test.GetBuffer();
+    buffer_info.offset = 0;
+    buffer_info.range = 1024;
+
+    VkWriteDescriptorSet write_descriptor_set = {};
+    write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_descriptor_set.dstSet = descriptorset;
+    write_descriptor_set.descriptorCount = 1;
+    write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    write_descriptor_set.pBufferInfo = &buffer_info;
+
+    vkUpdateDescriptorSets(m_device->device(), 1, &write_descriptor_set, 0, nullptr);
+
+    char const *vsSource =
+            "#version 450\n"
+            "\n"
+            "layout (std140, set = 0, binding = 0) uniform buf {\n"
+            "    mat4 mvp;\n"
+            "} ubuf;\n"
+            "out gl_PerVertex {\n"
+            "    vec4 gl_Position;\n"
+            "};\n"
+            "void main(){\n"
+            "   gl_Position = ubuf.mvp * vec4(1);\n"
+            "}\n";
+
+    char const *fsSource =
+            "#version 450\n"
+            "\n"
+            "layout(location = 0) out vec4 uFragColor;\n"
+            "void main(){\n"
+            "   uFragColor = vec4(0,1,0,1);\n"
+            "}\n";
+
+    VkShaderObj vs(m_device, vsSource, VK_SHADER_STAGE_VERTEX_BIT, this);
+    VkShaderObj fs(m_device, fsSource, VK_SHADER_STAGE_FRAGMENT_BIT, this);
+
+    VkPipelineLayoutCreateInfo pipeline_layout_create_info = {};
+    pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipeline_layout_create_info.setLayoutCount = 1;
+    pipeline_layout_create_info.pSetLayouts = &descriptorset_layout;
+
+    VkPipelineLayout pipeline_layout;
+    ASSERT_VK_SUCCESS(vkCreatePipelineLayout(m_device->device(), &pipeline_layout_create_info, nullptr, &pipeline_layout));
+
+    VkPipelineObj pipe(m_device);
+    pipe.AddColorAttachment();
+    pipe.AddShader(&vs);
+    pipe.AddShader(&fs);
+
+    m_errorMonitor->SetDesiredFailureMsg(VK_DEBUG_REPORT_ERROR_BIT_EXT, descriptor_not_accessible_message);
+    pipe.CreateVKPipeline(pipeline_layout, renderPass());
+    m_errorMonitor->VerifyFound();
+
+    vkDestroyPipelineLayout(m_device->device(), pipeline_layout, nullptr);
+    vkDestroyDescriptorPool(m_device->device(), descriptorset_pool, nullptr);
+    vkDestroyDescriptorSetLayout(m_device->device(), descriptorset_layout, nullptr);
+}
+
 TEST_F(VkLayerTest, CreatePipelineCheckShaderPushConstantNotAccessible) {
     TEST_DESCRIPTION("Challenge core_validation with shader validation issues related to vkCreateGraphicsPipelines.");
 
