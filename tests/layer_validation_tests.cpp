@@ -13485,6 +13485,64 @@ TEST_F(VkLayerTest, CreatePipelineCheckShaderBadSpecialization) {
     vkDestroyPipelineLayout(m_device->device(), pipeline_layout, nullptr);
 }
 
+TEST_F(VkLayerTest, CreatePipelineCheckShaderPushConstantNotAccessible) {
+    TEST_DESCRIPTION("Challenge core_validation with shader validation issues related to vkCreateGraphicsPipelines.");
+
+    ASSERT_NO_FATAL_FAILURE(InitState());
+    ASSERT_NO_FATAL_FAILURE(InitRenderTarget());
+
+    const char *push_constant_not_accessible_message =
+            "Push constant range covering variable starting at offset 0 not accessible from stage VK_SHADER_STAGE_VERTEX_BIT";
+
+    char const *vsSource =
+            "#version 450\n"
+            "\n"
+            "layout(push_constant, std430) uniform foo { float x; } consts;\n"
+            "out gl_PerVertex {\n"
+            "    vec4 gl_Position;\n"
+            "};\n"
+            "void main(){\n"
+            "   gl_Position = vec4(consts.x);\n"
+            "}\n";
+
+    char const *fsSource =
+            "#version 450\n"
+            "\n"
+            "layout(location = 0) out vec4 uFragColor;\n"
+            "void main(){\n"
+            "   uFragColor = vec4(0,1,0,1);\n"
+            "}\n";
+
+    VkShaderObj vs(m_device, vsSource, VK_SHADER_STAGE_VERTEX_BIT, this);
+    VkShaderObj fs(m_device, fsSource, VK_SHADER_STAGE_FRAGMENT_BIT, this);
+
+    VkPipelineLayoutCreateInfo pipeline_layout_create_info = {};
+    pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+    // Set up a push constant range
+    VkPushConstantRange push_constant_ranges = {};
+    // Set to the wrong stage to challenge core_validation
+    push_constant_ranges.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    push_constant_ranges.size = 4;
+
+    pipeline_layout_create_info.pPushConstantRanges = &push_constant_ranges;
+    pipeline_layout_create_info.pushConstantRangeCount = 1;
+
+    VkPipelineLayout pipeline_layout;
+    ASSERT_VK_SUCCESS(vkCreatePipelineLayout(m_device->device(), &pipeline_layout_create_info, nullptr, &pipeline_layout));
+
+    VkPipelineObj pipe(m_device);
+    pipe.AddColorAttachment();
+    pipe.AddShader(&vs);
+    pipe.AddShader(&fs);
+
+    m_errorMonitor->SetDesiredFailureMsg(VK_DEBUG_REPORT_ERROR_BIT_EXT, push_constant_not_accessible_message);
+    pipe.CreateVKPipeline(pipeline_layout, renderPass());
+    m_errorMonitor->VerifyFound();
+
+    vkDestroyPipelineLayout(m_device->device(), pipeline_layout, nullptr);
+}
+
 TEST_F(VkLayerTest, CreatePipelineFragmentInputNotProvided) {
     TEST_DESCRIPTION("Test that an error is produced for a fragment shader input "
                      "which is not present in the outputs of the previous stage");
