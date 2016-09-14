@@ -40,6 +40,7 @@ enum MEM_TRACK_ERROR {
     MEMTRACK_INVALID_USAGE_FLAG,           // Usage flags specified at image/buffer create conflict w/ use of object
     MEMTRACK_INVALID_MAP,                  // Size flag specified at alloc is too small for mapping range
     MEMTRACK_INVALID_MEM_TYPE,             // Memory Type mismatch
+    MEMTRACK_INVALID_MEM_REGION,           // Memory region for object bound to an allocation is invalid
     MEMTRACK_OBJECT_NOT_BOUND,             // Image or Buffer used without having memory bound to it
 };
 
@@ -60,9 +61,12 @@ enum DRAW_STATE_ERROR {
     DRAWSTATE_INVALID_COMMAND_BUFFER,        // Invalid CommandBuffer referenced
     DRAWSTATE_INVALID_BARRIER,               // Invalid Barrier
     DRAWSTATE_INVALID_BUFFER,                // Invalid Buffer
+    DRAWSTATE_INVALID_IMAGE,                 // Invalid Image
     DRAWSTATE_INVALID_QUERY,                 // Invalid Query
+    DRAWSTATE_INVALID_QUERY_POOL,            // Invalid QueryPool
     DRAWSTATE_INVALID_FENCE,                 // Invalid Fence
     DRAWSTATE_INVALID_EVENT,                 // Invalid Event
+    DRAWSTATE_INVALID_SAMPLER,               // Invalid Sampler
     DRAWSTATE_VTX_INDEX_OUT_OF_BOUNDS,       // binding in vkCmdBindVertexData() too
                                              // large for PSO's
                                              // pVertexBindingDescriptions array
@@ -221,7 +225,10 @@ enum DRAW_STATE_ERROR {
                                              // of queried queue families
     DRAWSTATE_INVALID_QUEUE_FAMILY,          // Command buffer submitted on queue is from
                                              // a different queue family
+    DRAWSTATE_IMAGE_TRANSFER_GRANULARITY,    // Violation of queue family's image transfer
+                                             // granularity
     DRAWSTATE_PUSH_CONSTANTS_ERROR,          // Push constants exceed maxPushConstantSize
+    DRAWSTATE_INVALID_SUBPASS_INDEX,         // Stepping beyond last subpass, or not reaching it
 };
 
 // Shader Checker ERROR codes
@@ -243,6 +250,8 @@ enum SHADER_CHECKER_ERROR {
     SHADER_CHECKER_DESCRIPTOR_NOT_ACCESSIBLE_FROM_STAGE,    // Descriptor used by shader, but not accessible from stage
     SHADER_CHECKER_FEATURE_NOT_ENABLED,                     // Shader uses capability requiring a feature not enabled on device
     SHADER_CHECKER_BAD_CAPABILITY,                          // Shader uses capability not supported by Vulkan (OpenCL features)
+    SHADER_CHECKER_MISSING_INPUT_ATTACHMENT,   // Shader uses an input attachment but not declared in subpass
+    SHADER_CHECKER_INPUT_ATTACHMENT_TYPE_MISMATCH,          // Shader input attachment type does not match subpass format
 };
 
 // Device Limits ERROR codes
