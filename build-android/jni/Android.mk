@@ -135,50 +135,6 @@ LOCAL_CPPFLAGS += -DVK_USE_PLATFORM_ANDROID_KHR -DVK_PROTOTYPES
 LOCAL_LDLIBS    := -llog
 include $(BUILD_SHARED_LIBRARY)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := VkLayerValidationTests
-LOCAL_SRC_FILES += $(SRC_DIR)/tests/layer_validation_tests.cpp \
-                   $(SRC_DIR)/tests/vktestbinding.cpp \
-                   $(SRC_DIR)/tests/vktestframeworkandroid.cpp \
-                   $(SRC_DIR)/tests/vkrenderframework.cpp \
-                   $(SRC_DIR)/common/vulkan_wrapper.cpp
-LOCAL_C_INCLUDES += $(SRC_DIR)/include \
-                    $(SRC_DIR)/layers \
-                    $(SRC_DIR)/libs \
-                    $(SRC_DIR)/common \
-                    $(SRC_DIR)/icd/common
-
-LOCAL_STATIC_LIBRARIES := googletest_main layer_utils
-LOCAL_SHARED_LIBRARIES += shaderc glslang OGLCompiler OSDependent HLSL shaderc_util SPIRV SPIRV-Tools
-LOCAL_CPPFLAGS += --include=$(SRC_DIR)/common/vulkan_wrapper.h
-LOCAL_CPPFLAGS += -Wall -Werror -Wno-unused-function -Wno-unused-const-variable -mxgot
-LOCAL_CPPFLAGS += -DVK_USE_PLATFORM_ANDROID_KHR -DVK_PROTOTYPES
-LOCAL_LDLIBS := -llog
-include $(BUILD_EXECUTABLE)
-
-# Note: The following module is similar in name to the executable, but differs so that loader won't enumerate the resulting .so
-include $(CLEAR_VARS)
-LOCAL_MODULE := VulkanLayerValidationTests
-LOCAL_SRC_FILES += $(SRC_DIR)/tests/layer_validation_tests.cpp \
-                   $(SRC_DIR)/tests/vktestbinding.cpp \
-                   $(SRC_DIR)/tests/vktestframeworkandroid.cpp \
-                   $(SRC_DIR)/tests/vkrenderframework.cpp \
-                   $(SRC_DIR)/common/vulkan_wrapper.cpp
-LOCAL_C_INCLUDES += $(SRC_DIR)/include \
-                    $(SRC_DIR)/layers \
-                    $(SRC_DIR)/libs \
-                    $(SRC_DIR)/common \
-                    $(SRC_DIR)/icd/common
-
-LOCAL_STATIC_LIBRARIES := googletest_main layer_utils
-LOCAL_SHARED_LIBRARIES += shaderc glslang OGLCompiler OSDependent HLSL shaderc_util SPIRV SPIRV-Tools
-LOCAL_CPPFLAGS += -DVALIDATION_APK --include=$(SRC_DIR)/common/vulkan_wrapper.h
-LOCAL_CPPFLAGS += -Wall -Werror -Wno-unused-function -Wno-unused-const-variable -mxgot
-LOCAL_CPPFLAGS += -DVK_USE_PLATFORM_ANDROID_KHR -DVK_PROTOTYPES
-LOCAL_WHOLE_STATIC_LIBRARIES += android_native_app_glue
-LOCAL_LDLIBS := -llog -landroid
-include $(BUILD_SHARED_LIBRARY)
-
 $(call import-module,android/native_app_glue)
 $(call import-module,third_party/googletest)
 $(call import-module,third_party/shaderc)
