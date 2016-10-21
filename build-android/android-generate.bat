@@ -29,32 +29,3 @@ python ../vk-layer-generate.py Android unique_objects ../include/vulkan/vulkan.h
 cd generated/include
 python ../../../genvk.py threading -registry ../../../vk.xml thread_check.h
 python ../../../genvk.py paramchecker -registry ../../../vk.xml parameter_validation.h
-cd ../..
-
-copy /Y ..\layers\vk_layer_config.cpp   generated\common\
-copy /Y ..\layers\vk_layer_extension_utils.cpp  generated\common\
-copy /Y ..\layers\vk_layer_utils.cpp    generated\common\
-copy /Y ..\layers\vk_layer_table.cpp    generated\common\
-copy /Y ..\layers\descriptor_sets.cpp   generated\common\
-
-REM create build-script root directory
-mkdir generated\gradle-build
-cd generated\gradle-build
-mkdir  core_validation image object_tracker parameter_validation swapchain threading unique_objects
-cd ..\..
-mkdir generated\layer-src
-cd generated\layer-src
-mkdir  core_validation image object_tracker parameter_validation swapchain threading unique_objects
-cd ..\..
-xcopy /s gradle-templates\*   generated\gradle-build\
-for %%G in (core_validation image object_tracker parameter_validation swapchain threading) Do (
-    copy ..\layers\%%G.cpp   generated\layer-src\%%G
-    echo apply from: "../common.gradle"  > generated\gradle-build\%%G\build.gradle
-)
-copy generated\include\unique_objects.cpp generated\layer-src\unique_objects
-copy generated\common\descriptor_sets.cpp generated\layer-src\core_validation\descriptor_sets.cpp
-copy generated\include\vk_safe_struct.cpp generated\layer-src\core_validation\vk_safe_struct.cpp
-move generated\include\vk_safe_struct.cpp generated\layer-src\unique_objects\vk_safe_struct.cpp
-echo apply from: "../common.gradle"  > generated\gradle-build\unique_objects\build.gradle
-
-del  /f /q generated\include\unique_objects.cpp

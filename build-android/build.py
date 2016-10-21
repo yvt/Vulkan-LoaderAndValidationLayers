@@ -18,9 +18,10 @@
 import argparse
 import multiprocessing
 import os
+import shutil
 import subprocess
 import sys
-import shutil
+import time
 
 from subprocess import PIPE, STDOUT
 
@@ -175,7 +176,7 @@ def main():
   copies = [
       {
           'source_dir': os.path.join(shaderc_root_dir, 'shaderc'),
-          'dest_dir': 'shaderc',
+          'dest_dir': 'third_party/shaderc',
           'files': [
               'Android.mk', 'libshaderc/Android.mk',
               'libshaderc_util/Android.mk',
@@ -191,7 +192,7 @@ def main():
       },
       {
           'source_dir': os.path.join(shaderc_root_dir, 'spirv-tools'),
-          'dest_dir': 'shaderc/third_party/spirv-tools',
+          'dest_dir': 'third_party/shaderc/third_party/spirv-tools',
           'files': [
               'utils/generate_grammar_tables.py',
               'utils/update_build_version.py',
@@ -202,7 +203,7 @@ def main():
       {
           'source_dir': os.path.join(shaderc_root_dir, 'spirv-headers'),
           'dest_dir':
-              'shaderc/third_party/spirv-tools/external/spirv-headers',
+              'third_party/shaderc/third_party/spirv-tools/external/spirv-headers',
           'dirs': ['include',],
           'files': [
               'include/spirv/1.0/spirv.py',
@@ -211,7 +212,7 @@ def main():
       },
       {
           'source_dir': os.path.join(shaderc_root_dir, 'glslang'),
-          'dest_dir': 'shaderc/third_party/glslang',
+          'dest_dir': 'third_party/shaderc/third_party/glslang',
           'files': ['glslang/OSDependent/osinclude.h'],
           'dirs': [
               'SPIRV',
@@ -225,6 +226,7 @@ def main():
           ],
       },
   ]
+  print(' '.join(build_cmd))
 
   default_ignore_patterns = shutil.ignore_patterns(
       "*CMakeLists.txt",
@@ -251,35 +253,7 @@ def main():
           else:
               print(source_dir, ':', dest_dir, ":", f, "SKIPPED")
 
-  print('Building shader toolchain...')
-  build_cmd = [
-    'bash', ndk_build, '-C', shaderc_path,
-    jobs_arg(),
-    'APP_ABI=' + ' '.join(abis),
-    # Use the prebuilt platforms and toolchains.
-    'NDK_PLATFORMS_ROOT=' + platforms_root,
-    'NDK_TOOLCHAINS_ROOT=' + toolchains_root,
-    'GNUSTL_PREFIX=',
-
-    # Tell ndk-build where all of our makefiles are and where outputs
-    # should go. The defaults in ndk-build are only valid if we have a
-    # typical ndk-build layout with a jni/{Android,Application}.mk.
-    'NDK_PROJECT_PATH=null',
-    'NDK_TOOLCHAIN_VERSION=' + compiler,
-    'APP_BUILD_SCRIPT=' + os.path.join(shaderc_path, 'jni', 'Android.mk'),
-    'APP_STL=' + stl,
-    'NDK_APPLICATION_MK=' + os.path.join(shaderc_path, 'jni', 'Application.mk'),
-    'NDK_OUT=' + os.path.join(shaderc_path, 'obj'),
-    'NDK_LIBS_OUT=' + os.path.join(shaderc_path, 'jniLibs'),
-    'THIRD_PARTY_PATH=../third_party',
-
-    # Put armeabi-v7a-hard in its own directory.
-    '_NDK_TESTING_ALL_=yes'
-  ]
-  print(' '.join(build_cmd))
-
-  subprocess.check_call(build_cmd)
-  print('Finished shader toolchain build')
+  print('Constructing Vulkan validation layer source...')
 
   print('Constructing Vulkan validation layer source...')
 
@@ -297,28 +271,18 @@ def main():
     # Use the prebuilt platforms and toolchains.
     'NDK_PLATFORMS_ROOT=' + platforms_root,
     'NDK_TOOLCHAINS_ROOT=' + toolchains_root,
+    'NDK_MODULE_PATH=' + installdir,
     'GNUSTL_PREFIX=',
-
-    # Tell ndk-build where all of our makefiles are and where outputs
-    # should go. The defaults in ndk-build are only valid if we have a
-    # typical ndk-build layout with a jni/{Android,Application}.mk.
-    'NDK_PROJECT_PATH=null',
-    'NDK_TOOLCHAIN_VERSION=' + compiler,
-    'APP_BUILD_SCRIPT=' + os.path.join(build_dir, 'jni', 'Android.mk'),
     'APP_STL=' + stl,
-    'NDK_APPLICATION_MK=' + os.path.join(build_dir, 'jni', 'Application.mk'),
+    'NDK_TOOLCHAIN_VERSION=' + compiler,
+
+    # Tell ndk-build where to put the results
     'NDK_OUT=' + obj_out,
     'NDK_LIBS_OUT=' + lib_out,
-    'THIRD_PARTY_PATH=',
-    'SHADERC_OBJ_PATH=' + shaderc_path + '/obj',
-    'EXTERNAL_INCLUDE_PATH=' + installdir + '/shaderc',
-
-    # Put armeabi-v7a-hard in its own directory.
-    '_NDK_TESTING_ALL_=yes'
   ]
 
   print('Building Vulkan validation layers for ABIs:' +
-    ' {}'.format(', '.join(abis)))
+    ' {}'.format(', '.join(abis)) + "...")
   print(' '.join(build_cmd))
 
   subprocess.check_call(build_cmd)
@@ -334,8 +298,14 @@ def main():
   subprocess.check_call(build_cmd)
   print('Finished Packaging Vulkan validation layers')
 
-  # clean install directory
-  shutil.rmtree(installdir)
+  for properties in copies:
+      dest_dir = os.path.join(installdir, properties['dest_dir'])
+      for d in properties['dirs']:
+          dst = os.path.join(dest_dir, d)
+          print('Remove: %s' % dst)
+          shutil.rmtree(dst)
+
+  return 0
 
 
 if __name__ == '__main__':
