@@ -283,7 +283,7 @@ if(NOT WIN32)
 endif()
 
 if(UNIX)
-    install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/vulkan" DESTINATION include)
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/vulkan" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif()
 
 # loader: Generic VULKAN ICD loader
