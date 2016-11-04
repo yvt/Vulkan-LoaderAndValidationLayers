@@ -58,6 +58,45 @@ The `LoaderAndLayerInterface` document in the `loader` folder in this repository
 describes both how ICDs and layers should be properly
 packaged, and how developers can point to ICDs and layers within their builds.
 
+### Linux Install to System Directories
+
+Installing the files resulting from your build to the systems directories is optional since
+environment variables can usually be used instead to locate the binaries.
+There are also risks with interfering with binaries installed by packages.
+If you are certain that you would like to install your binaries to system directories,
+you can proceed with these instructions.
+
+Assuming that you've built the code as described above and the current directory is still `dbuild`,
+you can execute:
+
+```
+sudo make install
+```
+
+This command installs files to:
+
+* `/usr/local/include/vulkan`:  Vulkan include files
+* `/usr/local/lib`:  Vulkan loader and layers shared objects
+* `/usr/local/bin`:  vulkaninfo application
+* `/etc/vulkan/explicit_layer.d`:  Layer JSON files
+
+You may need to run `ldconfig` in order to refresh the system loader search cache on some Linux systems.
+
+The list of installed files appears in the build directory in a file named `install_manifest.txt`.
+You can easily remove the installed files with:
+
+```
+cat install_manifest.txt | sudo xargs rm
+```
+
+See the CMake documentation for details on using `DESTDIR` and `CMAKE_INSTALL_PREFIX` to customize
+your installation location.
+
+Note that some executables in this repository (e.g., `cube`) use the "rpath" linker directive
+to load the Vulkan loader from the build directory, `dbuild` in this example.
+This means that even after installing the loader to the system directories, these executables
+still use the loader from the build directory.
+
 ## Validation Test
 
 The test executables can be found in the dbuild/tests directory. 
@@ -71,7 +110,6 @@ There are also a few shell and Python scripts that run test collections (eg,
 
 Some demos that can be found in the dbuild/demos directory are:
 - vulkaninfo: report GPU properties
-- tri: a textured triangle (which is animated to demonstrate Z-clipping)
 - cube: a textured spinning cube
 - smoke/smoke: A "smoke" test using a more complex Vulkan demo
 
@@ -178,6 +216,36 @@ Follow the setup steps for Windows above, then from Developer Command Prompt for
 cd build-android
 android-generate.bat
 ndk-build
+```
+#### Android demos
+Use the following steps to build, install, and run Cube and Tri for Android:
+```
+cd demos/android
+android update project -s -p . -t "android-23"
+ndk-build
+ant -buildfile cube debug
+adb install ./cube/bin/NativeActivity-debug.apk
+adb shell am start com.example.Cube/android.app.NativeActivity
+```
+To build, install, and run Cube with validation layers, first build layers using steps above, then run:
+```
+cd demos/android
+android update project -s -p . -t "android-23"
+ndk-build -j
+ant -buildfile cube-with-layers debug
+adb install ./cube-with-layers/bin/NativeActivity-debug.apk
+adb shell am start -a android.intent.action.MAIN -c android-intent.category.LAUNCH -n com.example.CubeWithLayers/android.app.NativeActivity --es args "--validate"
+```
+
+To build, install, and run the Smoke demo for Android, run the following, and any
+prompts that come back from the script:
+```
+./update_external_sources.sh --glslang
+cd demos/smoke/android
+export ANDROID_SDK_HOME=<path to Android/Sdk>
+export ANDROID_NDK_HOME=<path to Android/Sdk/ndk-bundle>
+./build-and-install
+adb shell am start com.example.Smoke/android.app.NativeActivity
 ```
 
 #### Building with upstream sources

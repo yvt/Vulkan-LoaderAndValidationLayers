@@ -18,8 +18,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Android")
     add_definitions(-DVK_USE_PLATFORM_ANDROID_KHR)
     set(DisplayServer Android)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    #   Note: Supported configurations are XCB, XCB + Xlib, Wayland.  
-    #         MIR is stubbed and untested 
+    #   Note: Supported configurations are XCB, XCB + Xlib, Wayland.
+    #         MIR is stubbed and untested
     option(BUILD_WSI_XCB_SUPPORT "Build XCB WSI support" ON)
     option(BUILD_WSI_XLIB_SUPPORT "Build Xlib WSI support" ON)
     option(BUILD_WSI_WAYLAND_SUPPORT "Build Wayland WSI support" OFF)
@@ -44,15 +44,15 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         add_definitions(-DVK_USE_PLATFORM_MIR_KHR)
         set(DisplayServer Mir)
     endif()
-    
+
     if (NOT BUILD_WSI_XCB_SUPPORT AND NOT BUILD_WSI_XLIB_SUPPORT AND NOT BUILD_WSI_WAYLAND_SUPPORT AND NOT BUILD_WSI_MIR_SUPPORT)
         set(DisplayServer Display)
-    endif()    
+    endif()
 else()
     message(FATAL_ERROR "Unsupported Platform!")
 endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # Header file for CMake settings
 include_directories("${PROJECT_SOURCE_DIR}/include")
@@ -280,6 +280,10 @@ if(NOT WIN32)
     else()
         add_definitions(-DLOCALPREFIX="${CMAKE_INSTALL_PREFIX}")
     endif()
+endif()
+
+if(UNIX)
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/vulkan" DESTINATION include)
 endif()
 
 # loader: Generic VULKAN ICD loader
