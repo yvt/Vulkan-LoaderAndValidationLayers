@@ -219,7 +219,6 @@ def main():
           ],
       },
   ]
-  print(' '.join(build_cmd))
 
   default_ignore_patterns = shutil.ignore_patterns(
       "*CMakeLists.txt",
