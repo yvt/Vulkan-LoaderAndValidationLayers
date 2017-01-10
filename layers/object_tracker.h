@@ -82,6 +82,7 @@ struct instance_extension_enables {
     bool android_enabled;
     bool win32_enabled;
     bool display_enabled;
+    bool get_physical_device_properties2_enabled;
 };
 
 typedef std::unordered_map<uint64_t, OBJTRACK_NODE *> object_map_type;
@@ -119,8 +120,8 @@ struct layer_data {
     layer_data()
         : instance(nullptr), physical_device(nullptr), num_objects{}, num_total_objects(0), report_data(nullptr),
           wsi_enabled(false), wsi_display_swapchain_enabled(false), wsi_display_extension_enabled(false),
-          objtrack_extensions_enabled(false), num_tmp_callbacks(0), tmp_dbg_create_infos(nullptr), tmp_callbacks(nullptr),
-          object_map{}, dispatch_table{} {
+          objtrack_extensions_enabled(false), num_tmp_callbacks(0), tmp_dbg_create_infos(nullptr),
+          tmp_callbacks(nullptr), object_map{}, dispatch_table{} {
         object_map.resize(VK_DEBUG_REPORT_OBJECT_TYPE_RANGE_SIZE_EXT + 1);
     }
 };
