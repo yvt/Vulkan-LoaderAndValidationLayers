@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <registry>
     <comment>
-Copyright (c) 2015-2016 The Khronos Group Inc.
+Copyright (c) 2015-2017 The Khronos Group Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and/or associated documentation files (the
@@ -492,7 +492,7 @@ maintained in the master branch of the Khronos Vulkan GitHub project.
         </type>
         <type category="struct" name="VkDeviceCreateInfo">
             <member values="VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO"><type>VkStructureType</type> <name>sType</name></member>
-            <member>const <type>void</type>*     <name>pNext</name></member>                          <!-- Pointer to next structure -->
+            <member validextensionstructs="VkPhysicalDeviceFeatures2KHR">const <type>void</type>*     <name>pNext</name></member>                          <!-- Pointer to next structure -->
             <member optional="true"><type>VkDeviceCreateFlags</type>    <name>flags</name></member>                   <!-- Reserved -->
             <member><type>uint32_t</type>        <name>queueCreateInfoCount</name></member>
             <member len="queueCreateInfoCount">const <type>VkDeviceQueueCreateInfo</type>* <name>pQueueCreateInfos</name></member>
@@ -1719,6 +1719,59 @@ maintained in the master branch of the Khronos Vulkan GitHub project.
             <member><type>VkObjectEntryUsageFlagsNVX</type>   <name>flags</name></member>
             <member><type>VkPipelineLayout</type>             <name>pipelineLayout</name></member>
             <member><type>VkShaderStageFlags</type>           <name>stageFlags</name></member>
+        </type>
+        <type category="struct" name="VkPhysicalDeviceFeatures2KHR">
+            <member values="VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2_KHR"><type>VkStructureType</type> <name>sType</name></member>
+            <member validextensionstructs="VkPhysicalDeviceMultiviewFeaturesKHX"><type>void</type>*                            <name>pNext</name></member>                    <!-- Pointer to next structure -->
+            <member><type>VkPhysicalDeviceFeatures</type>         <name>features</name></member>
+        </type>
+        <type category="struct" name="VkPhysicalDeviceProperties2KHR" returnedonly="true">
+            <member values="VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR"><type>VkStructureType</type> <name>sType</name></member>
+            <member validextensionstructs="VkPhysicalDevicePushDescriptorPropertiesKHX,VkPhysicalDeviceIDPropertiesKHX,VkPhysicalDeviceMultiviewPropertiesKHX"><type>void</type>*                            <name>pNext</name></member>                    <!-- Pointer to next structure -->
+            <member><type>VkPhysicalDeviceProperties</type>       <name>properties</name></member>
+        </type>
+        <type category="struct" name="VkFormatProperties2KHR" returnedonly="true">
+            <member values="VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2_KHR"><type>VkStructureType</type> <name>sType</name></member>
+            <member><type>void</type>*                            <name>pNext</name></member>                    <!-- Pointer to next structure -->
+            <member><type>VkFormatProperties</type>               <name>formatProperties</name></member>
+        </type>
+        <type category="struct" name="VkImageFormatProperties2KHR" returnedonly="true">
+            <member values="VK_STRUCTURE_TYPE_IMAGE_FORMAT_PROPERTIES_2_KHR"><type>VkStructureType</type> <name>sType</name></member>
+            <member validextensionstructs="VkExternalImageFormatPropertiesKHX"><type>void</type>* <name>pNext</name></member>                    <!-- Pointer to next structure -->
+            <member><type>VkImageFormatProperties</type>          <name>imageFormatProperties</name></member>
+        </type>
+        <type category="struct" name="VkPhysicalDeviceImageFormatInfo2KHR">
+            <member values="VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2_KHR"><type>VkStructureType</type> <name>sType</name></member>
+            <member validextensionstructs="VkPhysicalDeviceExternalImageFormatInfoKHX">const <type>void</type>* <name>pNext</name></member>                    <!-- Pointer to next structure -->
+            <member><type>VkFormat</type>                         <name>format</name></member>
+            <member><type>VkImageType</type>                      <name>type</name></member>
+            <member><type>VkImageTiling</type>                    <name>tiling</name></member>
+            <member><type>VkImageUsageFlags</type>                <name>usage</name></member>
+            <member optional="true"><type>VkImageCreateFlags</type> <name>flags</name></member>
+        </type>
+        <type category="struct" name="VkQueueFamilyProperties2KHR" returnedonly="true">
+            <member values="VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2_KHR"><type>VkStructureType</type> <name>sType</name></member>
+            <member><type>void</type>*                            <name>pNext</name></member>                    <!-- Pointer to next structure -->
+            <member><type>VkQueueFamilyProperties</type>          <name>queueFamilyProperties</name></member>
+        </type>
+        <type category="struct" name="VkPhysicalDeviceMemoryProperties2KHR" returnedonly="true">
+            <member values="VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2_KHR"><type>VkStructureType</type> <name>sType</name></member>
+            <member><type>void</type>*                            <name>pNext</name></member>                    <!-- Pointer to next structure -->
+            <member><type>VkPhysicalDeviceMemoryProperties</type> <name>memoryProperties</name></member>
+        </type>
+        <type category="struct" name="VkSparseImageFormatProperties2KHR" returnedonly="true">
+            <member values="VK_STRUCTURE_TYPE_SPARSE_IMAGE_FORMAT_PROPERTIES_2_KHR"><type>VkStructureType</type> <name>sType</name></member>
+            <member><type>void</type>*                            <name>pNext</name></member>                    <!-- Pointer to next structure -->
+            <member><type>VkSparseImageFormatProperties</type>    <name>properties</name></member>
+        </type>
+        <type category="struct" name="VkPhysicalDeviceSparseImageFormatInfo2KHR">
+            <member values="VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SPARSE_IMAGE_FORMAT_INFO_2_KHR"><type>VkStructureType</type> <name>sType</name></member>
+            <member>const <type>void</type>*                      <name>pNext</name></member>                    <!-- Pointer to next structure -->
+            <member><type>VkFormat</type>                         <name>format</name></member>
+            <member><type>VkImageType</type>                      <name>type</name></member>
+            <member><type>VkSampleCountFlagBits</type>            <name>samples</name></member>
+            <member><type>VkImageUsageFlags</type>                <name>usage</name></member>
+            <member><type>VkImageTiling</type>                    <name>tiling</name></member>
         </type>
     </types>
 
@@ -3863,6 +3916,46 @@ maintained in the master branch of the Khronos Vulkan GitHub project.
             <param><type>VkDeviceGeneratedCommandsFeaturesNVX</type>* <name>pFeatures</name></param>
             <param><type>VkDeviceGeneratedCommandsLimitsNVX</type>* <name>pLimits</name></param>
         </command>
+        <command>
+            <proto><type>void</type> <name>vkGetPhysicalDeviceFeatures2KHR</name></proto>
+            <param><type>VkPhysicalDevice</type> <name>physicalDevice</name></param>
+            <param><type>VkPhysicalDeviceFeatures2KHR</type>* <name>pFeatures</name></param>
+        </command>
+        <command>
+            <proto><type>void</type> <name>vkGetPhysicalDeviceProperties2KHR</name></proto>
+            <param><type>VkPhysicalDevice</type> <name>physicalDevice</name></param>
+            <param><type>VkPhysicalDeviceProperties2KHR</type>* <name>pProperties</name></param>
+        </command>
+        <command>
+            <proto><type>void</type> <name>vkGetPhysicalDeviceFormatProperties2KHR</name></proto>
+            <param><type>VkPhysicalDevice</type> <name>physicalDevice</name></param>
+            <param><type>VkFormat</type> <name>format</name></param>
+            <param><type>VkFormatProperties2KHR</type>* <name>pFormatProperties</name></param>
+        </command>
+        <command successcodes="VK_SUCCESS" errorcodes="VK_ERROR_OUT_OF_HOST_MEMORY,VK_ERROR_OUT_OF_DEVICE_MEMORY,VK_ERROR_FORMAT_NOT_SUPPORTED">
+            <proto><type>VkResult</type> <name>vkGetPhysicalDeviceImageFormatProperties2KHR</name></proto>
+            <param><type>VkPhysicalDevice</type> <name>physicalDevice</name></param>
+            <param>const <type>VkPhysicalDeviceImageFormatInfo2KHR</type>* <name>pImageFormatInfo</name></param>
+            <param><type>VkImageFormatProperties2KHR</type>* <name>pImageFormatProperties</name></param>
+        </command>
+        <command>
+            <proto><type>void</type> <name>vkGetPhysicalDeviceQueueFamilyProperties2KHR</name></proto>
+            <param><type>VkPhysicalDevice</type> <name>physicalDevice</name></param>
+            <param optional="false,true"><type>uint32_t</type>* <name>pQueueFamilyPropertyCount</name></param>
+            <param optional="true" len="pQueueFamilyPropertyCount"><type>VkQueueFamilyProperties2KHR</type>* <name>pQueueFamilyProperties</name></param>
+        </command>
+        <command>
+            <proto><type>void</type> <name>vkGetPhysicalDeviceMemoryProperties2KHR</name></proto>
+            <param><type>VkPhysicalDevice</type> <name>physicalDevice</name></param>
+            <param><type>VkPhysicalDeviceMemoryProperties2KHR</type>* <name>pMemoryProperties</name></param>
+        </command>
+        <command>
+            <proto><type>void</type> <name>vkGetPhysicalDeviceSparseImageFormatProperties2KHR</name></proto>
+            <param><type>VkPhysicalDevice</type> <name>physicalDevice</name></param>
+            <param>const <type>VkPhysicalDeviceSparseImageFormatInfo2KHR</type>* <name>pFormatInfo</name></param>
+            <param optional="false,true"><type>uint32_t</type>* <name>pPropertyCount</name></param>
+            <param optional="true" len="pPropertyCount"><type>VkSparseImageFormatProperties2KHR</type>* <name>pProperties</name></param>
+        </command>
     </commands>
 
     <!-- SECTION: Vulkan API interface definitions -->
@@ -4581,10 +4674,35 @@ maintained in the master branch of the Khronos Vulkan GitHub project.
                 <type name="VkWin32KeyedMutexAcquireReleaseInfoNV"/>
             </require>
         </extension>
-        <extension name="VK_KHR_extension_60" number="60" author="KHR" contact="Jeff Bolz @jbolz" supported="disabled">
+        <extension name="VK_KHR_get_physical_device_properties2" number="60" author="KHR" contact="Jeff Bolz @jbolz" supported="vulkan">
             <require>
-                <enum value="0"                                         name="VK_KHR_EXTENSION_60_SPEC_VERSION"/>
-                <enum value="&quot;VK_KHR_extension_60&quot;"           name="VK_KHR_EXTENSION_60_EXTENSION_NAME"/>
+                <enum value="1"                                           name="VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_SPEC_VERSION"/>
+                <enum value="&quot;VK_KHR_get_physical_device_properties2&quot;" name="VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME"/>
+                <enum offset="0" extends="VkStructureType"                name="VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2_KHR"/>
+                <enum offset="1" extends="VkStructureType"                name="VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR"/>
+                <enum offset="2" extends="VkStructureType"                name="VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2_KHR"/>
+                <enum offset="3" extends="VkStructureType"                name="VK_STRUCTURE_TYPE_IMAGE_FORMAT_PROPERTIES_2_KHR"/>
+                <enum offset="4" extends="VkStructureType"                name="VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2_KHR"/>
+                <enum offset="5" extends="VkStructureType"                name="VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2_KHR"/>
+                <enum offset="6" extends="VkStructureType"                name="VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2_KHR"/>
+                <enum offset="7" extends="VkStructureType"                name="VK_STRUCTURE_TYPE_SPARSE_IMAGE_FORMAT_PROPERTIES_2_KHR"/>
+                <enum offset="8" extends="VkStructureType"                name="VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SPARSE_IMAGE_FORMAT_INFO_2_KHR"/>
+                <type name="VkPhysicalDeviceFeatures2KHR"/>
+                <type name="VkPhysicalDeviceProperties2KHR"/>
+                <type name="VkFormatProperties2KHR"/>
+                <type name="VkImageFormatProperties2KHR"/>
+                <type name="VkPhysicalDeviceImageFormatInfo2KHR"/>
+                <type name="VkQueueFamilyProperties2KHR"/>
+                <type name="VkPhysicalDeviceMemoryProperties2KHR"/>
+                <type name="VkSparseImageFormatProperties2KHR"/>
+                <type name="VkPhysicalDeviceSparseImageFormatInfo2KHR"/>
+                <command name="vkGetPhysicalDeviceFeatures2KHR"/>
+                <command name="vkGetPhysicalDeviceProperties2KHR"/>
+                <command name="vkGetPhysicalDeviceFormatProperties2KHR"/>
+                <command name="vkGetPhysicalDeviceImageFormatProperties2KHR"/>
+                <command name="vkGetPhysicalDeviceQueueFamilyProperties2KHR"/>
+                <command name="vkGetPhysicalDeviceMemoryProperties2KHR"/>
+                <command name="vkGetPhysicalDeviceSparseImageFormatProperties2KHR"/>
             </require>
         </extension>
         <extension name="VK_KHR_extension_61" number="61" author="KHR" contact="Jeff Bolz @jbolz" supported="disabled">
