@@ -33,17 +33,9 @@
 #include <unordered_set>
 #include <vector>
 
-
-
-
-
-
-
-
-
-
-
-
-
+VK_LAYER_EXPORT void PostCallRecordCreateImage(std::unordered_map<VkImage, std::unique_ptr<IMAGE_STATE>> *imageMap,
+    std::unordered_map<VkImage, std::vector<ImageSubresourcePair>> *imageSubresourceMap,
+    std::unordered_map<ImageSubresourcePair, IMAGE_LAYOUT_NODE> *imageLayoutMap,
+    const VkImageCreateInfo *pCreateInfo, VkImage *pImage);
 
 #endif // CORE_VALIDATION_IMAGE_VALIDATION_H_
