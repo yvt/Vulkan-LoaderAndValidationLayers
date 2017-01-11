@@ -1517,7 +1517,7 @@ maintained in the master branch of the Khronos Vulkan GitHub project.
         </type>
         <type category="struct" name="VkPresentInfoKHR">
             <member values="VK_STRUCTURE_TYPE_PRESENT_INFO_KHR"><type>VkStructureType</type> <name>sType</name></member>
-            <member>const <type>void</type>*                      <name>pNext</name></member>                    <!-- Pointer to next structure -->
+            <member validextensionstructs="VkPresentRegionsKHR">const <type>void</type>*                      <name>pNext</name></member>                    <!-- Pointer to next structure -->
             <member optional="true"><type>uint32_t</type>         <name>waitSemaphoreCount</name></member>       <!-- Number of semaphores to wait for before presenting -->
             <member optional="true" len="waitSemaphoreCount">const <type>VkSemaphore</type>* <name>pWaitSemaphores</name></member> <!-- Semaphores to wait for before presenting -->
             <member><type>uint32_t</type>                         <name>swapchainCount</name></member>           <!-- Number of swap chains to present in this call -->
@@ -1719,6 +1719,21 @@ maintained in the master branch of the Khronos Vulkan GitHub project.
             <member><type>VkObjectEntryUsageFlagsNVX</type>   <name>flags</name></member>
             <member><type>VkPipelineLayout</type>             <name>pipelineLayout</name></member>
             <member><type>VkShaderStageFlags</type>           <name>stageFlags</name></member>
+        </type>
+        <type category="struct" name="VkPresentRegionsKHR">
+            <member values="VK_STRUCTURE_TYPE_PRESENT_REGIONS_KHR"><type>VkStructureType</type> <name>sType</name></member>
+            <member>const <type>void</type>*                      <name>pNext</name></member>                    <!-- Pointer to next structure -->
+            <member><type>uint32_t</type>                         <name>swapchainCount</name></member>           <!-- Copy of VkPresentInfoKHR::swapchainCount -->
+            <member len="swapchainCount" optional="true">const <type>VkPresentRegionKHR</type>*   <name>pRegions</name></member>       <!-- The regions that have changed -->
+        </type>
+        <type category="struct" name="VkPresentRegionKHR">
+            <member><type>uint32_t</type>                         <name>rectangleCount</name></member>           <!-- Number of rectangles in pRectangles -->
+            <member optional="true" len="rectangleCount">const <type>VkRectLayerKHR</type>*   <name>pRectangles</name></member>  <!-- Array of rectangles that have changed in a swapchain's image(s) -->
+        </type>
+        <type category="struct" name="VkRectLayerKHR">
+            <member><type>VkOffset2D</type>                       <name>offset</name></member>                   <!-- upper-left corner of a rectangle that has not changed, in pixels of a presentation images -->
+            <member><type>VkExtent2D</type>                       <name>extent</name></member>                   <!-- Dimensions of a rectangle that has not changed, in pixels of a presentation images -->
+            <member><type>uint32_t</type>                         <name>layer</name></member>                    <!-- Layer of a swapchain's image(s), for stereoscopic-3D images -->
         </type>
     </types>
 
@@ -4733,10 +4748,14 @@ maintained in the master branch of the Khronos Vulkan GitHub project.
                  <enum value="&quot;VK_KHR_extension_84&quot;"           name="VK_KHR_EXTENSION_84_EXTENSION_NAME"/>
              </require>
          </extension>
-         <extension name="VK_KHR_extension_85" number="85" author="KHR" contact="Ian Elliott @ianelliott" supported="disabled">
+         <extension name="VK_KHR_incremental_present" number="85" type="device" author="KHR" contact="Ian Elliott ianelliott@google.com" supported="vulkan">
              <require>
-                 <enum value="0"                                         name="VK_KHR_EXTENSION_85_SPEC_VERSION"/>
-                 <enum value="&quot;VK_KHR_extension_85&quot;"           name="VK_KHR_EXTENSION_85_EXTENSION_NAME"/>
+                 <enum value="1"                                         name="VK_KHR_INCREMENTAL_PRESENT_SPEC_VERSION"/>
+                 <enum value="&quot;VK_KHR_incremental_present&quot;"    name="VK_KHR_INCREMENTAL_PRESENT_EXTENSION_NAME"/>
+                 <enum offset="0"         extends="VkStructureType"      name="VK_STRUCTURE_TYPE_PRESENT_REGIONS_KHR"/>
+                 <type name="VkPresentRegionsKHR"/>
+                 <type name="VkPresentRegionKHR"/>
+                 <type name="VkRectLayerKHR"/>
              </require>
          </extension>
          <extension name="VK_KHR_extension_86" number="86" author="KHR" contact="Markus Tavenrath @mtavenrath" supported="disabled">
