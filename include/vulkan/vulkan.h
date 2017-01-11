@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 /*
-** Copyright (c) 2015-2016 The Khronos Group Inc.
+** Copyright (c) 2015-2017 The Khronos Group Inc.
 **
 ** Licensed under the Apache License, Version 2.0 (the "License");
 ** you may not use this file except in compliance with the License.
@@ -145,6 +145,8 @@ typedef enum VkResult {
     VK_ERROR_INCOMPATIBLE_DISPLAY_KHR = -1000003001,
     VK_ERROR_VALIDATION_FAILED_EXT = -1000011001,
     VK_ERROR_INVALID_SHADER_NV = -1000012000,
+    VK_ERROR_OUT_OF_POOL_MEMORY_KHR = -1000069000,
+    VK_ERROR_INVALID_EXTERNAL_HANDLE_KHX = -1000072003,
     VK_RESULT_BEGIN_RANGE = VK_ERROR_FRAGMENTED_POOL,
     VK_RESULT_END_RANGE = VK_INCOMPLETE,
     VK_RESULT_RANGE_SIZE = (VK_INCOMPLETE - VK_ERROR_FRAGMENTED_POOL + 1),
@@ -220,18 +222,77 @@ typedef enum VkStructureType {
     VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_IMAGE_CREATE_INFO_NV = 1000026000,
     VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_BUFFER_CREATE_INFO_NV = 1000026001,
     VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_MEMORY_ALLOCATE_INFO_NV = 1000026002,
+    VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO_KHX = 1000053000,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHX = 1000053001,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES_KHX = 1000053002,
     VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO_NV = 1000056000,
     VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO_NV = 1000056001,
     VK_STRUCTURE_TYPE_IMPORT_MEMORY_WIN32_HANDLE_INFO_NV = 1000057000,
     VK_STRUCTURE_TYPE_EXPORT_MEMORY_WIN32_HANDLE_INFO_NV = 1000057001,
     VK_STRUCTURE_TYPE_WIN32_KEYED_MUTEX_ACQUIRE_RELEASE_INFO_NV = 1000058000,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2_KHR = 1000059000,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR = 1000059001,
+    VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2_KHR = 1000059002,
+    VK_STRUCTURE_TYPE_IMAGE_FORMAT_PROPERTIES_2_KHR = 1000059003,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2_KHR = 1000059004,
+    VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2_KHR = 1000059005,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2_KHR = 1000059006,
+    VK_STRUCTURE_TYPE_SPARSE_IMAGE_FORMAT_PROPERTIES_2_KHR = 1000059007,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SPARSE_IMAGE_FORMAT_INFO_2_KHR = 1000059008,
+    VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHX = 1000060000,
+    VK_STRUCTURE_TYPE_BIND_BUFFER_MEMORY_INFO_KHX = 1000060001,
+    VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO_KHX = 1000060002,
+    VK_STRUCTURE_TYPE_DEVICE_GROUP_RENDER_PASS_BEGIN_INFO_KHX = 1000060003,
+    VK_STRUCTURE_TYPE_DEVICE_GROUP_COMMAND_BUFFER_BEGIN_INFO_KHX = 1000060004,
+    VK_STRUCTURE_TYPE_DEVICE_GROUP_SUBMIT_INFO_KHX = 1000060005,
+    VK_STRUCTURE_TYPE_DEVICE_GROUP_BIND_SPARSE_INFO_KHX = 1000060006,
+    VK_STRUCTURE_TYPE_DEVICE_GROUP_PRESENT_CAPABILITIES_KHX = 1000060007,
+    VK_STRUCTURE_TYPE_IMAGE_SWAPCHAIN_CREATE_INFO_KHX = 1000060008,
+    VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_SWAPCHAIN_INFO_KHX = 1000060009,
+    VK_STRUCTURE_TYPE_ACQUIRE_NEXT_IMAGE_INFO_KHX = 1000060010,
+    VK_STRUCTURE_TYPE_DEVICE_GROUP_PRESENT_INFO_KHX = 1000060011,
+    VK_STRUCTURE_TYPE_DEVICE_GROUP_SWAPCHAIN_CREATE_INFO_KHX = 1000060012,
     VK_STRUCTURE_TYPE_VALIDATION_FLAGS_EXT = 1000061000,
+    VK_STRUCTURE_TYPE_VI_SURFACE_CREATE_INFO_NN = 1000062000,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GROUP_PROPERTIES_KHX = 1000070000,
+    VK_STRUCTURE_TYPE_DEVICE_GROUP_DEVICE_CREATE_INFO_KHX = 1000070001,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_IMAGE_FORMAT_INFO_KHX = 1000071000,
+    VK_STRUCTURE_TYPE_EXTERNAL_IMAGE_FORMAT_PROPERTIES_KHX = 1000071001,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_BUFFER_INFO_KHX = 1000071002,
+    VK_STRUCTURE_TYPE_EXTERNAL_BUFFER_PROPERTIES_KHX = 1000071003,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES_KHX = 1000071004,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHX = 1000071005,
+    VK_STRUCTURE_TYPE_IMAGE_FORMAT_PROPERTIES_2_KHX = 1000071006,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2_KHX = 1000071007,
+    VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_BUFFER_CREATE_INFO_KHX = 1000072000,
+    VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO_KHX = 1000072001,
+    VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO_KHX = 1000072002,
+    VK_STRUCTURE_TYPE_IMPORT_MEMORY_WIN32_HANDLE_INFO_KHX = 1000073000,
+    VK_STRUCTURE_TYPE_EXPORT_MEMORY_WIN32_HANDLE_INFO_KHX = 1000073001,
+    VK_STRUCTURE_TYPE_MEMORY_WIN32_HANDLE_PROPERTIES_KHX = 1000073002,
+    VK_STRUCTURE_TYPE_IMPORT_MEMORY_FD_INFO_KHX = 1000074000,
+    VK_STRUCTURE_TYPE_MEMORY_FD_PROPERTIES_KHX = 1000074001,
+    VK_STRUCTURE_TYPE_WIN32_KEYED_MUTEX_ACQUIRE_RELEASE_INFO_KHX = 1000075000,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_SEMAPHORE_INFO_KHX = 1000076000,
+    VK_STRUCTURE_TYPE_EXTERNAL_SEMAPHORE_PROPERTIES_KHX = 1000076001,
+    VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO_KHX = 1000077000,
+    VK_STRUCTURE_TYPE_IMPORT_SEMAPHORE_WIN32_HANDLE_INFO_KHX = 1000078000,
+    VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_WIN32_HANDLE_INFO_KHX = 1000078001,
+    VK_STRUCTURE_TYPE_D3D12_FENCE_SUBMIT_INFO_KHX = 1000078002,
+    VK_STRUCTURE_TYPE_IMPORT_SEMAPHORE_FD_INFO_KHX = 1000079000,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PUSH_DESCRIPTOR_PROPERTIES_KHX = 1000080000,
+    VK_STRUCTURE_TYPE_PRESENT_REGIONS_KHR = 1000084000,
     VK_STRUCTURE_TYPE_OBJECT_TABLE_CREATE_INFO_NVX = 1000086000,
     VK_STRUCTURE_TYPE_INDIRECT_COMMANDS_LAYOUT_CREATE_INFO_NVX = 1000086001,
     VK_STRUCTURE_TYPE_CMD_PROCESS_COMMANDS_INFO_NVX = 1000086002,
     VK_STRUCTURE_TYPE_CMD_RESERVE_SPACE_FOR_COMMANDS_INFO_NVX = 1000086003,
     VK_STRUCTURE_TYPE_DEVICE_GENERATED_COMMANDS_LIMITS_NVX = 1000086004,
     VK_STRUCTURE_TYPE_DEVICE_GENERATED_COMMANDS_FEATURES_NVX = 1000086005,
+    VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES2_EXT = 1000090000,
+    VK_STRUCTURE_TYPE_DISPLAY_POWER_INFO_EXT = 1000091000,
+    VK_STRUCTURE_TYPE_DEVICE_EVENT_INFO_EXT = 1000091001,
+    VK_STRUCTURE_TYPE_DISPLAY_EVENT_INFO_EXT = 1000091002,
+    VK_STRUCTURE_TYPE_SWAPCHAIN_COUNTER_CREATE_INFO_EXT = 1000091003,
     VK_STRUCTURE_TYPE_BEGIN_RANGE = VK_STRUCTURE_TYPE_APPLICATION_INFO,
     VK_STRUCTURE_TYPE_END_RANGE = VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO,
     VK_STRUCTURE_TYPE_RANGE_SIZE = (VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO - VK_STRUCTURE_TYPE_APPLICATION_INFO + 1),
@@ -840,6 +901,8 @@ typedef enum VkFormatFeatureFlagBits {
     VK_FORMAT_FEATURE_BLIT_DST_BIT = 0x00000800,
     VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT = 0x00001000,
     VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_IMG = 0x00002000,
+    VK_FORMAT_FEATURE_TRANSFER_SRC_BIT_KHR = 0x00004000,
+    VK_FORMAT_FEATURE_TRANSFER_DST_BIT_KHR = 0x00008000,
     VK_FORMAT_FEATURE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } VkFormatFeatureFlagBits;
 typedef VkFlags VkFormatFeatureFlags;
@@ -863,6 +926,8 @@ typedef enum VkImageCreateFlagBits {
     VK_IMAGE_CREATE_SPARSE_ALIASED_BIT = 0x00000004,
     VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT = 0x00000008,
     VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT = 0x00000010,
+    VK_IMAGE_CREATE_BIND_SFR_BIT_KHX = 0x00000040,
+    VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT_KHR = 0x00000020,
     VK_IMAGE_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } VkImageCreateFlagBits;
 typedef VkFlags VkImageCreateFlags;
@@ -900,6 +965,7 @@ typedef VkFlags VkMemoryPropertyFlags;
 
 typedef enum VkMemoryHeapFlagBits {
     VK_MEMORY_HEAP_DEVICE_LOCAL_BIT = 0x00000001,
+    VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHX = 0x00000002,
     VK_MEMORY_HEAP_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } VkMemoryHeapFlagBits;
 typedef VkFlags VkMemoryHeapFlags;
@@ -1017,6 +1083,8 @@ typedef enum VkPipelineCreateFlagBits {
     VK_PIPELINE_CREATE_DISABLE_OPTIMIZATION_BIT = 0x00000001,
     VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT = 0x00000002,
     VK_PIPELINE_CREATE_DERIVATIVE_BIT = 0x00000004,
+    VK_PIPELINE_CREATE_VIEW_INDEX_FROM_DEVICE_INDEX_BIT_KHX = 0x00000008,
+    VK_PIPELINE_CREATE_DISPATCH_BASE_KHX = 0x00000010,
     VK_PIPELINE_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } VkPipelineCreateFlagBits;
 typedef VkFlags VkPipelineCreateFlags;
@@ -1063,6 +1131,11 @@ typedef VkFlags VkPipelineDynamicStateCreateFlags;
 typedef VkFlags VkPipelineLayoutCreateFlags;
 typedef VkFlags VkShaderStageFlags;
 typedef VkFlags VkSamplerCreateFlags;
+
+typedef enum VkDescriptorSetLayoutCreateFlagBits {
+    VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHX = 0x00000001,
+    VK_DESCRIPTOR_SET_LAYOUT_CREATE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
+} VkDescriptorSetLayoutCreateFlagBits;
 typedef VkFlags VkDescriptorSetLayoutCreateFlags;
 
 typedef enum VkDescriptorPoolCreateFlagBits {
@@ -1107,6 +1180,8 @@ typedef VkFlags VkAccessFlags;
 
 typedef enum VkDependencyFlagBits {
     VK_DEPENDENCY_BY_REGION_BIT = 0x00000001,
+    VK_DEPENDENCY_VIEW_LOCAL_BIT_KHX = 0x00000002,
+    VK_DEPENDENCY_DEVICE_GROUP_BIT_KHX = 0x00000004,
     VK_DEPENDENCY_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 } VkDependencyFlagBits;
 typedef VkFlags VkDependencyFlags;
@@ -2369,7 +2444,7 @@ typedef void (VKAPI_PTR *PFN_vkCmdDraw)(VkCommandBuffer commandBuffer, uint32_t 
 typedef void (VKAPI_PTR *PFN_vkCmdDrawIndexed)(VkCommandBuffer commandBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance);
 typedef void (VKAPI_PTR *PFN_vkCmdDrawIndirect)(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride);
 typedef void (VKAPI_PTR *PFN_vkCmdDrawIndexedIndirect)(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride);
-typedef void (VKAPI_PTR *PFN_vkCmdDispatch)(VkCommandBuffer commandBuffer, uint32_t x, uint32_t y, uint32_t z);
+typedef void (VKAPI_PTR *PFN_vkCmdDispatch)(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
 typedef void (VKAPI_PTR *PFN_vkCmdDispatchIndirect)(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset);
 typedef void (VKAPI_PTR *PFN_vkCmdCopyBuffer)(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferCopy* pRegions);
 typedef void (VKAPI_PTR *PFN_vkCmdCopyImage)(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageCopy* pRegions);
@@ -3005,9 +3080,9 @@ VKAPI_ATTR void VKAPI_CALL vkCmdDrawIndexedIndirect(
 
 VKAPI_ATTR void VKAPI_CALL vkCmdDispatch(
     VkCommandBuffer                             commandBuffer,
-    uint32_t                                    x,
-    uint32_t                                    y,
-    uint32_t                                    z);
+    uint32_t                                    groupCountX,
+    uint32_t                                    groupCountY,
+    uint32_t                                    groupCountZ);
 
 VKAPI_ATTR void VKAPI_CALL vkCmdDispatchIndirect(
     VkCommandBuffer                             commandBuffer,
@@ -3308,6 +3383,11 @@ VK_DEFINE_NON_DISPATCHABLE_HANDLE(VkSwapchainKHR)
 #define VK_KHR_SWAPCHAIN_SPEC_VERSION     68
 #define VK_KHR_SWAPCHAIN_EXTENSION_NAME   "VK_KHR_swapchain"
 
+
+typedef enum VkSwapchainCreateFlagBitsKHR {
+    VK_SWAPCHAIN_CREATE_BIND_SFR_BIT_KHX = 0x00000001,
+    VK_SWAPCHAIN_CREATE_FLAG_BITS_MAX_ENUM_KHR = 0x7FFFFFFF
+} VkSwapchainCreateFlagBitsKHR;
 typedef VkFlags VkSwapchainCreateFlagsKHR;
 
 typedef struct VkSwapchainCreateInfoKHR {
@@ -3741,6 +3821,160 @@ VKAPI_ATTR VkBool32 VKAPI_CALL vkGetPhysicalDeviceWin32PresentationSupportKHR(
 #define VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME "VK_KHR_sampler_mirror_clamp_to_edge"
 
 
+#define VK_KHR_get_physical_device_properties2 1
+#define VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_SPEC_VERSION 1
+#define VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME "VK_KHR_get_physical_device_properties2"
+
+typedef struct VkPhysicalDeviceFeatures2KHR {
+    VkStructureType             sType;
+    void*                       pNext;
+    VkPhysicalDeviceFeatures    features;
+} VkPhysicalDeviceFeatures2KHR;
+
+typedef struct VkPhysicalDeviceProperties2KHR {
+    VkStructureType               sType;
+    void*                         pNext;
+    VkPhysicalDeviceProperties    properties;
+} VkPhysicalDeviceProperties2KHR;
+
+typedef struct VkFormatProperties2KHR {
+    VkStructureType       sType;
+    void*                 pNext;
+    VkFormatProperties    formatProperties;
+} VkFormatProperties2KHR;
+
+typedef struct VkImageFormatProperties2KHR {
+    VkStructureType            sType;
+    void*                      pNext;
+    VkImageFormatProperties    imageFormatProperties;
+} VkImageFormatProperties2KHR;
+
+typedef struct VkPhysicalDeviceImageFormatInfo2KHR {
+    VkStructureType       sType;
+    const void*           pNext;
+    VkFormat              format;
+    VkImageType           type;
+    VkImageTiling         tiling;
+    VkImageUsageFlags     usage;
+    VkImageCreateFlags    flags;
+} VkPhysicalDeviceImageFormatInfo2KHR;
+
+typedef struct VkQueueFamilyProperties2KHR {
+    VkStructureType            sType;
+    void*                      pNext;
+    VkQueueFamilyProperties    queueFamilyProperties;
+} VkQueueFamilyProperties2KHR;
+
+typedef struct VkPhysicalDeviceMemoryProperties2KHR {
+    VkStructureType                     sType;
+    void*                               pNext;
+    VkPhysicalDeviceMemoryProperties    memoryProperties;
+} VkPhysicalDeviceMemoryProperties2KHR;
+
+typedef struct VkSparseImageFormatProperties2KHR {
+    VkStructureType                  sType;
+    void*                            pNext;
+    VkSparseImageFormatProperties    properties;
+} VkSparseImageFormatProperties2KHR;
+
+typedef struct VkPhysicalDeviceSparseImageFormatInfo2KHR {
+    VkStructureType          sType;
+    const void*              pNext;
+    VkFormat                 format;
+    VkImageType              type;
+    VkSampleCountFlagBits    samples;
+    VkImageUsageFlags        usage;
+    VkImageTiling            tiling;
+} VkPhysicalDeviceSparseImageFormatInfo2KHR;
+
+
+typedef void (VKAPI_PTR *PFN_vkGetPhysicalDeviceFeatures2KHR)(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2KHR* pFeatures);
+typedef void (VKAPI_PTR *PFN_vkGetPhysicalDeviceProperties2KHR)(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties2KHR* pProperties);
+typedef void (VKAPI_PTR *PFN_vkGetPhysicalDeviceFormatProperties2KHR)(VkPhysicalDevice physicalDevice, VkFormat format, VkFormatProperties2KHR* pFormatProperties);
+typedef VkResult (VKAPI_PTR *PFN_vkGetPhysicalDeviceImageFormatProperties2KHR)(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceImageFormatInfo2KHR* pImageFormatInfo, VkImageFormatProperties2KHR* pImageFormatProperties);
+typedef void (VKAPI_PTR *PFN_vkGetPhysicalDeviceQueueFamilyProperties2KHR)(VkPhysicalDevice physicalDevice, uint32_t* pQueueFamilyPropertyCount, VkQueueFamilyProperties2KHR* pQueueFamilyProperties);
+typedef void (VKAPI_PTR *PFN_vkGetPhysicalDeviceMemoryProperties2KHR)(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties2KHR* pMemoryProperties);
+typedef void (VKAPI_PTR *PFN_vkGetPhysicalDeviceSparseImageFormatProperties2KHR)(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSparseImageFormatInfo2KHR* pFormatInfo, uint32_t* pPropertyCount, VkSparseImageFormatProperties2KHR* pProperties);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR void VKAPI_CALL vkGetPhysicalDeviceFeatures2KHR(
+    VkPhysicalDevice                            physicalDevice,
+    VkPhysicalDeviceFeatures2KHR*               pFeatures);
+
+VKAPI_ATTR void VKAPI_CALL vkGetPhysicalDeviceProperties2KHR(
+    VkPhysicalDevice                            physicalDevice,
+    VkPhysicalDeviceProperties2KHR*             pProperties);
+
+VKAPI_ATTR void VKAPI_CALL vkGetPhysicalDeviceFormatProperties2KHR(
+    VkPhysicalDevice                            physicalDevice,
+    VkFormat                                    format,
+    VkFormatProperties2KHR*                     pFormatProperties);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkGetPhysicalDeviceImageFormatProperties2KHR(
+    VkPhysicalDevice                            physicalDevice,
+    const VkPhysicalDeviceImageFormatInfo2KHR*  pImageFormatInfo,
+    VkImageFormatProperties2KHR*                pImageFormatProperties);
+
+VKAPI_ATTR void VKAPI_CALL vkGetPhysicalDeviceQueueFamilyProperties2KHR(
+    VkPhysicalDevice                            physicalDevice,
+    uint32_t*                                   pQueueFamilyPropertyCount,
+    VkQueueFamilyProperties2KHR*                pQueueFamilyProperties);
+
+VKAPI_ATTR void VKAPI_CALL vkGetPhysicalDeviceMemoryProperties2KHR(
+    VkPhysicalDevice                            physicalDevice,
+    VkPhysicalDeviceMemoryProperties2KHR*       pMemoryProperties);
+
+VKAPI_ATTR void VKAPI_CALL vkGetPhysicalDeviceSparseImageFormatProperties2KHR(
+    VkPhysicalDevice                            physicalDevice,
+    const VkPhysicalDeviceSparseImageFormatInfo2KHR* pFormatInfo,
+    uint32_t*                                   pPropertyCount,
+    VkSparseImageFormatProperties2KHR*          pProperties);
+#endif
+
+#define VK_KHR_shader_draw_parameters 1
+#define VK_KHR_SHADER_DRAW_PARAMETERS_SPEC_VERSION 1
+#define VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME "VK_KHR_shader_draw_parameters"
+
+
+#define VK_KHR_maintenance1 1
+#define VK_KHR_MAINTENANCE1_SPEC_VERSION  1
+#define VK_KHR_MAINTENANCE1_EXTENSION_NAME "VK_KHR_maintenance1"
+
+typedef VkFlags VkCommandPoolTrimFlagsKHR;
+
+typedef void (VKAPI_PTR *PFN_vkTrimCommandPoolKHR)(VkDevice device, VkCommandPool commandPool, VkCommandPoolTrimFlagsKHR flags);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR void VKAPI_CALL vkTrimCommandPoolKHR(
+    VkDevice                                    device,
+    VkCommandPool                               commandPool,
+    VkCommandPoolTrimFlagsKHR                   flags);
+#endif
+
+#define VK_KHR_incremental_present 1
+#define VK_KHR_INCREMENTAL_PRESENT_SPEC_VERSION 1
+#define VK_KHR_INCREMENTAL_PRESENT_EXTENSION_NAME "VK_KHR_incremental_present"
+
+typedef struct VkRectLayerKHR {
+    VkOffset2D    offset;
+    VkExtent2D    extent;
+    uint32_t      layer;
+} VkRectLayerKHR;
+
+typedef struct VkPresentRegionKHR {
+    uint32_t                 rectangleCount;
+    const VkRectLayerKHR*    pRectangles;
+} VkPresentRegionKHR;
+
+typedef struct VkPresentRegionsKHR {
+    VkStructureType              sType;
+    const void*                  pNext;
+    uint32_t                     swapchainCount;
+    const VkPresentRegionKHR*    pRegions;
+} VkPresentRegionsKHR;
+
+
+
 #define VK_EXT_debug_report 1
 VK_DEFINE_NON_DISPATCHABLE_HANDLE(VkDebugReportCallbackEXT)
 
@@ -4027,6 +4261,38 @@ VKAPI_ATTR void VKAPI_CALL vkCmdDrawIndexedIndirectCountAMD(
 #define VK_AMD_SHADER_BALLOT_EXTENSION_NAME "VK_AMD_shader_ballot"
 
 
+#define VK_KHX_multiview 1
+#define VK_KHX_MULTIVIEW_SPEC_VERSION     1
+#define VK_KHX_MULTIVIEW_EXTENSION_NAME   "VK_KHX_multiview"
+
+typedef struct VkRenderPassMultiviewCreateInfoKHX {
+    VkStructureType    sType;
+    const void*        pNext;
+    uint32_t           subpassCount;
+    const uint32_t*    pViewMasks;
+    uint32_t           dependencyCount;
+    const int32_t*     pViewOffsets;
+    uint32_t           correlationMaskCount;
+    const uint32_t*    pCorrelationMasks;
+} VkRenderPassMultiviewCreateInfoKHX;
+
+typedef struct VkPhysicalDeviceMultiviewFeaturesKHX {
+    VkStructureType    sType;
+    void*              pNext;
+    VkBool32           multiview;
+    VkBool32           multiviewGeometryShader;
+    VkBool32           multiviewTessellationShader;
+} VkPhysicalDeviceMultiviewFeaturesKHX;
+
+typedef struct VkPhysicalDeviceMultiviewPropertiesKHX {
+    VkStructureType    sType;
+    void*              pNext;
+    uint32_t           maxMultiviewViewCount;
+    uint32_t           maxMultiviewInstanceIndex;
+} VkPhysicalDeviceMultiviewPropertiesKHX;
+
+
+
 #define VK_IMG_format_pvrtc 1
 #define VK_IMG_FORMAT_PVRTC_SPEC_VERSION  1
 #define VK_IMG_FORMAT_PVRTC_EXTENSION_NAME "VK_IMG_format_pvrtc"
@@ -4145,6 +4411,204 @@ typedef struct VkWin32KeyedMutexAcquireReleaseInfoNV {
 
 #endif /* VK_USE_PLATFORM_WIN32_KHR */
 
+#define VK_KHX_device_group 1
+#define VK_MAX_DEVICE_GROUP_SIZE_KHX      32
+#define VK_KHX_DEVICE_GROUP_SPEC_VERSION  1
+#define VK_KHX_DEVICE_GROUP_EXTENSION_NAME "VK_KHX_device_group"
+
+
+typedef enum VkPeerMemoryFeatureFlagBitsKHX {
+    VK_PEER_MEMORY_FEATURE_COPY_SRC_BIT_KHX = 0x00000001,
+    VK_PEER_MEMORY_FEATURE_COPY_DST_BIT_KHX = 0x00000002,
+    VK_PEER_MEMORY_FEATURE_GENERIC_SRC_BIT_KHX = 0x00000004,
+    VK_PEER_MEMORY_FEATURE_GENERIC_DST_BIT_KHX = 0x00000008,
+    VK_PEER_MEMORY_FEATURE_FLAG_BITS_MAX_ENUM_KHX = 0x7FFFFFFF
+} VkPeerMemoryFeatureFlagBitsKHX;
+typedef VkFlags VkPeerMemoryFeatureFlagsKHX;
+
+typedef enum VkMemoryAllocateFlagBitsKHX {
+    VK_MEMORY_ALLOCATE_DEVICE_MASK_BIT_KHX = 0x00000001,
+    VK_MEMORY_ALLOCATE_FLAG_BITS_MAX_ENUM_KHX = 0x7FFFFFFF
+} VkMemoryAllocateFlagBitsKHX;
+typedef VkFlags VkMemoryAllocateFlagsKHX;
+
+typedef enum VkDeviceGroupPresentModeFlagBitsKHX {
+    VK_DEVICE_GROUP_PRESENT_MODE_LOCAL_BIT_KHX = 0x00000001,
+    VK_DEVICE_GROUP_PRESENT_MODE_REMOTE_BIT_KHX = 0x00000002,
+    VK_DEVICE_GROUP_PRESENT_MODE_SUM_BIT_KHX = 0x00000004,
+    VK_DEVICE_GROUP_PRESENT_MODE_LOCAL_MULTI_DEVICE_BIT_KHX = 0x00000008,
+    VK_DEVICE_GROUP_PRESENT_MODE_FLAG_BITS_MAX_ENUM_KHX = 0x7FFFFFFF
+} VkDeviceGroupPresentModeFlagBitsKHX;
+typedef VkFlags VkDeviceGroupPresentModeFlagsKHX;
+
+typedef struct VkMemoryAllocateFlagsInfoKHX {
+    VkStructureType             sType;
+    const void*                 pNext;
+    VkMemoryAllocateFlagsKHX    flags;
+    uint32_t                    deviceMask;
+} VkMemoryAllocateFlagsInfoKHX;
+
+typedef struct VkBindBufferMemoryInfoKHX {
+    VkStructureType    sType;
+    const void*        pNext;
+    VkBuffer           buffer;
+    VkDeviceMemory     memory;
+    VkDeviceSize       memoryOffset;
+    uint32_t           deviceIndexCount;
+    const uint32_t*    pDeviceIndices;
+} VkBindBufferMemoryInfoKHX;
+
+typedef struct VkBindImageMemoryInfoKHX {
+    VkStructureType    sType;
+    const void*        pNext;
+    VkImage            image;
+    VkDeviceMemory     memory;
+    VkDeviceSize       memoryOffset;
+    uint32_t           deviceIndexCount;
+    const uint32_t*    pDeviceIndices;
+    uint32_t           SFRRectCount;
+    const VkRect2D*    pSFRRects;
+} VkBindImageMemoryInfoKHX;
+
+typedef struct VkDeviceGroupRenderPassBeginInfoKHX {
+    VkStructureType    sType;
+    const void*        pNext;
+    uint32_t           deviceMask;
+    uint32_t           deviceRenderAreaCount;
+    const VkRect2D*    pDeviceRenderAreas;
+} VkDeviceGroupRenderPassBeginInfoKHX;
+
+typedef struct VkDeviceGroupCommandBufferBeginInfoKHX {
+    VkStructureType    sType;
+    const void*        pNext;
+    uint32_t           deviceMask;
+} VkDeviceGroupCommandBufferBeginInfoKHX;
+
+typedef struct VkDeviceGroupSubmitInfoKHX {
+    VkStructureType    sType;
+    const void*        pNext;
+    uint32_t           waitSemaphoreCount;
+    const uint32_t*    pWaitSemaphoreDeviceIndices;
+    uint32_t           commandBufferCount;
+    const uint32_t*    pCommandBufferDeviceMasks;
+    uint32_t           signalSemaphoreCount;
+    const uint32_t*    pSignalSemaphoreDeviceIndices;
+} VkDeviceGroupSubmitInfoKHX;
+
+typedef struct VkDeviceGroupBindSparseInfoKHX {
+    VkStructureType    sType;
+    const void*        pNext;
+    uint32_t           resourceDeviceIndex;
+    uint32_t           memoryDeviceIndex;
+} VkDeviceGroupBindSparseInfoKHX;
+
+typedef struct VkDeviceGroupPresentCapabilitiesKHX {
+    VkStructureType                     sType;
+    const void*                         pNext;
+    uint32_t                            presentMask[VK_MAX_DEVICE_GROUP_SIZE_KHX];
+    VkDeviceGroupPresentModeFlagsKHX    modes;
+} VkDeviceGroupPresentCapabilitiesKHX;
+
+typedef struct VkImageSwapchainCreateInfoKHX {
+    VkStructureType    sType;
+    const void*        pNext;
+    VkSwapchainKHR     swapchain;
+} VkImageSwapchainCreateInfoKHX;
+
+typedef struct VkBindImageMemorySwapchainInfoKHX {
+    VkStructureType    sType;
+    const void*        pNext;
+    VkSwapchainKHR     swapchain;
+    uint32_t           imageIndex;
+} VkBindImageMemorySwapchainInfoKHX;
+
+typedef struct VkAcquireNextImageInfoKHX {
+    VkStructureType    sType;
+    const void*        pNext;
+    VkSwapchainKHR     swapchain;
+    uint64_t           timeout;
+    VkSemaphore        semaphore;
+    VkFence            fence;
+    uint32_t           deviceMask;
+} VkAcquireNextImageInfoKHX;
+
+typedef struct VkDeviceGroupPresentInfoKHX {
+    VkStructureType                        sType;
+    const void*                            pNext;
+    uint32_t                               swapchainCount;
+    const uint32_t*                        pDeviceMasks;
+    VkDeviceGroupPresentModeFlagBitsKHX    mode;
+} VkDeviceGroupPresentInfoKHX;
+
+typedef struct VkDeviceGroupSwapchainCreateInfoKHX {
+    VkStructureType                     sType;
+    const void*                         pNext;
+    VkDeviceGroupPresentModeFlagsKHX    modes;
+} VkDeviceGroupSwapchainCreateInfoKHX;
+
+
+typedef void (VKAPI_PTR *PFN_vkGetDeviceGroupPeerMemoryFeaturesKHX)(VkDevice device, uint32_t heapIndex, uint32_t localDeviceIndex, uint32_t remoteDeviceIndex, VkPeerMemoryFeatureFlagsKHX* pPeerMemoryFeatures);
+typedef VkResult (VKAPI_PTR *PFN_vkBindBufferMemory2KHX)(VkDevice device, uint32_t bindInfoCount, const VkBindBufferMemoryInfoKHX* pBindInfos);
+typedef VkResult (VKAPI_PTR *PFN_vkBindImageMemory2KHX)(VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfoKHX* pBindInfos);
+typedef void (VKAPI_PTR *PFN_vkCmdSetDeviceMaskKHX)(VkCommandBuffer commandBuffer, uint32_t deviceMask);
+typedef VkResult (VKAPI_PTR *PFN_vkGetDeviceGroupPresentCapabilitiesKHX)(VkDevice device, VkDeviceGroupPresentCapabilitiesKHX* pDeviceGroupPresentCapabilities);
+typedef VkResult (VKAPI_PTR *PFN_vkGetDeviceGroupSurfacePresentModesKHX)(VkDevice device, VkSurfaceKHR surface, VkDeviceGroupPresentModeFlagsKHX* pModes);
+typedef VkResult (VKAPI_PTR *PFN_vkAcquireNextImage2KHX)(VkDevice device, const VkAcquireNextImageInfoKHX* pAcquireInfo, uint32_t* pImageIndex);
+typedef void (VKAPI_PTR *PFN_vkCmdDispatchBaseKHX)(VkCommandBuffer commandBuffer, uint32_t baseGroupX, uint32_t baseGroupY, uint32_t baseGroupZ, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
+typedef VkResult (VKAPI_PTR *PFN_vkGetPhysicalDevicePresentRectanglesKHX)(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t* pRectCount, VkRect2D* pRects);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR void VKAPI_CALL vkGetDeviceGroupPeerMemoryFeaturesKHX(
+    VkDevice                                    device,
+    uint32_t                                    heapIndex,
+    uint32_t                                    localDeviceIndex,
+    uint32_t                                    remoteDeviceIndex,
+    VkPeerMemoryFeatureFlagsKHX*                pPeerMemoryFeatures);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkBindBufferMemory2KHX(
+    VkDevice                                    device,
+    uint32_t                                    bindInfoCount,
+    const VkBindBufferMemoryInfoKHX*            pBindInfos);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkBindImageMemory2KHX(
+    VkDevice                                    device,
+    uint32_t                                    bindInfoCount,
+    const VkBindImageMemoryInfoKHX*             pBindInfos);
+
+VKAPI_ATTR void VKAPI_CALL vkCmdSetDeviceMaskKHX(
+    VkCommandBuffer                             commandBuffer,
+    uint32_t                                    deviceMask);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkGetDeviceGroupPresentCapabilitiesKHX(
+    VkDevice                                    device,
+    VkDeviceGroupPresentCapabilitiesKHX*        pDeviceGroupPresentCapabilities);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkGetDeviceGroupSurfacePresentModesKHX(
+    VkDevice                                    device,
+    VkSurfaceKHR                                surface,
+    VkDeviceGroupPresentModeFlagsKHX*           pModes);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkAcquireNextImage2KHX(
+    VkDevice                                    device,
+    const VkAcquireNextImageInfoKHX*            pAcquireInfo,
+    uint32_t*                                   pImageIndex);
+
+VKAPI_ATTR void VKAPI_CALL vkCmdDispatchBaseKHX(
+    VkCommandBuffer                             commandBuffer,
+    uint32_t                                    baseGroupX,
+    uint32_t                                    baseGroupY,
+    uint32_t                                    baseGroupZ,
+    uint32_t                                    groupCountX,
+    uint32_t                                    groupCountY,
+    uint32_t                                    groupCountZ);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkGetPhysicalDevicePresentRectanglesKHX(
+    VkPhysicalDevice                            physicalDevice,
+    VkSurfaceKHR                                surface,
+    uint32_t*                                   pRectCount,
+    VkRect2D*                                   pRects);
+#endif
+
 #define VK_EXT_validation_flags 1
 #define VK_EXT_VALIDATION_FLAGS_SPEC_VERSION 1
 #define VK_EXT_VALIDATION_FLAGS_EXTENSION_NAME "VK_EXT_validation_flags"
@@ -4166,6 +4630,454 @@ typedef struct VkValidationFlagsEXT {
 } VkValidationFlagsEXT;
 
 
+
+#ifdef VK_USE_PLATFORM_VI_NN
+#define VK_NN_vi_surface 1
+#define VK_NN_VI_SURFACE_SPEC_VERSION     1
+#define VK_NN_VI_SURFACE_EXTENSION_NAME   "VK_NN_vi_surface"
+
+typedef VkFlags VkViSurfaceCreateFlagsNN;
+
+typedef struct VkViSurfaceCreateInfoNN {
+    VkStructureType             sType;
+    const void*                 pNext;
+    VkViSurfaceCreateFlagsNN    flags;
+    void*                       window;
+} VkViSurfaceCreateInfoNN;
+
+
+typedef VkResult (VKAPI_PTR *PFN_vkCreateViSurfaceNN)(VkInstance instance, const VkViSurfaceCreateInfoNN* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR VkResult VKAPI_CALL vkCreateViSurfaceNN(
+    VkInstance                                  instance,
+    const VkViSurfaceCreateInfoNN*              pCreateInfo,
+    const VkAllocationCallbacks*                pAllocator,
+    VkSurfaceKHR*                               pSurface);
+#endif
+#endif /* VK_USE_PLATFORM_VI_NN */
+
+#define VK_KHX_device_group_creation 1
+#define VK_KHX_DEVICE_GROUP_CREATION_SPEC_VERSION 1
+#define VK_KHX_DEVICE_GROUP_CREATION_EXTENSION_NAME "VK_KHX_device_group_creation"
+
+typedef struct VkPhysicalDeviceGroupPropertiesKHX {
+    VkStructureType     sType;
+    const void*         pNext;
+    uint32_t            physicalDeviceCount;
+    VkPhysicalDevice    physicalDevices[VK_MAX_DEVICE_GROUP_SIZE_KHX];
+    VkBool32            subsetAllocation;
+} VkPhysicalDeviceGroupPropertiesKHX;
+
+typedef struct VkDeviceGroupDeviceCreateInfoKHX {
+    VkStructureType            sType;
+    const void*                pNext;
+    uint32_t                   physicalDeviceCount;
+    const VkPhysicalDevice*    pPhysicalDevices;
+} VkDeviceGroupDeviceCreateInfoKHX;
+
+
+typedef VkResult (VKAPI_PTR *PFN_vkEnumeratePhysicalDeviceGroupsKHX)(VkInstance instance, uint32_t* pPhysicalDeviceGroupCount, VkPhysicalDeviceGroupPropertiesKHX* pPhysicalDeviceGroupProperties);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR VkResult VKAPI_CALL vkEnumeratePhysicalDeviceGroupsKHX(
+    VkInstance                                  instance,
+    uint32_t*                                   pPhysicalDeviceGroupCount,
+    VkPhysicalDeviceGroupPropertiesKHX*         pPhysicalDeviceGroupProperties);
+#endif
+
+#define VK_KHX_external_memory_capabilities 1
+#define VK_LUID_SIZE_KHX                  8
+#define VK_KHX_EXTERNAL_MEMORY_CAPABILITIES_SPEC_VERSION 1
+#define VK_KHX_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME "VK_KHX_external_memory_capabilities"
+
+
+typedef enum VkExternalMemoryHandleTypeFlagBitsKHX {
+    VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT_KHX = 0x00000001,
+    VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT_KHX = 0x00000002,
+    VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT_KHX = 0x00000004,
+    VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_TEXTURE_BIT_KHX = 0x00000008,
+    VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_TEXTURE_KMT_BIT_KHX = 0x00000010,
+    VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_HEAP_BIT_KHX = 0x00000020,
+    VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE_BIT_KHX = 0x00000040,
+    VK_EXTERNAL_MEMORY_HANDLE_TYPE_FLAG_BITS_MAX_ENUM_KHX = 0x7FFFFFFF
+} VkExternalMemoryHandleTypeFlagBitsKHX;
+
+typedef enum VkExternalMemoryFeatureFlagBitsKHX {
+    VK_EXTERNAL_MEMORY_FEATURE_DEDICATED_ONLY_BIT_KHX = 0x00000001,
+    VK_EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT_KHX = 0x00000002,
+    VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT_KHX = 0x00000004,
+    VK_EXTERNAL_MEMORY_FEATURE_FLAG_BITS_MAX_ENUM_KHX = 0x7FFFFFFF
+} VkExternalMemoryFeatureFlagBitsKHX;
+
+typedef VkFlags VkExternalMemoryHandleTypeFlagsKHX;
+typedef VkFlags VkExternalMemoryFeatureFlagsKHX;
+
+typedef struct VkExternalMemoryPropertiesKHX {
+    VkExternalMemoryFeatureFlagsKHX       externalMemoryFeatures;
+    VkExternalMemoryHandleTypeFlagsKHX    exportFromImportedHandleTypes;
+    VkExternalMemoryHandleTypeFlagsKHX    compatibleHandleTypes;
+} VkExternalMemoryPropertiesKHX;
+
+typedef struct VkPhysicalDeviceExternalImageFormatInfoKHX {
+    VkStructureType                          sType;
+    const void*                              pNext;
+    VkExternalMemoryHandleTypeFlagBitsKHX    handleType;
+} VkPhysicalDeviceExternalImageFormatInfoKHX;
+
+typedef struct VkExternalImageFormatPropertiesKHX {
+    VkStructureType                  sType;
+    void*                            pNext;
+    VkExternalMemoryPropertiesKHX    externalMemoryProperties;
+} VkExternalImageFormatPropertiesKHX;
+
+typedef struct VkPhysicalDeviceExternalBufferInfoKHX {
+    VkStructureType                          sType;
+    const void*                              pNext;
+    VkBufferCreateFlags                      flags;
+    VkBufferUsageFlags                       usage;
+    VkExternalMemoryHandleTypeFlagBitsKHX    handleType;
+} VkPhysicalDeviceExternalBufferInfoKHX;
+
+typedef struct VkExternalBufferPropertiesKHX {
+    VkStructureType                  sType;
+    void*                            pNext;
+    VkExternalMemoryPropertiesKHX    externalMemoryProperties;
+} VkExternalBufferPropertiesKHX;
+
+typedef struct VkPhysicalDeviceIDPropertiesKHX {
+    VkStructureType    sType;
+    void*              pNext;
+    uint8_t            deviceUUID[VK_UUID_SIZE];
+    uint8_t            driverUUID[VK_UUID_SIZE];
+    uint8_t            deviceLUID[VK_LUID_SIZE_KHX];
+    VkBool32           deviceLUIDValid;
+} VkPhysicalDeviceIDPropertiesKHX;
+
+typedef struct VkPhysicalDeviceProperties2KHX {
+    VkStructureType               sType;
+    void*                         pNext;
+    VkPhysicalDeviceProperties    properties;
+} VkPhysicalDeviceProperties2KHX;
+
+typedef struct VkImageFormatProperties2KHX {
+    VkStructureType            sType;
+    void*                      pNext;
+    VkImageFormatProperties    imageFormatProperties;
+} VkImageFormatProperties2KHX;
+
+typedef struct VkPhysicalDeviceImageFormatInfo2KHX {
+    VkStructureType       sType;
+    const void*           pNext;
+    VkFormat              format;
+    VkImageType           type;
+    VkImageTiling         tiling;
+    VkImageUsageFlags     usage;
+    VkImageCreateFlags    flags;
+} VkPhysicalDeviceImageFormatInfo2KHX;
+
+
+typedef void (VKAPI_PTR *PFN_vkGetPhysicalDeviceExternalBufferPropertiesKHX)(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalBufferInfoKHX* pExternalBufferInfo, VkExternalBufferPropertiesKHX* pExternalBufferProperties);
+typedef void (VKAPI_PTR *PFN_vkGetPhysicalDeviceProperties2KHX)(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties2KHX* pProperties);
+typedef VkResult (VKAPI_PTR *PFN_vkGetPhysicalDeviceImageFormatProperties2KHX)(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceImageFormatInfo2KHX* pImageFormatInfo, VkImageFormatProperties2KHX* pImageFormatProperties);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR void VKAPI_CALL vkGetPhysicalDeviceExternalBufferPropertiesKHX(
+    VkPhysicalDevice                            physicalDevice,
+    const VkPhysicalDeviceExternalBufferInfoKHX* pExternalBufferInfo,
+    VkExternalBufferPropertiesKHX*              pExternalBufferProperties);
+
+VKAPI_ATTR void VKAPI_CALL vkGetPhysicalDeviceProperties2KHX(
+    VkPhysicalDevice                            physicalDevice,
+    VkPhysicalDeviceProperties2KHX*             pProperties);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkGetPhysicalDeviceImageFormatProperties2KHX(
+    VkPhysicalDevice                            physicalDevice,
+    const VkPhysicalDeviceImageFormatInfo2KHX*  pImageFormatInfo,
+    VkImageFormatProperties2KHX*                pImageFormatProperties);
+#endif
+
+#define VK_KHX_external_memory 1
+#define VK_KHX_EXTERNAL_MEMORY_SPEC_VERSION 1
+#define VK_KHX_EXTERNAL_MEMORY_EXTENSION_NAME "VK_KHX_external_memory"
+#define VK_QUEUE_FAMILY_EXTERNAL_KHX      (~0U-1)
+
+typedef struct VkExternalMemoryImageCreateInfoKHX {
+    VkStructureType                       sType;
+    const void*                           pNext;
+    VkExternalMemoryHandleTypeFlagsKHX    handleTypes;
+} VkExternalMemoryImageCreateInfoKHX;
+
+typedef struct VkExternalMemoryBufferCreateInfoKHX {
+    VkStructureType                       sType;
+    const void*                           pNext;
+    VkExternalMemoryHandleTypeFlagsKHX    handleTypes;
+} VkExternalMemoryBufferCreateInfoKHX;
+
+typedef struct VkExportMemoryAllocateInfoKHX {
+    VkStructureType                       sType;
+    const void*                           pNext;
+    VkExternalMemoryHandleTypeFlagsKHX    handleTypes;
+} VkExportMemoryAllocateInfoKHX;
+
+
+
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+#define VK_KHX_external_memory_win32 1
+#define VK_KHX_EXTERNAL_MEMORY_WIN32_SPEC_VERSION 1
+#define VK_KHX_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME "VK_KHX_external_memory_win32"
+
+typedef struct VkImportMemoryWin32HandleInfoKHX {
+    VkStructureType                          sType;
+    const void*                              pNext;
+    VkExternalMemoryHandleTypeFlagBitsKHX    handleType;
+    HANDLE                                   handle;
+} VkImportMemoryWin32HandleInfoKHX;
+
+typedef struct VkExportMemoryWin32HandleInfoKHX {
+    VkStructureType               sType;
+    const void*                   pNext;
+    const SECURITY_ATTRIBUTES*    pAttributes;
+    DWORD                         dwAccess;
+    LPCWSTR                       name;
+} VkExportMemoryWin32HandleInfoKHX;
+
+typedef struct VkMemoryWin32HandlePropertiesKHX {
+    VkStructureType    sType;
+    void*              pNext;
+    uint32_t           memoryTypeBits;
+} VkMemoryWin32HandlePropertiesKHX;
+
+
+typedef VkResult (VKAPI_PTR *PFN_vkGetMemoryWin32HandleKHX)(VkDevice device, VkDeviceMemory memory, VkExternalMemoryHandleTypeFlagBitsKHX handleType, HANDLE* pHandle);
+typedef VkResult (VKAPI_PTR *PFN_vkGetMemoryWin32HandlePropertiesKHX)(VkDevice device, VkExternalMemoryHandleTypeFlagBitsKHX handleType, HANDLE handle, VkMemoryWin32HandlePropertiesKHX* pMemoryWin32HandleProperties);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR VkResult VKAPI_CALL vkGetMemoryWin32HandleKHX(
+    VkDevice                                    device,
+    VkDeviceMemory                              memory,
+    VkExternalMemoryHandleTypeFlagBitsKHX       handleType,
+    HANDLE*                                     pHandle);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkGetMemoryWin32HandlePropertiesKHX(
+    VkDevice                                    device,
+    VkExternalMemoryHandleTypeFlagBitsKHX       handleType,
+    HANDLE                                      handle,
+    VkMemoryWin32HandlePropertiesKHX*           pMemoryWin32HandleProperties);
+#endif
+#endif /* VK_USE_PLATFORM_WIN32_KHR */
+
+#define VK_KHX_external_memory_fd 1
+#define VK_KHX_EXTERNAL_MEMORY_FD_SPEC_VERSION 1
+#define VK_KHX_EXTERNAL_MEMORY_FD_EXTENSION_NAME "VK_KHX_external_memory_fd"
+
+typedef struct VkImportMemoryFdInfoKHX {
+    VkStructureType                          sType;
+    const void*                              pNext;
+    VkExternalMemoryHandleTypeFlagBitsKHX    handleType;
+    int                                      fd;
+} VkImportMemoryFdInfoKHX;
+
+typedef struct VkMemoryFdPropertiesKHX {
+    VkStructureType    sType;
+    void*              pNext;
+    uint32_t           memoryTypeBits;
+} VkMemoryFdPropertiesKHX;
+
+
+typedef VkResult (VKAPI_PTR *PFN_vkGetMemoryFdKHX)(VkDevice device, VkDeviceMemory memory, VkExternalMemoryHandleTypeFlagBitsKHX handleType, int* pFd);
+typedef VkResult (VKAPI_PTR *PFN_vkGetMemoryFdPropertiesKHX)(VkDevice device, VkExternalMemoryHandleTypeFlagBitsKHX handleType, int fd, VkMemoryFdPropertiesKHX* pMemoryFdProperties);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR VkResult VKAPI_CALL vkGetMemoryFdKHX(
+    VkDevice                                    device,
+    VkDeviceMemory                              memory,
+    VkExternalMemoryHandleTypeFlagBitsKHX       handleType,
+    int*                                        pFd);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkGetMemoryFdPropertiesKHX(
+    VkDevice                                    device,
+    VkExternalMemoryHandleTypeFlagBitsKHX       handleType,
+    int                                         fd,
+    VkMemoryFdPropertiesKHX*                    pMemoryFdProperties);
+#endif
+
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+#define VK_KHX_win32_keyed_mutex 1
+#define VK_KHX_WIN32_KEYED_MUTEX_SPEC_VERSION 1
+#define VK_KHX_WIN32_KEYED_MUTEX_EXTENSION_NAME "VK_KHX_win32_keyed_mutex"
+
+typedef struct VkWin32KeyedMutexAcquireReleaseInfoKHX {
+    VkStructureType          sType;
+    const void*              pNext;
+    uint32_t                 acquireCount;
+    const VkDeviceMemory*    pAcquireSyncs;
+    const uint64_t*          pAcquireKeys;
+    const uint32_t*          pAcquireTimeouts;
+    uint32_t                 releaseCount;
+    const VkDeviceMemory*    pReleaseSyncs;
+    const uint64_t*          pReleaseKeys;
+} VkWin32KeyedMutexAcquireReleaseInfoKHX;
+
+
+#endif /* VK_USE_PLATFORM_WIN32_KHR */
+
+#define VK_KHX_external_semaphore_capabilities 1
+#define VK_KHX_EXTERNAL_SEMAPHORE_CAPABILITIES_SPEC_VERSION 1
+#define VK_KHX_EXTERNAL_SEMAPHORE_CAPABILITIES_EXTENSION_NAME "VK_KHX_external_semaphore_capabilities"
+
+
+typedef enum VkExternalSemaphoreHandleTypeFlagBitsKHX {
+    VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_FD_BIT_KHX = 0x00000001,
+    VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT_KHX = 0x00000002,
+    VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT_KHX = 0x00000004,
+    VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_D3D12_FENCE_BIT_KHX = 0x00000008,
+    VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_FENCE_FD_BIT_KHX = 0x00000010,
+    VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_FLAG_BITS_MAX_ENUM_KHX = 0x7FFFFFFF
+} VkExternalSemaphoreHandleTypeFlagBitsKHX;
+
+typedef enum VkExternalSemaphoreFeatureFlagBitsKHX {
+    VK_EXTERNAL_SEMAPHORE_FEATURE_EXPORTABLE_BIT_KHX = 0x00000001,
+    VK_EXTERNAL_SEMAPHORE_FEATURE_IMPORTABLE_BIT_KHX = 0x00000002,
+    VK_EXTERNAL_SEMAPHORE_FEATURE_FLAG_BITS_MAX_ENUM_KHX = 0x7FFFFFFF
+} VkExternalSemaphoreFeatureFlagBitsKHX;
+
+typedef VkFlags VkExternalSemaphoreHandleTypeFlagsKHX;
+typedef VkFlags VkExternalSemaphoreFeatureFlagsKHX;
+
+typedef struct VkPhysicalDeviceExternalSemaphoreInfoKHX {
+    VkStructureType                             sType;
+    const void*                                 pNext;
+    VkExternalSemaphoreHandleTypeFlagBitsKHX    handleType;
+} VkPhysicalDeviceExternalSemaphoreInfoKHX;
+
+typedef struct VkExternalSemaphorePropertiesKHX {
+    VkStructureType                          sType;
+    void*                                    pNext;
+    VkExternalSemaphoreHandleTypeFlagsKHX    exportFromImportedHandleTypes;
+    VkExternalSemaphoreHandleTypeFlagsKHX    compatibleHandleTypes;
+    VkExternalSemaphoreFeatureFlagsKHX       externalSemaphoreFeatures;
+} VkExternalSemaphorePropertiesKHX;
+
+
+typedef void (VKAPI_PTR *PFN_vkGetPhysicalDeviceExternalSemaphorePropertiesKHX)(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalSemaphoreInfoKHX* pExternalSemaphoreInfo, VkExternalSemaphorePropertiesKHX* pExternalSemaphoreProperties);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR void VKAPI_CALL vkGetPhysicalDeviceExternalSemaphorePropertiesKHX(
+    VkPhysicalDevice                            physicalDevice,
+    const VkPhysicalDeviceExternalSemaphoreInfoKHX* pExternalSemaphoreInfo,
+    VkExternalSemaphorePropertiesKHX*           pExternalSemaphoreProperties);
+#endif
+
+#define VK_KHX_external_semaphore 1
+#define VK_KHX_EXTERNAL_SEMAPHORE_SPEC_VERSION 1
+#define VK_KHX_EXTERNAL_SEMAPHORE_EXTENSION_NAME "VK_KHX_external_semaphore"
+
+typedef struct VkExportSemaphoreCreateInfoKHX {
+    VkStructureType                          sType;
+    const void*                              pNext;
+    VkExternalSemaphoreHandleTypeFlagsKHX    handleTypes;
+} VkExportSemaphoreCreateInfoKHX;
+
+
+
+#ifdef VK_USE_PLATFORM_WIN32_KHX
+#define VK_KHX_external_semaphore_win32 1
+#define VK_KHX_EXTERNAL_SEMAPHORE_WIN32_SPEC_VERSION 1
+#define VK_KHX_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME "VK_KHX_external_semaphore_win32"
+
+typedef struct VkImportSemaphoreWin32HandleInfoKHX {
+    VkStructureType                          sType;
+    const void*                              pNext;
+    VkSemaphore                              semaphore;
+    VkExternalSemaphoreHandleTypeFlagsKHX    handleType;
+    HANDLE                                   handle;
+} VkImportSemaphoreWin32HandleInfoKHX;
+
+typedef struct VkExportSemaphoreWin32HandleInfoKHX {
+    VkStructureType               sType;
+    const void*                   pNext;
+    const SECURITY_ATTRIBUTES*    pAttributes;
+    DWORD                         dwAccess;
+    LPCWSTR                       name;
+} VkExportSemaphoreWin32HandleInfoKHX;
+
+typedef struct VkD3D12FenceSubmitInfoKHX {
+    VkStructureType    sType;
+    const void*        pNext;
+    uint32_t           waitSemaphoreValuesCount;
+    const uint64_t*    pWaitSemaphoreValues;
+    uint32_t           signalSemaphoreValuesCount;
+    const uint64_t*    pSignalSemaphoreValues;
+} VkD3D12FenceSubmitInfoKHX;
+
+
+typedef VkResult (VKAPI_PTR *PFN_vkImportSemaphoreWin32HandleKHX)(VkDevice device, const VkImportSemaphoreWin32HandleInfoKHX* pImportSemaphoreWin32HandleInfo);
+typedef VkResult (VKAPI_PTR *PFN_vkGetSemaphoreWin32HandleKHX)(VkDevice device, VkSemaphore semaphore, VkExternalSemaphoreHandleTypeFlagBitsKHX handleType, HANDLE* pHandle);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR VkResult VKAPI_CALL vkImportSemaphoreWin32HandleKHX(
+    VkDevice                                    device,
+    const VkImportSemaphoreWin32HandleInfoKHX*  pImportSemaphoreWin32HandleInfo);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkGetSemaphoreWin32HandleKHX(
+    VkDevice                                    device,
+    VkSemaphore                                 semaphore,
+    VkExternalSemaphoreHandleTypeFlagBitsKHX    handleType,
+    HANDLE*                                     pHandle);
+#endif
+#endif /* VK_USE_PLATFORM_WIN32_KHX */
+
+#define VK_KHX_external_semaphore_fd 1
+#define VK_KHX_EXTERNAL_SEMAPHORE_FD_SPEC_VERSION 1
+#define VK_KHX_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME "VK_KHX_external_semaphore_fd"
+
+typedef struct VkImportSemaphoreFdInfoKHX {
+    VkStructureType                             sType;
+    const void*                                 pNext;
+    VkSemaphore                                 semaphore;
+    VkExternalSemaphoreHandleTypeFlagBitsKHX    handleType;
+    int                                         fd;
+} VkImportSemaphoreFdInfoKHX;
+
+
+typedef VkResult (VKAPI_PTR *PFN_vkImportSemaphoreFdKHX)(VkDevice device, const VkImportSemaphoreFdInfoKHX* pImportSemaphoreFdInfo);
+typedef VkResult (VKAPI_PTR *PFN_vkGetSemaphoreFdKHX)(VkDevice device, VkSemaphore semaphore, VkExternalSemaphoreHandleTypeFlagBitsKHX handleType, int* pFd);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR VkResult VKAPI_CALL vkImportSemaphoreFdKHX(
+    VkDevice                                    device,
+    const VkImportSemaphoreFdInfoKHX*           pImportSemaphoreFdInfo);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkGetSemaphoreFdKHX(
+    VkDevice                                    device,
+    VkSemaphore                                 semaphore,
+    VkExternalSemaphoreHandleTypeFlagBitsKHX    handleType,
+    int*                                        pFd);
+#endif
+
+#define VK_KHX_push_descriptor 1
+#define VK_KHX_PUSH_DESCRIPTOR_SPEC_VERSION 1
+#define VK_KHX_PUSH_DESCRIPTOR_EXTENSION_NAME "VK_KHX_push_descriptor"
+
+typedef struct VkPhysicalDevicePushDescriptorPropertiesKHX {
+    VkStructureType    sType;
+    void*              pNext;
+    uint32_t           maxPushDescriptors;
+} VkPhysicalDevicePushDescriptorPropertiesKHX;
+
+
+typedef void (VKAPI_PTR *PFN_vkCmdPushDescriptorSetKHX)(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t set, uint32_t descriptorWriteCount, const VkWriteDescriptorSet* pDescriptorWrites);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR void VKAPI_CALL vkCmdPushDescriptorSetKHX(
+    VkCommandBuffer                             commandBuffer,
+    VkPipelineBindPoint                         pipelineBindPoint,
+    VkPipelineLayout                            layout,
+    uint32_t                                    set,
+    uint32_t                                    descriptorWriteCount,
+    const VkWriteDescriptorSet*                 pDescriptorWrites);
+#endif
 
 #define VK_NVX_device_generated_commands 1
 VK_DEFINE_NON_DISPATCHABLE_HANDLE(VkObjectTableNVX)
@@ -4391,6 +5303,166 @@ VKAPI_ATTR void VKAPI_CALL vkGetPhysicalDeviceGeneratedCommandsPropertiesNVX(
     VkPhysicalDevice                            physicalDevice,
     VkDeviceGeneratedCommandsFeaturesNVX*       pFeatures,
     VkDeviceGeneratedCommandsLimitsNVX*         pLimits);
+#endif
+
+#define VK_EXT_direct_mode_display 1
+#define VK_EXT_DIRECT_MODE_DISPLAY_SPEC_VERSION 1
+#define VK_EXT_DIRECT_MODE_DISPLAY_EXTENSION_NAME "VK_EXT_direct_mode_display"
+
+typedef VkResult (VKAPI_PTR *PFN_vkReleaseDisplayEXT)(VkPhysicalDevice physicalDevice, VkDisplayKHR display);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR VkResult VKAPI_CALL vkReleaseDisplayEXT(
+    VkPhysicalDevice                            physicalDevice,
+    VkDisplayKHR                                display);
+#endif
+
+#ifdef VK_USE_PLATFORM_XLIB_XRANDR_EXT
+#define VK_EXT_acquire_xlib_display 1
+#include <X11/extensions/Xrandr.h>
+
+#define VK_EXT_ACQUIRE_XLIB_DISPLAY_SPEC_VERSION 1
+#define VK_EXT_ACQUIRE_XLIB_DISPLAY_EXTENSION_NAME "VK_EXT_acquire_xlib_display"
+
+typedef VkResult (VKAPI_PTR *PFN_vkAcquireXlibDisplayEXT)(VkPhysicalDevice physicalDevice, Display* dpy, VkDisplayKHR display);
+typedef VkResult (VKAPI_PTR *PFN_vkGetRandROutputDisplayEXT)(VkPhysicalDevice physicalDevice, Display* dpy, RROutput rrOutput, VkDisplayKHR* pDisplay);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR VkResult VKAPI_CALL vkAcquireXlibDisplayEXT(
+    VkPhysicalDevice                            physicalDevice,
+    Display*                                    dpy,
+    VkDisplayKHR                                display);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkGetRandROutputDisplayEXT(
+    VkPhysicalDevice                            physicalDevice,
+    Display*                                    dpy,
+    RROutput                                    rrOutput,
+    VkDisplayKHR*                               pDisplay);
+#endif
+#endif /* VK_USE_PLATFORM_XLIB_XRANDR_EXT */
+
+#define VK_EXT_display_surface_counter 1
+#define VK_EXT_DISPLAY_SURFACE_COUNTER_SPEC_VERSION 1
+#define VK_EXT_DISPLAY_SURFACE_COUNTER_EXTENSION_NAME "VK_EXT_display_surface_counter"
+
+
+typedef enum VkSurfaceCounterFlagBitsEXT {
+    VK_SURFACE_COUNTER_VBLANK_EXT = 0x00000001,
+    VK_SURFACE_COUNTER_FLAG_BITS_MAX_ENUM_EXT = 0x7FFFFFFF
+} VkSurfaceCounterFlagBitsEXT;
+typedef VkFlags VkSurfaceCounterFlagsEXT;
+
+typedef struct VkSurfaceCapabilities2EXT {
+    VkStructureType                  sType;
+    void*                            pNext;
+    uint32_t                         minImageCount;
+    uint32_t                         maxImageCount;
+    VkExtent2D                       currentExtent;
+    VkExtent2D                       minImageExtent;
+    VkExtent2D                       maxImageExtent;
+    uint32_t                         maxImageArrayLayers;
+    VkSurfaceTransformFlagsKHR       supportedTransforms;
+    VkSurfaceTransformFlagBitsKHR    currentTransform;
+    VkCompositeAlphaFlagsKHR         supportedCompositeAlpha;
+    VkImageUsageFlags                supportedUsageFlags;
+    VkSurfaceCounterFlagsEXT         supportedSurfaceCounters;
+} VkSurfaceCapabilities2EXT;
+
+
+typedef VkResult (VKAPI_PTR *PFN_vkGetPhysicalDeviceSurfaceCapabilities2EXT)(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkSurfaceCapabilities2EXT* pSurfaceCapabilities);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR VkResult VKAPI_CALL vkGetPhysicalDeviceSurfaceCapabilities2EXT(
+    VkPhysicalDevice                            physicalDevice,
+    VkSurfaceKHR                                surface,
+    VkSurfaceCapabilities2EXT*                  pSurfaceCapabilities);
+#endif
+
+#define VK_EXT_display_control 1
+#define VK_EXT_DISPLAY_CONTROL_SPEC_VERSION 1
+#define VK_EXT_DISPLAY_CONTROL_EXTENSION_NAME "VK_EXT_display_control"
+
+
+typedef enum VkDisplayPowerStateEXT {
+    VK_DISPLAY_POWER_STATE_OFF_EXT = 0,
+    VK_DISPLAY_POWER_STATE_SUSPEND_EXT = 1,
+    VK_DISPLAY_POWER_STATE_ON_EXT = 2,
+    VK_DISPLAY_POWER_STATE_BEGIN_RANGE_EXT = VK_DISPLAY_POWER_STATE_OFF_EXT,
+    VK_DISPLAY_POWER_STATE_END_RANGE_EXT = VK_DISPLAY_POWER_STATE_ON_EXT,
+    VK_DISPLAY_POWER_STATE_RANGE_SIZE_EXT = (VK_DISPLAY_POWER_STATE_ON_EXT - VK_DISPLAY_POWER_STATE_OFF_EXT + 1),
+    VK_DISPLAY_POWER_STATE_MAX_ENUM_EXT = 0x7FFFFFFF
+} VkDisplayPowerStateEXT;
+
+typedef enum VkDeviceEventTypeEXT {
+    VK_DEVICE_EVENT_TYPE_DISPLAY_HOTPLUG_EXT = 0,
+    VK_DEVICE_EVENT_TYPE_BEGIN_RANGE_EXT = VK_DEVICE_EVENT_TYPE_DISPLAY_HOTPLUG_EXT,
+    VK_DEVICE_EVENT_TYPE_END_RANGE_EXT = VK_DEVICE_EVENT_TYPE_DISPLAY_HOTPLUG_EXT,
+    VK_DEVICE_EVENT_TYPE_RANGE_SIZE_EXT = (VK_DEVICE_EVENT_TYPE_DISPLAY_HOTPLUG_EXT - VK_DEVICE_EVENT_TYPE_DISPLAY_HOTPLUG_EXT + 1),
+    VK_DEVICE_EVENT_TYPE_MAX_ENUM_EXT = 0x7FFFFFFF
+} VkDeviceEventTypeEXT;
+
+typedef enum VkDisplayEventTypeEXT {
+    VK_DISPLAY_EVENT_TYPE_FIRST_PIXEL_OUT_EXT = 0,
+    VK_DISPLAY_EVENT_TYPE_BEGIN_RANGE_EXT = VK_DISPLAY_EVENT_TYPE_FIRST_PIXEL_OUT_EXT,
+    VK_DISPLAY_EVENT_TYPE_END_RANGE_EXT = VK_DISPLAY_EVENT_TYPE_FIRST_PIXEL_OUT_EXT,
+    VK_DISPLAY_EVENT_TYPE_RANGE_SIZE_EXT = (VK_DISPLAY_EVENT_TYPE_FIRST_PIXEL_OUT_EXT - VK_DISPLAY_EVENT_TYPE_FIRST_PIXEL_OUT_EXT + 1),
+    VK_DISPLAY_EVENT_TYPE_MAX_ENUM_EXT = 0x7FFFFFFF
+} VkDisplayEventTypeEXT;
+
+typedef struct VkDisplayPowerInfoEXT {
+    VkStructureType           sType;
+    const void*               pNext;
+    VkDisplayPowerStateEXT    powerState;
+} VkDisplayPowerInfoEXT;
+
+typedef struct VkDeviceEventInfoEXT {
+    VkStructureType         sType;
+    const void*             pNext;
+    VkDeviceEventTypeEXT    deviceEvent;
+} VkDeviceEventInfoEXT;
+
+typedef struct VkDisplayEventInfoEXT {
+    VkStructureType          sType;
+    const void*              pNext;
+    VkDisplayEventTypeEXT    displayEvent;
+} VkDisplayEventInfoEXT;
+
+typedef struct VkSwapchainCounterCreateInfoEXT {
+    VkStructureType             sType;
+    const void*                 pNext;
+    VkSurfaceCounterFlagsEXT    surfaceCounters;
+} VkSwapchainCounterCreateInfoEXT;
+
+
+typedef VkResult (VKAPI_PTR *PFN_vkDisplayPowerControlEXT)(VkDevice device, VkDisplayKHR display, const VkDisplayPowerInfoEXT* pDisplayPowerInfo);
+typedef VkResult (VKAPI_PTR *PFN_vkRegisterDeviceEventEXT)(VkDevice device, const VkDeviceEventInfoEXT* pDeviceEventInfo, const VkAllocationCallbacks* pAllocator, VkFence* pFence);
+typedef VkResult (VKAPI_PTR *PFN_vkRegisterDisplayEventEXT)(VkDevice device, VkDisplayKHR display, const VkDisplayEventInfoEXT* pDisplayEventInfo, const VkAllocationCallbacks* pAllocator, VkFence* pFence);
+typedef VkResult (VKAPI_PTR *PFN_vkGetSwapchainCounterEXT)(VkDevice device, VkSwapchainKHR swapchain, VkSurfaceCounterFlagBitsEXT counter, uint64_t* pCounterValue);
+
+#ifndef VK_NO_PROTOTYPES
+VKAPI_ATTR VkResult VKAPI_CALL vkDisplayPowerControlEXT(
+    VkDevice                                    device,
+    VkDisplayKHR                                display,
+    const VkDisplayPowerInfoEXT*                pDisplayPowerInfo);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkRegisterDeviceEventEXT(
+    VkDevice                                    device,
+    const VkDeviceEventInfoEXT*                 pDeviceEventInfo,
+    const VkAllocationCallbacks*                pAllocator,
+    VkFence*                                    pFence);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkRegisterDisplayEventEXT(
+    VkDevice                                    device,
+    VkDisplayKHR                                display,
+    const VkDisplayEventInfoEXT*                pDisplayEventInfo,
+    const VkAllocationCallbacks*                pAllocator,
+    VkFence*                                    pFence);
+
+VKAPI_ATTR VkResult VKAPI_CALL vkGetSwapchainCounterEXT(
+    VkDevice                                    device,
+    VkSwapchainKHR                              swapchain,
+    VkSurfaceCounterFlagBitsEXT                 counter,
+    uint64_t*                                   pCounterValue);
 #endif
 
 #ifdef __cplusplus
