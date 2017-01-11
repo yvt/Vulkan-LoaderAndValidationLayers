@@ -1501,6 +1501,134 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceMemoryProperties(VkPhysicalDevice ph
     }
 }
 
+VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceFeatures2KHR(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2KHR *pFeatures) {
+    bool skip = false;
+    auto my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), instance_layer_data_map);
+    assert(my_data != NULL);
+
+    skip |= parameter_validation_vkGetPhysicalDeviceFeatures2KHR(my_data->report_data, pFeatures);
+
+    if (!skip) {
+        my_data->dispatch_table.GetPhysicalDeviceFeatures2KHR(physicalDevice, pFeatures);
+    }
+}
+
+VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceFormatProperties2KHR(VkPhysicalDevice physicalDevice, VkFormat format,
+                                                                 VkFormatProperties2KHR *pFormatProperties) {
+    bool skip = false;
+    auto my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), instance_layer_data_map);
+    assert(my_data != NULL);
+
+    skip |= parameter_validation_vkGetPhysicalDeviceFormatProperties2KHR(my_data->report_data, format, pFormatProperties);
+
+    if (!skip) {
+        my_data->dispatch_table.GetPhysicalDeviceFormatProperties2KHR(physicalDevice, format, pFormatProperties);
+    }
+}
+
+VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceImageFormatProperties2KHR(
+    VkPhysicalDevice physicalDevice, const VkPhysicalDeviceImageFormatInfo2KHR *pImageFormatInfo,
+    VkImageFormatProperties2KHR *pImageFormatProperties) {
+    VkResult result = VK_ERROR_VALIDATION_FAILED_EXT;
+    bool skip = false;
+    auto my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), instance_layer_data_map);
+    assert(my_data != NULL);
+
+    skip |= parameter_validation_vkGetPhysicalDeviceImageFormatProperties2KHR(my_data->report_data, pImageFormatInfo,
+                                                                              pImageFormatProperties);
+
+    if (!skip) {
+        result = my_data->dispatch_table.GetPhysicalDeviceImageFormatProperties2KHR(physicalDevice, pImageFormatInfo,
+                                                                                    pImageFormatProperties);
+
+        validate_result(my_data->report_data, "vkGetPhysicalDeviceImageFormatProperties2KHR", result);
+    }
+
+    return result;
+}
+
+VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceProperties2KHR(VkPhysicalDevice physicalDevice,
+                                                           VkPhysicalDeviceProperties2KHR *pProperties) {
+    bool skip = false;
+    auto my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), instance_layer_data_map);
+    assert(my_data != NULL);
+
+    skip |= parameter_validation_vkGetPhysicalDeviceProperties2KHR(my_data->report_data, pProperties);
+
+    if (!skip) {
+        my_data->dispatch_table.GetPhysicalDeviceProperties2KHR(physicalDevice, pProperties);
+    }
+}
+
+VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceQueueFamilyProperties2KHR(VkPhysicalDevice physicalDevice,
+                                                                      uint32_t *pQueueFamilyPropertyCount,
+                                                                      VkQueueFamilyProperties2KHR *pQueueFamilyProperties) {
+    bool skip = false;
+    auto my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), instance_layer_data_map);
+    assert(my_data != NULL);
+
+    skip |= parameter_validation_vkGetPhysicalDeviceQueueFamilyProperties2KHR(my_data->report_data, pQueueFamilyPropertyCount,
+                                                                              pQueueFamilyProperties);
+
+    if (!skip) {
+        my_data->dispatch_table.GetPhysicalDeviceQueueFamilyProperties2KHR(physicalDevice, pQueueFamilyPropertyCount,
+                                                                           pQueueFamilyProperties);
+    }
+}
+
+VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceMemoryProperties2KHR(VkPhysicalDevice physicalDevice,
+                                                                 VkPhysicalDeviceMemoryProperties2KHR *pMemoryProperties) {
+    bool skip = false;
+    auto my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), instance_layer_data_map);
+    assert(my_data != NULL);
+
+    skip |= parameter_validation_vkGetPhysicalDeviceMemoryProperties2KHR(my_data->report_data, pMemoryProperties);
+
+    if (!skip) {
+        my_data->dispatch_table.GetPhysicalDeviceMemoryProperties2KHR(physicalDevice, pMemoryProperties);
+    }
+}
+
+static bool PostGetPhysicalDeviceSparseImageFormatProperties2KHR(VkPhysicalDevice physicalDevice,
+                                                                 const VkPhysicalDeviceSparseImageFormatInfo2KHR *pFormatInfo,
+                                                                 uint32_t *pPropertyCount,
+                                                                 VkSparseImageFormatProperties2KHR *pProperties) {
+    auto my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), instance_layer_data_map);
+    if (pProperties != nullptr) {
+        for (uint32_t i = 0; i < *pPropertyCount; ++i) {
+            if ((pProperties[i].properties.aspectMask & (VK_IMAGE_ASPECT_COLOR_BIT | VK_IMAGE_ASPECT_DEPTH_BIT |
+                                                         VK_IMAGE_ASPECT_STENCIL_BIT | VK_IMAGE_ASPECT_METADATA_BIT)) == 0) {
+                log_msg(my_data->report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT, 0, __LINE__,
+                        1, LayerName, "vkGetPhysicalDeviceSparseImageFormatProperties2KHR parameter, VkImageAspect "
+                                      "pProperties[%i].properties.aspectMask, is an "
+                                      "unrecognized enumerator",
+                        i);
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceSparseImageFormatProperties2KHR(
+    VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSparseImageFormatInfo2KHR *pFormatInfo, uint32_t *pPropertyCount,
+    VkSparseImageFormatProperties2KHR *pProperties) {
+    bool skip = false;
+    auto my_data = get_my_data_ptr(get_dispatch_key(physicalDevice), instance_layer_data_map);
+    assert(my_data != NULL);
+
+    skip |= parameter_validation_vkGetPhysicalDeviceSparseImageFormatProperties2KHR(my_data->report_data, pFormatInfo,
+                                                                                    pPropertyCount, pProperties);
+
+    if (!skip) {
+        my_data->dispatch_table.GetPhysicalDeviceSparseImageFormatProperties2KHR(physicalDevice, pFormatInfo, pPropertyCount,
+                                                                                 pProperties);
+
+        PostGetPhysicalDeviceSparseImageFormatProperties2KHR(physicalDevice, pFormatInfo, pPropertyCount, pProperties);
+    }
+}
+
 static void validateDeviceCreateInfo(VkPhysicalDevice physicalDevice, const VkDeviceCreateInfo *pCreateInfo,
                               const std::vector<VkQueueFamilyProperties> properties) {
     std::unordered_set<uint32_t> set;
@@ -1655,6 +1783,25 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDevice(VkPhysicalDevice physicalDevice, con
             for (size_t i = 0; i < pCreateInfo->enabledExtensionCount; i++) {
                 skip |= validate_string(my_instance_data->report_data, "vkCreateDevice",
                                              "pCreateInfo->ppEnabledExtensionNames", pCreateInfo->ppEnabledExtensionNames[i]);
+            }
+        }
+        if (pCreateInfo->pNext != NULL && pCreateInfo->pEnabledFeatures) {
+            // Check for get_physical_device_properties2 struct
+            struct std_header {
+                VkStructureType sType;
+                const void *pNext;
+            };
+            std_header *cur_pnext = (std_header *)pCreateInfo->pNext;
+            while (cur_pnext) {
+                if (VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2_KHR == cur_pnext->sType) {
+                    // Cannot include VkPhysicalDeviceFeatures2KHR and have non-null pEnabledFeatures
+                    skip |= log_msg(my_instance_data->report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT,
+                                    VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT, 0, __LINE__, INVALID_USAGE, LayerName,
+                                    "VkDeviceCreateInfo->pNext includes a VkPhysicalDeviceFeatures2KHR struct when "
+                                    "pCreateInfo->pEnabledFeatures is non-NULL.");
+                    break;
+                }
+                cur_pnext = (std_header *)cur_pnext->pNext;
             }
         }
     }
@@ -5724,6 +5871,8 @@ static PFN_vkVoidFunction InterceptWsiEnabledCommand(const char *name, VkDevice 
 
 static PFN_vkVoidFunction InterceptWsiEnabledCommand(const char *name, VkInstance instance);
 
+static PFN_vkVoidFunction InterceptGPDP2EnabledCommand(const char *name, VkInstance instance);
+
 VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetDeviceProcAddr(VkDevice device, const char *funcName) {
     assert(device);
 
@@ -5764,6 +5913,8 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetInstanceProcAddr(VkInstance instance
     proc = debug_report_get_instance_proc_addr(data->report_data, funcName);
     if (!proc)
         proc = InterceptWsiEnabledCommand(funcName, instance);
+    if (!proc)
+        proc = InterceptGPDP2EnabledCommand(funcName, instance);
 
     if (proc)
         return proc;
@@ -6029,6 +6180,31 @@ static PFN_vkVoidFunction InterceptWsiEnabledCommand(const char *name, VkInstanc
     for (size_t i = 0; i < ARRAY_SIZE(wsi_instance_commands); i++) {
         if (!strcmp(wsi_instance_commands[i].name, name))
             return wsi_instance_commands[i].proc;
+    }
+
+    return nullptr;
+}
+
+static PFN_vkVoidFunction InterceptGPDP2EnabledCommand(const char *name, VkInstance instance) {
+    static const struct {
+        const char *name;
+        PFN_vkVoidFunction proc;
+    } gpdp2_instance_commands[] = {
+        {"vkGetPhysicalDeviceProperties2KHR", reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceProperties2KHR)},
+        {"vkGetPhysicalDeviceQueueFamilyProperties2KHR",
+         reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceQueueFamilyProperties2KHR)},
+        {"vkGetPhysicalDeviceMemoryProperties2KHR", reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceMemoryProperties2KHR)},
+        {"vkGetPhysicalDeviceSparseImageFormatProperties2KHR",
+         reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceSparseImageFormatProperties2KHR)},
+        {"vkGetPhysicalDeviceFeatures2KHR", reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceFeatures2KHR)},
+        {"vkGetPhysicalDeviceFormatProperties2KHR", reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceFormatProperties2KHR)},
+        {"vkGetPhysicalDeviceImageFormatProperties2KHR",
+         reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceImageFormatProperties2KHR)},
+    };
+
+    for (size_t i = 0; i < ARRAY_SIZE(gpdp2_instance_commands); i++) {
+        if (!strcmp(gpdp2_instance_commands[i].name, name))
+            return gpdp2_instance_commands[i].proc;
     }
 
     return nullptr;
