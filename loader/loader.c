@@ -2329,10 +2329,12 @@ static void loader_read_json_layer(
     struct loader_layer_list *layer_instance_list, cJSON *layer_node,
     cJSON *item, cJSON *disable_environment, bool is_implicit, char *filename) {
     char *temp;
-    char *name, *type, *library_path, *api_version;
-    char *implementation_version, *description;
     cJSON *ext_item;
     VkExtensionProperties ext_prop;
+    union {
+        char json_buffer[MAX_STRING_SIZE];
+        char *ppStrings[MAX_STRING_SIZE / sizeof(char **)];
+    } workspace;
 
 /*
  * The following are required in the "layer" object:
@@ -2346,7 +2348,7 @@ static void loader_read_json_layer(
  */
 
 #define GET_JSON_OBJECT(node, var)                                             \
-    {                                                                          \
+    do {                                                                       \
         var = cJSON_GetObjectItem(node, #var);                                 \
         if (var == NULL) {                                                     \
             layer_node = layer_node->next;                                     \
@@ -2356,9 +2358,10 @@ static void loader_read_json_layer(
                        #var);                                                  \
             return;                                                            \
         }                                                                      \
-    }
-#define GET_JSON_ITEM(node, var)                                               \
-    {                                                                          \
+    } while (0)
+#define GET_JSON_ITEM(node, var, buffer)                                       \
+    do {                                                                       \
+        buffer[0] = '\0';                                                      \
         item = cJSON_GetObjectItem(node, #var);                                \
         if (item == NULL) {                                                    \
             layer_node = layer_node->next;                                     \
@@ -2378,24 +2381,19 @@ static void loader_read_json_layer(
             return;                                                            \
         }                                                                      \
         temp[strlen(temp) - 1] = '\0';                                         \
-        var = loader_stack_alloc(strlen(temp) + 1);                            \
-        strcpy(var, &temp[1]);                                                 \
+        strncpy(buffer, &temp[1], sizeof(buffer));                             \
+        buffer[sizeof(buffer) - 1] = '\0';                                     \
         cJSON_Free(temp);                                                      \
-    }
-    GET_JSON_ITEM(layer_node, name)
-    GET_JSON_ITEM(layer_node, type)
-    GET_JSON_ITEM(layer_node, library_path)
-    GET_JSON_ITEM(layer_node, api_version)
-    GET_JSON_ITEM(layer_node, implementation_version)
-    GET_JSON_ITEM(layer_node, description)
-    if (is_implicit) {
-        GET_JSON_OBJECT(layer_node, disable_environment)
-    }
-#undef GET_JSON_ITEM
-#undef GET_JSON_OBJECT
+    } while (0)
+
+    // We need to get the name now because it is first in the JSON file.
+    // Note that it isn't saved off until after we get the type.
+    GET_JSON_ITEM(layer_node, name, workspace.json_buffer);
 
     // add list entry
     struct loader_layer_properties *props = NULL;
+    char type[32];
+    GET_JSON_ITEM(layer_node, type, type);
     if (!strcmp(type, "DEVICE")) {
         loader_log(inst, VK_DEBUG_REPORT_WARNING_BIT_EXT, 0,
                    "Device layers are deprecated skipping this layer");
@@ -2423,28 +2421,36 @@ static void loader_read_json_layer(
         return;
     }
 
-    strncpy(props->info.layerName, name, sizeof(props->info.layerName));
+    // Save the name
+    strncpy(props->info.layerName, workspace.json_buffer,
+            sizeof(props->info.layerName));
     props->info.layerName[sizeof(props->info.layerName) - 1] = '\0';
 
     char *fullpath = props->lib_name;
     char *rel_base;
-    if (loader_platform_is_path(library_path)) {
+    GET_JSON_ITEM(layer_node, library_path, workspace.json_buffer);
+    if (loader_platform_is_path(workspace.json_buffer)) {
         // a relative or absolute path
         char *name_copy = loader_stack_alloc(strlen(filename) + 1);
         strcpy(name_copy, filename);
         rel_base = loader_platform_dirname(name_copy);
-        loader_expand_path(library_path, rel_base, MAX_STRING_SIZE, fullpath);
+        loader_expand_path(workspace.json_buffer, rel_base, MAX_STRING_SIZE,
+                           fullpath);
     } else {
         // a filename which is assumed in a system directory
-        loader_get_fullpath(library_path, DEFAULT_VK_LAYERS_PATH,
+        loader_get_fullpath(workspace.json_buffer, DEFAULT_VK_LAYERS_PATH,
                             MAX_STRING_SIZE, fullpath);
     }
-    props->info.specVersion = loader_make_version(api_version);
-    props->info.implementationVersion = atoi(implementation_version);
-    strncpy((char *)props->info.description, description,
-            sizeof(props->info.description));
-    props->info.description[sizeof(props->info.description) - 1] = '\0';
+    GET_JSON_ITEM(layer_node, api_version, workspace.json_buffer);
+    props->info.specVersion = loader_make_version(workspace.json_buffer);
+
+    GET_JSON_ITEM(layer_node, implementation_version, workspace.json_buffer);
+    props->info.implementationVersion = atoi(workspace.json_buffer);
+
+    GET_JSON_ITEM(layer_node, description, props->info.description);
+
     if (is_implicit) {
+        GET_JSON_OBJECT(layer_node, disable_environment);
         if (!disable_environment || !disable_environment->child) {
             loader_log(
                 inst, VK_DEBUG_REPORT_WARNING_BIT_EXT, 0,
@@ -2463,6 +2469,8 @@ static void loader_read_json_layer(
         props->disable_env_var.value[sizeof(props->disable_env_var.value) - 1] =
             '\0';
     }
+#undef GET_JSON_ITEM
+#undef GET_JSON_OBJECT
 
 /**
 * Now get all optional items and objects and put in list:
@@ -2472,31 +2480,28 @@ static void loader_read_json_layer(
 * enable_environment (implicit layers only)
 */
 #define GET_JSON_OBJECT(node, var)                                             \
-    { var = cJSON_GetObjectItem(node, #var); }
-#define GET_JSON_ITEM(node, var)                                               \
-    {                                                                          \
+    do {                                                                       \
+        var = cJSON_GetObjectItem(node, #var);                                 \
+    } while (0)
+#define GET_JSON_ITEM(node, var, buffer)                                       \
+    do {                                                                       \
+        buffer[0] = '\0';                                                      \
         item = cJSON_GetObjectItem(node, #var);                                \
         if (item != NULL) {                                                    \
             temp = cJSON_Print(item);                                          \
             if (temp != NULL) {                                                \
                 temp[strlen(temp) - 1] = '\0';                                 \
-                var = loader_stack_alloc(strlen(temp) + 1);                    \
-                strcpy(var, &temp[1]);                                         \
+                strncpy(buffer, &temp[1], sizeof(buffer));                     \
+                buffer[sizeof(buffer) - 1] = '\0';                             \
                 cJSON_Free(temp);                                              \
             }                                                                  \
         }                                                                      \
-    }
+    } while (0)
 
     cJSON *instance_extensions, *device_extensions, *functions,
         *enable_environment;
     cJSON *entrypoints;
-    char *vkGetInstanceProcAddr, *vkGetDeviceProcAddr, *spec_version;
     char **entry_array;
-    vkGetInstanceProcAddr = NULL;
-    vkGetDeviceProcAddr = NULL;
-    spec_version = NULL;
-    entrypoints = NULL;
-    entry_array = NULL;
     int i, j;
 
     /**
@@ -2504,18 +2509,12 @@ static void loader_read_json_layer(
     *     vkGetInstanceProcAddr
     *     vkGetDeviceProcAddr
     */
-    GET_JSON_OBJECT(layer_node, functions)
+    GET_JSON_OBJECT(layer_node, functions);
     if (functions != NULL) {
-        GET_JSON_ITEM(functions, vkGetInstanceProcAddr)
-        GET_JSON_ITEM(functions, vkGetDeviceProcAddr)
-        if (vkGetInstanceProcAddr != NULL)
-            strncpy(props->functions.str_gipa, vkGetInstanceProcAddr,
-                    sizeof(props->functions.str_gipa));
-        props->functions.str_gipa[sizeof(props->functions.str_gipa) - 1] = '\0';
-        if (vkGetDeviceProcAddr != NULL)
-            strncpy(props->functions.str_gdpa, vkGetDeviceProcAddr,
-                    sizeof(props->functions.str_gdpa));
-        props->functions.str_gdpa[sizeof(props->functions.str_gdpa) - 1] = '\0';
+        GET_JSON_ITEM(functions, vkGetInstanceProcAddr,
+                      props->functions.str_gipa);
+        GET_JSON_ITEM(functions, vkGetDeviceProcAddr,
+                      props->functions.str_gdpa);
     }
     /**
     * instance_extensions
@@ -2523,21 +2522,15 @@ static void loader_read_json_layer(
     *     name
     *     spec_version
     */
-    GET_JSON_OBJECT(layer_node, instance_extensions)
+    GET_JSON_OBJECT(layer_node, instance_extensions);
     if (instance_extensions != NULL) {
         int count = cJSON_GetArraySize(instance_extensions);
         for (i = 0; i < count; i++) {
             ext_item = cJSON_GetArrayItem(instance_extensions, i);
-            GET_JSON_ITEM(ext_item, name)
-            if (name != NULL) {
-                strncpy(ext_prop.extensionName, name,
-                        sizeof(ext_prop.extensionName));
-                ext_prop.extensionName[sizeof(ext_prop.extensionName) - 1] =
-                    '\0';
-            }
-            GET_JSON_ITEM(ext_item, spec_version)
-            if (NULL != spec_version) {
-                ext_prop.specVersion = atoi(spec_version);
+            GET_JSON_ITEM(ext_item, name, ext_prop.extensionName);
+            GET_JSON_ITEM(ext_item, spec_version, workspace.json_buffer);
+            if (strlen(workspace.json_buffer)) {
+                ext_prop.specVersion = atoi(workspace.json_buffer);
             } else {
                 ext_prop.specVersion = 0;
             }
@@ -2556,26 +2549,19 @@ static void loader_read_json_layer(
     *     spec_version
     *     entrypoints
     */
-    GET_JSON_OBJECT(layer_node, device_extensions)
+    GET_JSON_OBJECT(layer_node, device_extensions);
     if (device_extensions != NULL) {
         int count = cJSON_GetArraySize(device_extensions);
         for (i = 0; i < count; i++) {
             ext_item = cJSON_GetArrayItem(device_extensions, i);
-            GET_JSON_ITEM(ext_item, name)
-            GET_JSON_ITEM(ext_item, spec_version)
-            if (name != NULL) {
-                strncpy(ext_prop.extensionName, name,
-                        sizeof(ext_prop.extensionName));
-                ext_prop.extensionName[sizeof(ext_prop.extensionName) - 1] =
-                    '\0';
-            }
-            if (NULL != spec_version) {
-                ext_prop.specVersion = atoi(spec_version);
+            GET_JSON_ITEM(ext_item, name, ext_prop.extensionName);
+            GET_JSON_ITEM(ext_item, spec_version, workspace.json_buffer);
+            if (strlen(workspace.json_buffer)) {
+                ext_prop.specVersion = atoi(workspace.json_buffer);
             } else {
                 ext_prop.specVersion = 0;
             }
-            // entrypoints = cJSON_GetObjectItem(ext_item, "entrypoints");
-            GET_JSON_OBJECT(ext_item, entrypoints)
+            GET_JSON_OBJECT(ext_item, entrypoints);
             int entry_count;
             if (entrypoints == NULL) {
                 loader_add_to_dev_ext_list(inst, &props->device_extension_list,
@@ -2584,29 +2570,52 @@ static void loader_read_json_layer(
             }
             entry_count = cJSON_GetArraySize(entrypoints);
             if (entry_count) {
-                entry_array =
-                    (char **)loader_stack_alloc(sizeof(char *) * entry_count);
-            }
-            for (j = 0; j < entry_count; j++) {
-                ext_item = cJSON_GetArrayItem(entrypoints, j);
-                if (ext_item != NULL) {
-                    temp = cJSON_Print(ext_item);
-                    if (NULL == temp) {
-                        entry_array[j] = NULL;
-                        continue;
+                if (entry_count <= (int)(sizeof(workspace.ppStrings) /
+                                         sizeof(workspace.ppStrings[0]))) {
+                    entry_array = &workspace.ppStrings[0];
+                } else {
+                    entry_array = (char **)loader_instance_heap_alloc(
+                        inst, sizeof(char *) * entry_count,
+                        VK_SYSTEM_ALLOCATION_SCOPE_INSTANCE);
+                    if (NULL == entry_array) {
+                        loader_log(
+                            inst, VK_DEBUG_REPORT_ERROR_BIT_EXT, 0,
+                            "loader_add_to_dev_ext_list: Failed to allocate "
+                            "space for device extension entry point list");
+                        return;
                     }
-                    temp[strlen(temp) - 1] = '\0';
-                    entry_array[j] = loader_stack_alloc(strlen(temp) + 1);
-                    strcpy(entry_array[j], &temp[1]);
-                    cJSON_Free(temp);
+                }
+                for (j = 0; j < entry_count; j++) {
+                    ext_item = cJSON_GetArrayItem(entrypoints, j);
+                    if (ext_item != NULL) {
+                        temp = cJSON_Print(ext_item);
+                        if (NULL == temp) {
+                            entry_array[j] = NULL;
+                            continue;
+                        }
+                        // Remove end quote
+                        temp[strlen(temp) - 1] = '\0';
+                        // Skip first quote
+                        entry_array[j] = &temp[1];
+                    }
+                }
+                loader_add_to_dev_ext_list(inst, &props->device_extension_list,
+                                           &ext_prop, entry_count, entry_array);
+                // Clean up entry_array
+                for (j = 0; j < entry_count; j++) {
+                    if (entry_array[j]) {
+                        // Free at original start of string
+                        cJSON_Free(entry_array[j] - 1);
+                    }
+                }
+                if (entry_array != &workspace.ppStrings[0]) {
+                    loader_instance_heap_free(inst, entry_array);
                 }
             }
-            loader_add_to_dev_ext_list(inst, &props->device_extension_list,
-                                       &ext_prop, entry_count, entry_array);
         }
     }
     if (is_implicit) {
-        GET_JSON_OBJECT(layer_node, enable_environment)
+        GET_JSON_OBJECT(layer_node, enable_environment);
 
         // enable_environment is optional
         if (enable_environment) {
@@ -3132,6 +3141,8 @@ VkResult loader_icd_scan(const struct loader_instance *inst,
 
     memset(&manifest_files, 0, sizeof(struct loader_manifest_files));
 
+    char *name_copy = loader_stack_alloc(MAX_STRING_SIZE);
+
     res = loader_scanned_icd_init(inst, icd_tramp_list);
     if (VK_SUCCESS != res) {
         goto out;
@@ -3227,23 +3238,10 @@ VkResult loader_icd_scan(const struct loader_instance *inst,
                     json = NULL;
                     continue;
                 }
-                // strip out extra quotes
+                // If we get here, there should be at least '' in temp.
+                // Remove quotes and set library path.
                 temp[strlen(temp) - 1] = '\0';
-                char *library_path = loader_stack_alloc(strlen(temp) + 1);
-                if (NULL == library_path) {
-                    loader_log(inst, VK_DEBUG_REPORT_ERROR_BIT_EXT, 0,
-                               "loader_icd_scan: Failed to allocate space for "
-                               "ICD JSON %s \'library_path\' value.  Skipping "
-                               "ICD JSON.",
-                               file_str);
-                    res = VK_ERROR_OUT_OF_HOST_MEMORY;
-                    cJSON_Free(temp);
-                    cJSON_Delete(json);
-                    json = NULL;
-                    goto out;
-                }
-                strcpy(library_path, &temp[1]);
-                cJSON_Free(temp);
+                char *library_path = &temp[1];
                 if (strlen(library_path) == 0) {
                     loader_log(inst, VK_DEBUG_REPORT_WARNING_BIT_EXT, 0,
                                "loader_icd_scan: ICD JSON %s \'library_path\'"
@@ -3261,9 +3259,8 @@ VkResult loader_icd_scan(const struct loader_instance *inst,
                     library_path, DEFAULT_VK_DRIVERS_PATH);
                 if (loader_platform_is_path(library_path)) {
                     // a relative or absolute path
-                    char *name_copy = loader_stack_alloc(strlen(file_str) + 1);
                     char *rel_base;
-                    strcpy(name_copy, file_str);
+                    strncpy(name_copy, file_str, MAX_STRING_SIZE);
                     rel_base = loader_platform_dirname(name_copy);
                     loader_expand_path(library_path, rel_base, sizeof(fullpath),
                                        fullpath);
@@ -3272,6 +3269,7 @@ VkResult loader_icd_scan(const struct loader_instance *inst,
                     loader_get_fullpath(library_path, DEFAULT_VK_DRIVERS_PATH,
                                         sizeof(fullpath), fullpath);
                 }
+                cJSON_Free(temp);
 
                 uint32_t vers = 0;
                 item = cJSON_GetObjectItem(itemICD, "api_version");
