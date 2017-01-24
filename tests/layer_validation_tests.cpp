@@ -6620,6 +6620,23 @@ TEST_F(VkLayerTest, DescriptorSetCompatibility) {
     VkBuffer dyub;
     err = vkCreateBuffer(m_device->device(), &buffCI, NULL, &dyub);
     ASSERT_VK_SUCCESS(err);
+
+    //-- Allocate buffer memory --
+    VkDeviceMemory mem;
+    VkMemoryRequirements mem_reqs;
+    vkGetBufferMemoryRequirements(m_device->device(), dyub, &mem_reqs);
+
+    VkMemoryAllocateInfo mem_alloc_info = {};
+    mem_alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    mem_alloc_info.allocationSize = mem_reqs.size;
+    m_device->phy().set_memory_type(mem_reqs.memoryTypeBits, &mem_alloc_info, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    err = vkAllocateMemory(m_device->device(), &mem_alloc_info, NULL, &mem);
+    ASSERT_VK_SUCCESS(err);
+
+    err = vkBindBufferMemory(m_device->device(), dyub, mem, 0);
+    ASSERT_VK_SUCCESS(err);
+    //----------------------------
+
     // Correctly update descriptor to avoid "NOT_UPDATED" error
     static const uint32_t NUM_BUFFS = 5;
     VkDescriptorBufferInfo buffInfo[NUM_BUFFS] = {};
@@ -6628,6 +6645,7 @@ TEST_F(VkLayerTest, DescriptorSetCompatibility) {
         buffInfo[i].offset = 0;
         buffInfo[i].range = 1024;
     }
+
     VkImage image;
     const int32_t tex_width = 32;
     const int32_t tex_height = 32;
@@ -6843,6 +6861,7 @@ TEST_F(VkLayerTest, DescriptorSetCompatibility) {
     vkDestroyBuffer(m_device->device(), dyub, NULL);
     vkDestroyPipelineLayout(m_device->device(), pipeline_layout, NULL);
     vkDestroyDescriptorPool(m_device->device(), ds_pool, NULL);
+    vkFreeMemory(m_device->handle(), mem, NULL);
     vkFreeMemory(m_device->device(), imageMem, NULL);
     vkDestroyImage(m_device->device(), image, NULL);
     vkDestroyImageView(m_device->device(), view, NULL);
