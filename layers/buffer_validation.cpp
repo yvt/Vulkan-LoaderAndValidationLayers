@@ -1078,6 +1078,44 @@ static bool ExceedsBounds(const VkOffset3D *offset, const VkExtent3D *extent, co
     return result;
 }
 
+// Like ExceedsBounds(), but sends individual log messages per dimension, returns skip
+static bool ValidateSubresourceDimensions(const VkOffset3D *offset, const VkExtent3D *extent, const VkExtent3D *subresource_extent,
+                                          const debug_report_data *report_data, const char *fxn_name, uint64_t report_object,
+                                          UNIQUE_VALIDATION_ERROR_CODE x_vu,
+                                          UNIQUE_VALIDATION_ERROR_CODE y_vu = VALIDATION_ERROR_UNDEFINED,
+                                          UNIQUE_VALIDATION_ERROR_CODE z_vu = VALIDATION_ERROR_UNDEFINED) {
+    bool skip = false;
+    if ((offset->x + extent->width > subresource_extent->width) || (offset->x < 0) ||
+        ((offset->x + static_cast<int32_t>(extent->width)) < 0)) {
+        std::stringstream ss;
+        ss << fxn_name << ": copy x-dimension offset + extent exceeds subResource width";
+        skip |= log_msg(report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_BUFFER_EXT, report_object,
+                        0, x_vu, "IMAGE", "%s. %s", ss.str().c_str(), validation_error_map[x_vu]);
+    }
+
+    if (VALIDATION_ERROR_UNDEFINED != y_vu) {
+        if ((offset->y + extent->height > subresource_extent->height) || (offset->y < 0) ||
+            ((offset->y + static_cast<int32_t>(extent->height)) < 0)) {
+            std::stringstream ss;
+            ss << fxn_name << ": copy y-dimension offset + extent exceeds subResource height";
+            skip |= log_msg(report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_BUFFER_EXT,
+                            report_object, 0, y_vu, "IMAGE", "%s. %s", ss.str().c_str(), validation_error_map[y_vu]);
+        }
+    }
+
+    if (VALIDATION_ERROR_UNDEFINED != z_vu) {
+        if ((offset->z + extent->depth > subresource_extent->depth) || (offset->z < 0) ||
+            ((offset->z + static_cast<int32_t>(extent->depth)) < 0)) {
+            std::stringstream ss;
+            ss << fxn_name << ": copy z-dimension offset + extent exceeds subResource height";
+            skip |= log_msg(report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_BUFFER_EXT,
+                            report_object, 0, z_vu, "IMAGE", "%s. %s", ss.str().c_str(), validation_error_map[z_vu]);
+        }
+    }
+
+    return skip;
+}
+
 // Test if two VkExtent3D structs are equivalent
 static inline bool IsExtentEqual(const VkExtent3D *extent, const VkExtent3D *other_extent) {
     bool result = true;
@@ -1439,6 +1477,16 @@ bool PreCallValidateCmdCopyImage(layer_data *device_data, GLOBAL_CB_NODE *cb_nod
                             ss.str().c_str(), validation_error_map[VALIDATION_ERROR_01176]);
         }
 
+        // Each dimension offset + extent limits must fall with image's extent
+        VkExtent3D subresource_extent = GetImageSubresourceExtent(src_image_state, &(regions[i].srcSubresource));
+        ValidateSubresourceDimensions(&(regions[i].srcOffset), &regions[i].extent, &subresource_extent, report_data,
+                                      "VkCopyImage()", reinterpret_cast<uint64_t &>(command_buffer), VALIDATION_ERROR_01202,
+                                      VALIDATION_ERROR_01203, VALIDATION_ERROR_01204);
+        subresource_extent = GetImageSubresourceExtent(dst_image_state, &(regions[i].dstSubresource));
+        ValidateSubresourceDimensions(&(regions[i].dstOffset), &regions[i].extent, &subresource_extent, report_data,
+                                      "VkCopyImage()", reinterpret_cast<uint64_t &>(command_buffer), VALIDATION_ERROR_01205,
+                                      VALIDATION_ERROR_01206, VALIDATION_ERROR_01207);
+
         // The union of all source regions, and the union of all destination regions, specified by the elements of regions,
         // must not overlap in memory
         if (src_image_state->image == dst_image_state->image) {
@@ -1491,7 +1539,7 @@ bool PreCallValidateCmdCopyImage(layer_data *device_data, GLOBAL_CB_NODE *cb_nod
                                     "vkCmdCopyImage()", "VK_IMAGE_USAGE_TRANSFER_SRC_BIT");
     skip |= ValidateImageUsageFlags(device_data, dst_image_state, VK_IMAGE_USAGE_TRANSFER_DST_BIT, true, VALIDATION_ERROR_01181,
                                     "vkCmdCopyImage()", "VK_IMAGE_USAGE_TRANSFER_DST_BIT");
-    skip |= ValidateCmd(device_data, cb_node, CMD_COPYIMAGE, "vkCmdCopyImage()");
+    skip |= ValidateCmd(device_data, cb_node, CMD_COPYIMAGE, "vkCmdCopyImage()");// TODO:, VALIDATION_ERROR_01192);
     skip |= insideRenderPass(device_data, cb_node, "vkCmdCopyImage()", VALIDATION_ERROR_01194);
     for (uint32_t i = 0; i < region_count; ++i) {
         skip |= VerifySourceImageLayout(device_data, cb_node, src_image_state->image, regions[i].srcSubresource, src_image_layout,
