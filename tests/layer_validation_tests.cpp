@@ -321,8 +321,12 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL myDbgFunc(VkFlags msgFlags, VkDebugReportO
                                                 size_t location, int32_t msgCode, const char *pLayerPrefix, const char *pMsg,
                                                 void *pUserData) {
     ErrorMonitor *errMonitor = (ErrorMonitor *)pUserData;
+
+    char more_helpful_string[1024];
+    snprintf(more_helpful_string, 1024, "%s [%05d]", pMsg, msgCode);
+
     if (msgFlags & errMonitor->GetMessageFlags()) {
-        return errMonitor->CheckForDesiredMsg(msgCode, pMsg);
+        return errMonitor->CheckForDesiredMsg(msgCode, more_helpful_string);
     }
     return false;
 }
