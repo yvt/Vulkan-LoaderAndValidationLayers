@@ -9271,17 +9271,17 @@ TEST_F(VkLayerTest, InvalidBarriers) {
 TEST_F(VkLayerTest, LayoutFromPresentWithoutAccessMemoryRead) {
     // Transition an image away from PRESENT_SRC_KHR without ACCESS_MEMORY_READ in srcAccessMask
 
-    m_errorMonitor->SetDesiredFailureMsg(VK_DEBUG_REPORT_WARNING_BIT_EXT, "must have required access bit");
     ASSERT_NO_FATAL_FAILURE(Init());
     VkImageObj image(m_device);
     image.init(128, 128, VK_FORMAT_B8G8R8A8_UNORM, (VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT),
                VK_IMAGE_TILING_OPTIMAL, 0);
     ASSERT_TRUE(image.initialized());
 
+    // Expect no errors or warnings
+    m_errorMonitor->ExpectSuccess(VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT);
     VkImageMemoryBarrier barrier = {};
     VkImageSubresourceRange range;
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.srcAccessMask = 0;
     barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
     barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
     barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -9297,10 +9297,14 @@ TEST_F(VkLayerTest, LayoutFromPresentWithoutAccessMemoryRead) {
     cmdbuf.BeginCommandBuffer();
     cmdbuf.PipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, nullptr, 0, nullptr, 1,
                            &barrier);
+    m_errorMonitor->VerifyNotFound();
+
     barrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
     barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     barrier.srcAccessMask = 0;
     barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+    m_errorMonitor->SetDesiredFailureMsg(VK_DEBUG_REPORT_WARNING_BIT_EXT, "must have required access bit");
     cmdbuf.PipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 0, 0, nullptr, 0, nullptr, 1,
                            &barrier);
 
