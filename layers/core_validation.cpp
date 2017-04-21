@@ -144,7 +144,7 @@ struct layer_data {
     unordered_map<VkImage, unique_ptr<IMAGE_STATE>> imageMap;
     unordered_map<VkBufferView, unique_ptr<BUFFER_VIEW_STATE>> bufferViewMap;
     unordered_map<VkBuffer, unique_ptr<BUFFER_STATE>> bufferMap;
-    unordered_map<VkPipeline, PIPELINE_STATE *> pipelineMap;
+    unordered_map<VkPipeline, unique_ptr<PIPELINE_STATE>> pipelineMap;
     unordered_map<VkCommandPool, COMMAND_POOL_NODE> commandPoolMap;
     unordered_map<VkDescriptorPool, DESCRIPTOR_POOL_STATE *> descriptorPoolMap;
     unordered_map<VkDescriptorSet, cvdescriptorset::DescriptorSet *> setMap;
@@ -2064,7 +2064,7 @@ static PIPELINE_STATE *getPipelineState(layer_data const *dev_data, VkPipeline p
     if (it == dev_data->pipelineMap.end()) {
         return nullptr;
     }
-    return it->second;
+    return it->second.get();
 }
 
 RENDER_PASS_STATE *GetRenderPassState(layer_data const *dev_data, VkRenderPass renderpass) {
@@ -3087,10 +3087,10 @@ static bool verifyLineWidth(layer_data *dev_data, DRAW_STATE_ERROR dsError, VkDe
 }
 
 // Verify that create state for a pipeline is valid
-static bool verifyPipelineCreateState(layer_data *dev_data, std::vector<PIPELINE_STATE *> pPipelines, int pipelineIndex) {
+static bool verifyPipelineCreateState(layer_data *dev_data, std::vector<unique_ptr<PIPELINE_STATE>> const &pPipelines, int pipelineIndex) {
     bool skip_call = false;
 
-    PIPELINE_STATE *pPipeline = pPipelines[pipelineIndex];
+    auto pPipeline = pPipelines[pipelineIndex].get();
 
     // If create derivative bit is set, check that we've specified a base
     // pipeline correctly, and that the base pipeline was created to allow
@@ -3112,7 +3112,7 @@ static bool verifyPipelineCreateState(layer_data *dev_data, std::vector<PIPELINE
                             "Invalid Pipeline CreateInfo: base pipeline must occur earlier in array than derivative pipeline. %s",
                             validation_error_map[VALIDATION_ERROR_00518]);
             } else {
-                pBasePipeline = pPipelines[pPipeline->graphicsPipelineCI.basePipelineIndex];
+                pBasePipeline = pPipelines[pPipeline->graphicsPipelineCI.basePipelineIndex].get();
             }
         } else if (pPipeline->graphicsPipelineCI.basePipelineHandle != VK_NULL_HANDLE) {
             pBasePipeline = getPipelineState(dev_data, pPipeline->graphicsPipelineCI.basePipelineHandle);
@@ -3349,15 +3349,6 @@ static bool verifyPipelineCreateState(layer_data *dev_data, std::vector<PIPELINE
     }
 
     return skip_call;
-}
-
-// Free the Pipeline nodes
-static void deletePipelines(layer_data *dev_data) {
-    if (dev_data->pipelineMap.size() <= 0) return;
-    for (auto &pipe_map_pair : dev_data->pipelineMap) {
-        delete pipe_map_pair.second;
-    }
-    dev_data->pipelineMap.clear();
 }
 
 // Block of code at start here specifically for managing/tracking DSs
@@ -4034,7 +4025,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDevice(VkDevice device, const VkAllocationCall
     layer_data *dev_data = GetLayerDataPtr(key, layer_data_map);
     // Free all the memory
     std::unique_lock<std::mutex> lock(global_lock);
-    deletePipelines(dev_data);
+    dev_data->pipelineMap.clear();
     dev_data->renderPassMap.clear();
     deleteCommandBuffers(dev_data);
     // This will also delete all sets in the pool & remove them from setMap
@@ -6326,7 +6317,7 @@ bool validate_dual_src_blend_feature(layer_data *device_data, PIPELINE_STATE *pi
 }
 
 static bool PreCallCreateGraphicsPipelines(layer_data *device_data, uint32_t count,
-                                           const VkGraphicsPipelineCreateInfo *create_infos, vector<PIPELINE_STATE *> &pipe_state) {
+                                           const VkGraphicsPipelineCreateInfo *create_infos, vector<unique_ptr<PIPELINE_STATE>> const &pipe_state) {
     bool skip = false;
     instance_layer_data *instance_data =
         GetLayerDataPtr(get_dispatch_key(device_data->instance_data->instance), instance_layer_data_map);
@@ -6362,26 +6353,22 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateGraphicsPipelines(VkDevice device, VkPipeli
     //  2. Create state is then validated (which uses flags setup during shadowing)
     //  3. If everything looks good, we'll then create the pipeline and add NODE to pipelineMap
     bool skip = false;
-    // TODO : Improve this data struct w/ unique_ptrs so cleanup below is automatic
-    vector<PIPELINE_STATE *> pipe_state(count);
+    vector<unique_ptr<PIPELINE_STATE>> new_pipelines;
+    new_pipelines.reserve(count);
     layer_data *dev_data = GetLayerDataPtr(get_dispatch_key(device), layer_data_map);
 
-    uint32_t i = 0;
     std::unique_lock<std::mutex> lock(global_lock);
 
-    for (i = 0; i < count; i++) {
-        pipe_state[i] = new PIPELINE_STATE;
-        pipe_state[i]->initGraphicsPipeline(&pCreateInfos[i]);
-        pipe_state[i]->render_pass_ci.initialize(GetRenderPassState(dev_data, pCreateInfos[i].renderPass)->createInfo.ptr());
-        pipe_state[i]->pipeline_layout = *getPipelineLayout(dev_data, pCreateInfos[i].layout);
+    for (uint32_t i = 0; i < count; i++) {
+        unique_ptr<PIPELINE_STATE> pipe(new PIPELINE_STATE);
+        pipe->initGraphicsPipeline(&pCreateInfos[i]);
+        pipe->render_pass_ci.initialize(GetRenderPassState(dev_data, pCreateInfos[i].renderPass)->createInfo.ptr());
+        pipe->pipeline_layout = *getPipelineLayout(dev_data, pCreateInfos[i].layout);
+        new_pipelines.push_back(std::move(pipe));
     }
-    skip |= PreCallCreateGraphicsPipelines(dev_data, count, pCreateInfos, pipe_state);
+    skip |= PreCallCreateGraphicsPipelines(dev_data, count, pCreateInfos, new_pipelines);
 
     if (skip) {
-        for (i = 0; i < count; i++) {
-            delete pipe_state[i];
-            pPipelines[i] = VK_NULL_HANDLE;
-        }
         return VK_ERROR_VALIDATION_FAILED_EXT;
     }
 
@@ -6389,12 +6376,11 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateGraphicsPipelines(VkDevice device, VkPipeli
     auto result =
         dev_data->dispatch_table.CreateGraphicsPipelines(device, pipelineCache, count, pCreateInfos, pAllocator, pPipelines);
     lock.lock();
-    for (i = 0; i < count; i++) {
-        if (pPipelines[i] == VK_NULL_HANDLE) {
-            delete pipe_state[i];
-        } else {
-            pipe_state[i]->pipeline = pPipelines[i];
-            dev_data->pipelineMap[pipe_state[i]->pipeline] = pipe_state[i];
+
+    for (uint32_t i = 0; i < count; i++) {
+        if (pPipelines[i]) {
+            new_pipelines[i]->pipeline = pPipelines[i];
+            dev_data->pipelineMap[pPipelines[i]] = std::move(new_pipelines[i]);
         }
     }
 
@@ -6406,31 +6392,24 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateComputePipelines(VkDevice device, VkPipelin
                                                       const VkAllocationCallbacks *pAllocator, VkPipeline *pPipelines) {
     bool skip = false;
 
-    // TODO : Improve this data struct w/ unique_ptrs so cleanup below is automatic
-    vector<PIPELINE_STATE *> pPipeState(count);
+    vector<unique_ptr<PIPELINE_STATE>> new_pipelines;
+    new_pipelines.reserve(count);
     layer_data *dev_data = GetLayerDataPtr(get_dispatch_key(device), layer_data_map);
 
-    uint32_t i = 0;
     std::unique_lock<std::mutex> lock(global_lock);
-    for (i = 0; i < count; i++) {
+    for (uint32_t i = 0; i < count; i++) {
         // TODO: Verify compute stage bits
 
         // Create and initialize internal tracking data structure
-        pPipeState[i] = new PIPELINE_STATE;
-        pPipeState[i]->initComputePipeline(&pCreateInfos[i]);
-        pPipeState[i]->pipeline_layout = *getPipelineLayout(dev_data, pCreateInfos[i].layout);
-
-        // TODO: Add Compute Pipeline Verification
-        skip |= !validate_compute_pipeline(dev_data, pPipeState[i]);
-        // skip |= verifyPipelineCreateState(dev_data, pPipeState[i]);
+        unique_ptr<PIPELINE_STATE> pipe(new PIPELINE_STATE);
+        pipe->initComputePipeline(&pCreateInfos[i]);
+        pipe->pipeline_layout = *getPipelineLayout(dev_data, pCreateInfos[i].layout);
+        skip |= !validate_compute_pipeline(dev_data, pipe.get());
+        new_pipelines.push_back(std::move(pipe));
+        // skip |= verifyPipelineCreateState(dev_data, new_pipelines[i]);
     }
 
     if (skip) {
-        for (i = 0; i < count; i++) {
-            // Clean up any locally allocated data structures
-            delete pPipeState[i];
-            pPipelines[i] = VK_NULL_HANDLE;
-        }
         return VK_ERROR_VALIDATION_FAILED_EXT;
     }
 
@@ -6438,12 +6417,11 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateComputePipelines(VkDevice device, VkPipelin
     auto result =
         dev_data->dispatch_table.CreateComputePipelines(device, pipelineCache, count, pCreateInfos, pAllocator, pPipelines);
     lock.lock();
-    for (i = 0; i < count; i++) {
-        if (pPipelines[i] == VK_NULL_HANDLE) {
-            delete pPipeState[i];
-        } else {
-            pPipeState[i]->pipeline = pPipelines[i];
-            dev_data->pipelineMap[pPipeState[i]->pipeline] = pPipeState[i];
+
+    for (uint32_t i = 0; i < count; i++) {
+        if (pPipelines[i]) {
+            new_pipelines[i]->pipeline = pPipelines[i];
+            dev_data->pipelineMap[pPipelines[i]] = std::move(new_pipelines[i]);
         }
     }
 
