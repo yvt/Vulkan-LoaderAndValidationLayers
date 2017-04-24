@@ -51,6 +51,7 @@
 #include "vk_validation_error_messages.h"
 #include "vk_layer_logging.h"
 #include "vk_object_types.h"
+#include "dynamic_bitset.h"
 #include <atomic>
 #include <functional>
 #include <map>
