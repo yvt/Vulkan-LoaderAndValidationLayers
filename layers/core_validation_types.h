@@ -801,13 +801,11 @@ bool ValidateBufferMemoryIsValid(layer_data *dev_data, BUFFER_STATE *buffer_stat
 void SetBufferMemoryValid(layer_data *dev_data, BUFFER_STATE *buffer_state, bool valid);
 bool ValidateCmdSubpassState(const layer_data *dev_data, const GLOBAL_CB_NODE *pCB, const CMD_TYPE cmd_type);
 
-
-
 // Prototypes for layer_data accessor functions.  These should be in their own header file at some point
-const VkFormatProperties *GetFormatProperties(core_validation::layer_data *device_data, VkFormat format);
-const VkImageFormatProperties *GetImageFormatProperties(core_validation::layer_data *device_data, VkFormat format,
-                                                        VkImageType image_type, VkImageTiling tiling, VkImageUsageFlags usage,
-                                                        VkImageCreateFlags flags);
+void GetFormatProperties(core_validation::layer_data *, VkFormat, VkFormatProperties *);
+VkFormatFeatureFlags GetFormatProperties(core_validation::layer_data *, IMAGE_STATE *);
+void GetImageFormatProperties(core_validation::layer_data *device_data, VkFormat format, VkImageType image_type,
+                              VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags, VkImageFormatProperties *);
 const debug_report_data *GetReportData(const layer_data *);
 const VkPhysicalDeviceProperties *GetPhysicalDeviceProperties(layer_data *);
 const CHECK_DISABLED *GetDisables(layer_data *);
