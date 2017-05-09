@@ -1855,7 +1855,7 @@ bool PreCallValidateCmdBlitImage(layer_data *device_data, GLOBAL_CB_NODE *cb_nod
         skip |= ValidateCmd(device_data, cb_node, CMD_BLITIMAGE, "vkCmdBlitImage()");
         skip |= insideRenderPass(device_data, cb_node, "vkCmdBlitImage()", VALIDATION_ERROR_01300);
 
-        VkFormatFeatureFlags src_format_features = GetFormatProperties(device_data, src_image_state);
+        VkFormatFeatureFlags src_format_features = GetFormatFeatureFlags(device_data, &src_image_state->createInfo);
         if ((src_format_features & VK_FORMAT_FEATURE_BLIT_SRC_BIT) == 0) {
             skip |= log_msg(report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_BUFFER_EXT,
                             reinterpret_cast<uint64_t>(cb_node->commandBuffer), __LINE__, VALIDATION_ERROR_01290, "IMAGE",
@@ -1878,7 +1878,7 @@ bool PreCallValidateCmdBlitImage(layer_data *device_data, GLOBAL_CB_NODE *cb_nod
                 string_VkFormat(src_image_state->createInfo.format), validation_error_map[VALIDATION_ERROR_02197]);
         }
 
-        VkFormatFeatureFlags dst_format_features = GetFormatProperties(device_data, dst_image_state);
+        VkFormatFeatureFlags dst_format_features = GetFormatFeatureFlags(device_data, &dst_image_state->createInfo);
         if ((dst_format_features & VK_FORMAT_FEATURE_BLIT_DST_BIT) == 0) {
             skip |= log_msg(report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_BUFFER_EXT,
                             reinterpret_cast<uint64_t>(cb_node->commandBuffer), __LINE__, VALIDATION_ERROR_02185, "IMAGE",

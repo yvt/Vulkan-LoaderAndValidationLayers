@@ -5713,11 +5713,9 @@ void GetFormatProperties(core_validation::layer_data *device_data, VkFormat form
 }
 
 // for an Image's format and tiling, return the VkFormatFeatureFlags.
-VkFormatFeatureFlags GetFormatProperties(core_validation::layer_data *device_data, IMAGE_STATE *image_state) {
-    const VkImageCreateInfo &image_create_info = image_state->createInfo;
-    VkFormat format = image_create_info.format;
+VkFormatFeatureFlags GetFormatFeatureFlags(core_validation::layer_data *device_data, const VkImageCreateInfo *image_create_info) {
     VkFormatProperties format_properties = {};
-    GetFormatProperties(device_data, format, &format_properties);
+    GetFormatProperties(device_data, image_create_info.format, &format_properties);
 
     VkFormatFeatureFlags flags = 0;
     switch (image_create_info.tiling) {
