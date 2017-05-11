@@ -8684,6 +8684,46 @@ TEST_F(VkLayerTest, PSOLineWidthInvalid) {
     vkDestroyPipeline(m_device->device(), pipeline, NULL);
 }
 
+TEST_F(VkLayerTest, VALIDATION_ERROR_01118) {
+    TEST_DESCRIPTION(
+        "Test VALIDATION_ERROR_01118: pAttachments must be a pointer to an array of attachmentCount valid VkClearAttachment structures");
+
+    ASSERT_NO_FATAL_FAILURE(Init());
+    ASSERT_NO_FATAL_FAILURE(InitRenderTarget());
+
+    VkResult err = m_commandBuffer->BeginCommandBuffer();
+    ASSERT_VK_SUCCESS(err);
+
+    // TODO: replace with VALIDATION_ERROR_01118
+    m_errorMonitor->SetDesiredFailureMsg(VK_DEBUG_REPORT_ERROR_BIT_EXT,
+                                         "vkCmdClearAttachments: required parameter pAttachments specified as NULL");
+
+    VkClearRect const rects[1] {{{{0, 0}, {1, 1}}, 0, 1}};
+    vkCmdClearAttachments(m_commandBuffer->GetBufferHandle(), 1, nullptr, 1, rects);
+
+    m_errorMonitor->VerifyFound();
+}
+
+TEST_F(VkLayerTest, VALIDATION_ERROR_01119) {
+    TEST_DESCRIPTION(
+        "Test VALIDATION_ERROR_01119: pRects must be a pointer to an array of rectCount VkClearRect structures");
+
+    ASSERT_NO_FATAL_FAILURE(Init());
+    ASSERT_NO_FATAL_FAILURE(InitRenderTarget());
+
+    VkResult err = m_commandBuffer->BeginCommandBuffer();
+    ASSERT_VK_SUCCESS(err);
+
+    // TODO: replace with VALIDATION_ERROR_01119
+    m_errorMonitor->SetDesiredFailureMsg(VK_DEBUG_REPORT_ERROR_BIT_EXT,
+                                         "vkCmdClearAttachments: required parameter pRects specified as NULL");
+
+    VkClearAttachment const attachments [1] { VK_IMAGE_ASPECT_COLOR_BIT, 0, { { 0.0f, 0.0f, 0.0f, 0.0f } } };
+    vkCmdClearAttachments(m_commandBuffer->GetBufferHandle(), 1, attachments, 1, nullptr);
+
+    m_errorMonitor->VerifyFound();
+}
+
 TEST_F(VkLayerTest, VALIDATION_ERROR_01407) {
     TEST_DESCRIPTION("Test VALIDATION_ERROR_01407: binding must be less than VkPhysicalDeviceLimits::maxVertexInputBindings");
 
