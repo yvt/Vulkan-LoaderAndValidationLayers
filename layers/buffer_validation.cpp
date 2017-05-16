@@ -583,13 +583,15 @@ bool VerifyImageLayout(layer_data const *device_data, GLOBAL_CB_NODE const *cb_n
                                 "%s: For optimal performance image 0x%" PRIxLEAST64 " layout should be %s instead of GENERAL.",
                                 caller, HandleToUint64(image), string_VkImageLayout(optimal_layout));
             }
-        } else if (image_state->shared_presentable) {
-            if (VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR != explicit_layout) {
-                // TODO: Add unique error id when available.
-                skip |= log_msg(report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, (VkDebugReportObjectTypeEXT)0, 0,
-                                __LINE__, msg_code, "DS",
-                                "Layout for shared presentable image is %s but must be VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR.",
-                                string_VkImageLayout(optimal_layout));
+        } else if (GetDeviceExtensions(device_data)->khr_shared_presentable_image) {
+            if (image_state->shared_presentable) {
+                if (VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR != explicit_layout) {
+                    // TODO: Add unique error id when available.
+                    skip |= log_msg(report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT, 0,
+                                    __LINE__, msg_code, "DS",
+                                    "Layout for shared presentable image is %s but must be VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR.",
+                                    string_VkImageLayout(optimal_layout));
+                }
             }
         } else {
             *error = true;
@@ -896,13 +898,21 @@ bool VerifyClearImageLayout(layer_data *device_data, GLOBAL_CB_NODE *cb_node, IM
                                 HandleToUint64(image_state->image), __LINE__, DRAWSTATE_INVALID_IMAGE_LAYOUT, "DS",
                                 "%s: Layout for cleared image should be TRANSFER_DST_OPTIMAL instead of GENERAL.", func_name);
             }
-        } else if (image_state->shared_presentable) {
-            if (VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR != dest_image_layout) {
-                // TODO: Add unique error id when available.
-                skip |=
-                    log_msg(report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, (VkDebugReportObjectTypeEXT)0, 0, __LINE__, 0, "DS",
-                            "Layout for shared presentable cleared image is %s but can only be VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR.",
-                            string_VkImageLayout(dest_image_layout));
+        } else if (VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR == dest_image_layout) {
+            if (!GetDeviceExtensions(device_data)->khr_shared_presentable_image) {
+                skip |= log_msg(report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_EXT,
+                    reinterpret_cast<uint64_t &>(image_state->image), __LINE__, 0, "DS",
+                    "Must enable VK_KHR_shared_presentable_image extension before creating images with a layout type "
+                    "of VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR.");
+
+            } else {
+                if (image_state->shared_presentable) {
+                    skip |= log_msg(
+                        report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_EXT,
+                        reinterpret_cast<uint64_t &>(image_state->image), __LINE__, 0, "DS",
+                        "Layout for shared presentable cleared image is %s but can only be VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR.",
+                        string_VkImageLayout(dest_image_layout));
+                }
             }
         } else {
             UNIQUE_VALIDATION_ERROR_CODE error_code = VALIDATION_ERROR_01086;
@@ -2193,7 +2203,11 @@ bool ValidateMaskBitsFromLayouts(core_validation::layer_data *device_data, VkCom
         // avoid only a WAR hazard -- any writes need to be ordered after
         // the PE's reads. There is no need for a memory dependency for this
         // case.
-        /* fallthrough */
+        // Intentionally fall through
+
+        case VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR:
+        // Todo -- shouldn't be valid unless extension is enabled
+        // Intentionally fall through
 
         case VK_IMAGE_LAYOUT_GENERAL:
         default: { break; }
