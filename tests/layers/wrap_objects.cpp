@@ -38,6 +38,27 @@ static uint32_t loader_layer_if_version = CURRENT_LOADER_LAYER_INTERFACE_VERSION
 
 //TODO Add wrapping of Vkdevice, Vkqueue, VkcommandBuffer
 
+VKAPI_ATTR void VKAPI_CALL GetOriginalPhysicalDeviceLimitsEXT(VkPhysicalDevice physicalDevice, VkPhysicalDeviceLimits *orgLimits) {
+
+    wrapped_phys_dev_obj *phys_dev;
+    auto vk_phys_dev = unwrap_phys_dev(physicalDevice, &phys_dev);
+
+    auto func = phys_dev->inst->layer_disp.GetInstanceProcAddr(vk_phys_dev, "vkGetOriginalPhysicalDeviceLimitsEXT");
+    if(func == nullptr)
+    {
+        return;
+    }
+
+    func(vk_phys_dev, orgLimits);
+
+    phys_dev->inst->layer_disp.GetOriginalPhysicalDeviceLimitsEXT(vk_phys_dev, orgLimits);
+}
+
+VKAPI_ATTR VkResult VKAPI_CALL SetPhysicalDeviceLimitsEXT(VkPhysicalDevice physicalDevice,
+                                                          const VkPhysicalDeviceLimits *newLimits) {
+    return VK_SUCCESS;
+}
+
 VKAPI_ATTR VkResult VKAPI_CALL vkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance)
 {
     VkLayerInstanceCreateInfo *chain_info = get_chain_info(pCreateInfo, VK_LAYER_LINK_INFO);
@@ -1450,6 +1471,11 @@ static inline PFN_vkVoidFunction layer_intercept_instance_proc(const char *name)
         return (PFN_vkVoidFunction) vkGetPhysicalDeviceSparseImageFormatProperties;
     if (!strcmp(name, "EnumerateDeviceExtensionProperties"))
         return (PFN_vkVoidFunction)vkEnumerateDeviceExtensionProperties;
+    if (!strcmp(name, "SetPhysicalDeviceLimitsEXT"))
+        return (PFN_vkVoidFunction)SetPhysicalDeviceLimitsEXT;
+    if (!strcmp(name, "GetOriginalPhysicalDeviceLimitsEXT"))
+        return (PFN_vkVoidFunction)GetOriginalPhysicalDeviceLimitsEXT;
+
     return NULL;
 }
 
@@ -1570,12 +1596,16 @@ VK_LAYER_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vkGetInstanceProcAddr(V
 VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetPhysicalDeviceProcAddr(VkInstance instance, const char *funcName) {
     assert(instance);
 
+    if (!strcmp(funcName, "vkSetPhysicalDeviceLimitsEXT")) return (PFN_vkVoidFunction)SetPhysicalDeviceLimitsEXT;
+    if (!strcmp(funcName, "vkGetOriginalPhysicalDeviceLimitsEXT")) return (PFN_vkVoidFunction)GetOriginalPhysicalDeviceLimitsEXT;
+
     wrapped_inst_obj *inst;
     (void)unwrap_instance(instance, &inst);
     VkLayerInstanceDispatchTable* pTable = &inst->layer_disp;
 
     if (pTable->GetPhysicalDeviceProcAddr == NULL)
         return NULL;
+
     return pTable->GetPhysicalDeviceProcAddr(instance, funcName);
 }
 
