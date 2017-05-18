@@ -135,7 +135,7 @@ function update_shaderc () {
 function build_shaderc () {
    echo "Building $BASEDIR/shaderc"
    cd $BASEDIR/shaderc/android_test
-   ndk-build THIRD_PARTY_PATH=../.. -j $cores
+   ndk-build NDK_APPLICATION_MK=../../../jni/shaderc/Application.mk THIRD_PARTY_PATH=../.. -j $cores
 }
 
 if [ ! -d "$BASEDIR/glslang" -o ! -d "$BASEDIR/glslang/.git" -o -d "$BASEDIR/glslang/.svn" ]; then
