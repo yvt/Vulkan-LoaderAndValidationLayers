@@ -24134,31 +24134,27 @@ TEST_F(VkPositiveLayerTest, CreateComputePipelineCombinedImageSamplerConsumedAsB
     vkDestroyDescriptorSetLayout(m_device->device(), dsl, nullptr);
 }
 
+static bool IsExtensionSupported(VkPhysicalDevice gpu, char const *extension) {
+    uint32_t count = 0;
+    vkEnumerateDeviceExtensionProperties(gpu, nullptr, &count, nullptr);
+    if (!count)
+        return false;
+
+    std::vector<VkExtensionProperties> extensions(count);
+    vkEnumerateDeviceExtensionProperties(gpu, nullptr, &count, extensions.data());
+
+    return std::any_of(extensions.begin(), extensions.end(),
+                       [=](VkExtensionProperties const &e){ return !strcmp(extension, e.extensionName); });
+}
+
 TEST_F(VkPositiveLayerTest, Maintenance1Tests) {
     TEST_DESCRIPTION("Validate various special cases for the Maintenance1_KHR extension");
 
     device_extension_names.push_back(VK_KHR_MAINTENANCE1_EXTENSION_NAME);
     InitFramework(instance_layer_names, instance_extension_names, device_extension_names, myDbgFunc, m_errorMonitor);
 
-    // Ensure that extension is available and enabled.
-    uint32_t extension_count = 0;
-    bool supports_maintenance1_extension = false;
-    VkResult err = vkEnumerateDeviceExtensionProperties(gpu(), nullptr, &extension_count, nullptr);
-    ASSERT_VK_SUCCESS(err);
-    if (extension_count > 0) {
-        std::vector<VkExtensionProperties> available_extensions(extension_count);
-
-        err = vkEnumerateDeviceExtensionProperties(gpu(), nullptr, &extension_count, &available_extensions[0]);
-        ASSERT_VK_SUCCESS(err);
-        for (const auto &extension_props : available_extensions) {
-            if (strcmp(extension_props.extensionName, VK_KHR_MAINTENANCE1_EXTENSION_NAME) == 0) {
-                supports_maintenance1_extension = true;
-            }
-        }
-    }
-
     // Proceed if extension is supported by hardware
-    if (!supports_maintenance1_extension) {
+    if (!IsExtensionSupported(gpu(), VK_KHR_MAINTENANCE1_EXTENSION_NAME)) {
         printf("             Maintenance1 Extension not supported, skipping tests\n");
         return;
     }
@@ -24176,48 +24172,39 @@ TEST_F(VkPositiveLayerTest, Maintenance1Tests) {
 }
 
 TEST_F(VkLayerTest, DuplicateValidPNextStructures) {
-    TEST_DESCRIPTION("Create a pNext chain containing valid strutures, but with a duplicate structure type");
+    TEST_DESCRIPTION("Create a pNext chain containing valid structures, but with a duplicate structure type");
 
     ASSERT_NO_FATAL_FAILURE(Init());
 
-    uint32_t extension_count = 0;
-    VkResult err = vkEnumerateDeviceExtensionProperties(gpu(), nullptr, &extension_count, nullptr);
-    ASSERT_VK_SUCCESS(err);
-
-    if (extension_count > 0) {
-        std::vector<VkExtensionProperties> available_extensions(extension_count);
-        err = vkEnumerateDeviceExtensionProperties(gpu(), nullptr, &extension_count, &available_extensions[0]);
-        ASSERT_VK_SUCCESS(err);
-
-        for (const auto &extension_props : available_extensions) {
-            if (strcmp(extension_props.extensionName, VK_NV_DEDICATED_ALLOCATION_EXTENSION_NAME) == 0) {
-                // Create two pNext structures which by themselves would be valid
-                VkDedicatedAllocationBufferCreateInfoNV dedicated_buffer_create_info = {};
-                VkDedicatedAllocationBufferCreateInfoNV dedicated_buffer_create_info_2 = {};
-                dedicated_buffer_create_info.sType = VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_BUFFER_CREATE_INFO_NV;
-                dedicated_buffer_create_info.pNext = &dedicated_buffer_create_info_2;
-                dedicated_buffer_create_info.dedicatedAllocation = VK_TRUE;
-
-                dedicated_buffer_create_info_2.sType = VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_BUFFER_CREATE_INFO_NV;
-                dedicated_buffer_create_info_2.pNext = nullptr;
-                dedicated_buffer_create_info_2.dedicatedAllocation = VK_TRUE;
-
-                uint32_t queue_family_index = 0;
-                VkBufferCreateInfo buffer_create_info = {};
-                buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-                buffer_create_info.pNext = &dedicated_buffer_create_info;
-                buffer_create_info.size = 1024;
-                buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-                buffer_create_info.queueFamilyIndexCount = 1;
-                buffer_create_info.pQueueFamilyIndices = &queue_family_index;
-
-                m_errorMonitor->SetDesiredFailureMsg(VK_DEBUG_REPORT_ERROR_BIT_EXT, "chain contains duplicate structure types");
-                VkBuffer buffer;
-                err = vkCreateBuffer(m_device->device(), &buffer_create_info, NULL, &buffer);
-                m_errorMonitor->VerifyFound();
-            }
-        }
+    if (!IsExtensionSupported(gpu(), VK_NV_DEDICATED_ALLOCATION_EXTENSION_NAME)) {
+        printf("Required extension %s not supported; skipped\n", VK_NV_DEDICATED_ALLOCATION_EXTENSION_NAME);
+        return;
     }
+
+    // Create two pNext structures which by themselves would be valid
+    VkDedicatedAllocationBufferCreateInfoNV dedicated_buffer_create_info = {};
+    VkDedicatedAllocationBufferCreateInfoNV dedicated_buffer_create_info_2 = {};
+    dedicated_buffer_create_info.sType = VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_BUFFER_CREATE_INFO_NV;
+    dedicated_buffer_create_info.pNext = &dedicated_buffer_create_info_2;
+    dedicated_buffer_create_info.dedicatedAllocation = VK_TRUE;
+
+    dedicated_buffer_create_info_2.sType = VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_BUFFER_CREATE_INFO_NV;
+    dedicated_buffer_create_info_2.pNext = nullptr;
+    dedicated_buffer_create_info_2.dedicatedAllocation = VK_TRUE;
+
+    uint32_t queue_family_index = 0;
+    VkBufferCreateInfo buffer_create_info = {};
+    buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    buffer_create_info.pNext = &dedicated_buffer_create_info;
+    buffer_create_info.size = 1024;
+    buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    buffer_create_info.queueFamilyIndexCount = 1;
+    buffer_create_info.pQueueFamilyIndices = &queue_family_index;
+
+    m_errorMonitor->SetDesiredFailureMsg(VK_DEBUG_REPORT_ERROR_BIT_EXT, "chain contains duplicate structure types");
+    VkBuffer buffer;
+    vkCreateBuffer(m_device->device(), &buffer_create_info, NULL, &buffer);
+    m_errorMonitor->VerifyFound();
 }
 
 TEST_F(VkPositiveLayerTest, ValidStructPNext) {
@@ -24225,77 +24212,62 @@ TEST_F(VkPositiveLayerTest, ValidStructPNext) {
 
     ASSERT_NO_FATAL_FAILURE(Init());
 
-    // Positive test to check parameter_validation and unique_objects support
-    // for NV_dedicated_allocation
-    uint32_t extension_count = 0;
-    bool supports_nv_dedicated_allocation = false;
-    VkResult err = vkEnumerateDeviceExtensionProperties(gpu(), nullptr, &extension_count, nullptr);
+    if (!IsExtensionSupported(gpu(), VK_NV_DEDICATED_ALLOCATION_EXTENSION_NAME)) {
+        printf("Required extension %s not supported; skipped\n",
+               VK_NV_DEDICATED_ALLOCATION_EXTENSION_NAME);
+        return;
+    }
+
+    m_errorMonitor->ExpectSuccess();
+
+    VkDedicatedAllocationBufferCreateInfoNV dedicated_buffer_create_info = {};
+    dedicated_buffer_create_info.sType =
+        VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_BUFFER_CREATE_INFO_NV;
+    dedicated_buffer_create_info.pNext = nullptr;
+    dedicated_buffer_create_info.dedicatedAllocation = VK_TRUE;
+
+    uint32_t queue_family_index = 0;
+    VkBufferCreateInfo buffer_create_info = {};
+    buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    buffer_create_info.pNext = &dedicated_buffer_create_info;
+    buffer_create_info.size = 1024;
+    buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    buffer_create_info.queueFamilyIndexCount = 1;
+    buffer_create_info.pQueueFamilyIndices = &queue_family_index;
+
+    VkBuffer buffer;
+    auto err = vkCreateBuffer(m_device->device(), &buffer_create_info, NULL, &buffer);
     ASSERT_VK_SUCCESS(err);
 
-    if (extension_count > 0) {
-        std::vector<VkExtensionProperties> available_extensions(extension_count);
+    VkMemoryRequirements memory_reqs;
+    vkGetBufferMemoryRequirements(m_device->device(), buffer, &memory_reqs);
 
-        err = vkEnumerateDeviceExtensionProperties(gpu(), nullptr, &extension_count, &available_extensions[0]);
-        ASSERT_VK_SUCCESS(err);
+    VkDedicatedAllocationMemoryAllocateInfoNV dedicated_memory_info = {};
+    dedicated_memory_info.sType = VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_MEMORY_ALLOCATE_INFO_NV;
+    dedicated_memory_info.pNext = nullptr;
+    dedicated_memory_info.buffer = buffer;
+    dedicated_memory_info.image = VK_NULL_HANDLE;
 
-        for (const auto &extension_props : available_extensions) {
-            if (strcmp(extension_props.extensionName, VK_NV_DEDICATED_ALLOCATION_EXTENSION_NAME) == 0) {
-                supports_nv_dedicated_allocation = true;
-            }
-        }
-    }
+    VkMemoryAllocateInfo memory_info = {};
+    memory_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    memory_info.pNext = &dedicated_memory_info;
+    memory_info.allocationSize = memory_reqs.size;
 
-    if (supports_nv_dedicated_allocation) {
-        m_errorMonitor->ExpectSuccess();
+    bool pass;
+    pass = m_device->phy().set_memory_type(memory_reqs.memoryTypeBits, &memory_info, 0);
+    ASSERT_TRUE(pass);
 
-        VkDedicatedAllocationBufferCreateInfoNV dedicated_buffer_create_info = {};
-        dedicated_buffer_create_info.sType = VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_BUFFER_CREATE_INFO_NV;
-        dedicated_buffer_create_info.pNext = nullptr;
-        dedicated_buffer_create_info.dedicatedAllocation = VK_TRUE;
+    VkDeviceMemory buffer_memory;
+    err = vkAllocateMemory(m_device->device(), &memory_info, NULL, &buffer_memory);
+    ASSERT_VK_SUCCESS(err);
 
-        uint32_t queue_family_index = 0;
-        VkBufferCreateInfo buffer_create_info = {};
-        buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        buffer_create_info.pNext = &dedicated_buffer_create_info;
-        buffer_create_info.size = 1024;
-        buffer_create_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-        buffer_create_info.queueFamilyIndexCount = 1;
-        buffer_create_info.pQueueFamilyIndices = &queue_family_index;
+    err = vkBindBufferMemory(m_device->device(), buffer, buffer_memory, 0);
+    ASSERT_VK_SUCCESS(err);
 
-        VkBuffer buffer;
-        err = vkCreateBuffer(m_device->device(), &buffer_create_info, NULL, &buffer);
-        ASSERT_VK_SUCCESS(err);
+    vkDestroyBuffer(m_device->device(), buffer, NULL);
+    vkFreeMemory(m_device->device(), buffer_memory, NULL);
 
-        VkMemoryRequirements memory_reqs;
-        vkGetBufferMemoryRequirements(m_device->device(), buffer, &memory_reqs);
-
-        VkDedicatedAllocationMemoryAllocateInfoNV dedicated_memory_info = {};
-        dedicated_memory_info.sType = VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_MEMORY_ALLOCATE_INFO_NV;
-        dedicated_memory_info.pNext = nullptr;
-        dedicated_memory_info.buffer = buffer;
-        dedicated_memory_info.image = VK_NULL_HANDLE;
-
-        VkMemoryAllocateInfo memory_info = {};
-        memory_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memory_info.pNext = &dedicated_memory_info;
-        memory_info.allocationSize = memory_reqs.size;
-
-        bool pass;
-        pass = m_device->phy().set_memory_type(memory_reqs.memoryTypeBits, &memory_info, 0);
-        ASSERT_TRUE(pass);
-
-        VkDeviceMemory buffer_memory;
-        err = vkAllocateMemory(m_device->device(), &memory_info, NULL, &buffer_memory);
-        ASSERT_VK_SUCCESS(err);
-
-        err = vkBindBufferMemory(m_device->device(), buffer, buffer_memory, 0);
-        ASSERT_VK_SUCCESS(err);
-
-        vkDestroyBuffer(m_device->device(), buffer, NULL);
-        vkFreeMemory(m_device->device(), buffer_memory, NULL);
-
-        m_errorMonitor->VerifyNotFound();
-    }
+    m_errorMonitor->VerifyNotFound();
 }
 
 TEST_F(VkPositiveLayerTest, PSOPolygonModeValid) {
@@ -24309,7 +24281,7 @@ TEST_F(VkPositiveLayerTest, PSOPolygonModeValid) {
     std::vector<const char *> device_extension_names;
     auto features = m_device->phy().features();
     // Artificially disable support for non-solid fill modes
-    features.fillModeNonSolid = false;
+    features.fillModeNonSolid = VK_FALSE;
     // The sacrificial device object
     VkDeviceObj test_device(0, gpu(), device_extension_names, &features);
 
@@ -24328,7 +24300,7 @@ TEST_F(VkPositiveLayerTest, PSOPolygonModeValid) {
     rs_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rs_ci.pNext = nullptr;
     rs_ci.lineWidth = 1.0f;
-    rs_ci.rasterizerDiscardEnable = true;
+    rs_ci.rasterizerDiscardEnable = VK_TRUE;
 
     VkShaderObj vs(&test_device, bindStateVertShaderText, VK_SHADER_STAGE_VERTEX_BIT, this);
     VkShaderObj fs(&test_device, bindStateFragShaderText, VK_SHADER_STAGE_FRAGMENT_BIT, this);
