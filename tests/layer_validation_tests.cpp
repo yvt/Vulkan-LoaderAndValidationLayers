@@ -9282,6 +9282,7 @@ TEST_F(VkLayerTest, RenderPassClearOpMismatch) {
     attach_desc.format = VK_FORMAT_B8G8R8A8_UNORM;
     // Set loadOp to CLEAR
     attach_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    attach_desc.samples = VK_SAMPLE_COUNT_1_BIT;
     rpci.pAttachments = &attach_desc;
     rpci.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     VkRenderPass rp;
@@ -12789,6 +12790,7 @@ TEST_F(VkLayerTest, InvalidImageLayout) {
     rpci.attachmentCount = 1;
     VkAttachmentDescription attach_desc = {};
     attach_desc.format = VK_FORMAT_UNDEFINED;
+    attach_desc.samples = VK_SAMPLE_COUNT_1_BIT;
     rpci.pAttachments = &attach_desc;
     rpci.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     VkRenderPass rp;
@@ -16492,6 +16494,7 @@ TEST_F(VkLayerTest, AttachmentDescriptionUndefinedFormat) {
     rpci.attachmentCount = 1;
     VkAttachmentDescription attach_desc = {};
     attach_desc.format = VK_FORMAT_UNDEFINED;
+    attach_desc.samples = VK_SAMPLE_COUNT_1_BIT;
     rpci.pAttachments = &attach_desc;
     rpci.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     VkRenderPass rp;
@@ -17799,9 +17802,8 @@ TEST_F(VkLayerTest, ImageFormatLimits) {
     m_errorMonitor->VerifyFound();
     image_create_info.arrayLayers = 1;
 
-    m_errorMonitor->SetDesiredFailureMsg(VK_DEBUG_REPORT_ERROR_BIT_EXT, "is not supported by format");
-    int samples = imgFmtProps.sampleCounts >> 1;
-    image_create_info.samples = (VkSampleCountFlagBits)samples;
+    m_errorMonitor->SetDesiredFailureMsg(VK_DEBUG_REPORT_ERROR_BIT_EXT, VALIDATION_ERROR_09e0078e);
+    image_create_info.samples = VK_SAMPLE_COUNT_2_BIT;
     // Expect INVALID_FORMAT_LIMITS_VIOLATION
     vkCreateImage(m_device->handle(), &image_create_info, NULL, &nullImg);
     m_errorMonitor->VerifyFound();
