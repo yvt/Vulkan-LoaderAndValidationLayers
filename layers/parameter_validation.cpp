@@ -320,6 +320,8 @@ VKAPI_ATTR void VKAPI_CALL DestroyInstance(VkInstance instance, const VkAllocati
         layer_debug_report_destroy_instance(my_data->report_data);
         instance_layer_data_map.erase(key);
     }
+
+    delete my_data;
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL EnumeratePhysicalDevices(VkInstance instance, uint32_t *pPhysicalDeviceCount,
@@ -628,6 +630,8 @@ VKAPI_ATTR void VKAPI_CALL DestroyDevice(VkDevice device, const VkAllocationCall
         my_data->dispatch_table.DestroyDevice(device, pAllocator);
         layer_data_map.erase(key);
     }
+
+    delete my_data;
 }
 
 static bool PreGetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex) {

@@ -3441,6 +3441,8 @@ VKAPI_ATTR void VKAPI_CALL DestroyInstance(VkInstance instance, const VkAllocati
 
     layer_debug_report_destroy_instance(instance_data->report_data);
     layer_data_map.erase(key);
+
+    delete instance_data;
 }
 
 static bool ValidatePhysicalDeviceQueueFamily(instance_layer_data *instance_data, const PHYSICAL_DEVICE_STATE *pd_state,
@@ -3671,6 +3673,8 @@ VKAPI_ATTR void VKAPI_CALL DestroyDevice(VkDevice device, const VkAllocationCall
         dev_data->dispatch_table.DestroyDevice(device, pAllocator);
         layer_data_map.erase(key);
     }
+
+    delete dev_data;
 }
 
 static const VkExtensionProperties instance_extensions[] = {{VK_EXT_DEBUG_REPORT_EXTENSION_NAME, VK_EXT_DEBUG_REPORT_SPEC_VERSION}};

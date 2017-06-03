@@ -217,6 +217,8 @@ VKAPI_ATTR void VKAPI_CALL DestroyInstance(VkInstance instance, const VkAllocati
 
     delete my_data->instance_dispatch_table;
     layer_data_map.erase(key);
+
+    delete my_data;
 }
 
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
@@ -744,6 +746,8 @@ VKAPI_ATTR void VKAPI_CALL DestroyDevice(VkDevice device, const VkAllocationCall
     }
     delete my_data->device_dispatch_table;
     layer_data_map.erase(key);
+
+    delete my_data;
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL CreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR *pCreateInfo,
