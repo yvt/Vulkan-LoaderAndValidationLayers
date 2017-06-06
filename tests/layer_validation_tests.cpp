@@ -1354,6 +1354,7 @@ TEST_F(VkLayerTest, SparseBindingImageBufferCreate) {
     m_errorMonitor->VerifyFound();
 }
 
+#if 0
 TEST_F(VkLayerTest, SparseResidencyImageCreateUnsupportedTypes) {
     TEST_DESCRIPTION("Create images with sparse residency with unsupported types");
 
@@ -1513,6 +1514,7 @@ TEST_F(VkLayerTest, SparseResidencyImageCreateUnsupportedSamples) {
         image = VK_NULL_HANDLE;
     }
 }
+#endif
 
 TEST_F(VkLayerTest, InvalidMemoryAliasing) {
     TEST_DESCRIPTION(
