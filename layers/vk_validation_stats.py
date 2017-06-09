@@ -50,7 +50,6 @@ layer_source_files = [
 'parameter_validation.cpp',
 'object_tracker.cpp',
 'buffer_validation.cpp',
-'swapchain.cpp'
 ]
 header_file = 'vk_validation_error_messages.h'
 # TODO : Don't hardcode linux path format if we want this to run on windows
