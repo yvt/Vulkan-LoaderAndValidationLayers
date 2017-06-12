@@ -92,9 +92,6 @@ std::string to_string(T var) {
 }
 #endif
 
-// This intentionally includes a cpp file
-#include "vk_safe_struct.cpp"
-
 namespace core_validation {
 
 using std::unordered_map;
