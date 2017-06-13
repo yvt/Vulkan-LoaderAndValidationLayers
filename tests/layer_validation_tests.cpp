@@ -2343,18 +2343,13 @@ TEST_F(VkLayerTest, InvalidDescriptorPoolConsistency) {
     VkDescriptorPoolCreateInfo ds_pool_ci = {};
     ds_pool_ci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     ds_pool_ci.pNext = NULL;
-    ds_pool_ci.flags = 0;
+    ds_pool_ci.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     ds_pool_ci.maxSets = 1;
     ds_pool_ci.poolSizeCount = 1;
     ds_pool_ci.pPoolSizes = &ds_type_count;
 
     VkDescriptorPool ds_pool_one;
     err = vkCreateDescriptorPool(m_device->device(), &ds_pool_ci, NULL, &ds_pool_one);
-    ASSERT_VK_SUCCESS(err);
-
-    // Create a second descriptor pool
-    VkDescriptorPool ds_pool_two;
-    err = vkCreateDescriptorPool(m_device->device(), &ds_pool_ci, NULL, &ds_pool_two);
     ASSERT_VK_SUCCESS(err);
 
     VkDescriptorSetLayoutBinding dsl_binding = {};
@@ -2383,13 +2378,10 @@ TEST_F(VkLayerTest, InvalidDescriptorPoolConsistency) {
     err = vkAllocateDescriptorSets(m_device->device(), &alloc_info, &descriptorSet);
     ASSERT_VK_SUCCESS(err);
 
-    err = vkFreeDescriptorSets(m_device->device(), ds_pool_two, 1, &descriptorSet);
-
-    m_errorMonitor->VerifyFound();
-
     vkDestroyDescriptorSetLayout(m_device->device(), ds_layout, NULL);
+    err = vkFreeDescriptorSets(m_device->device(), ds_pool_one, 1, &descriptorSet);
+
     vkDestroyDescriptorPool(m_device->device(), ds_pool_one, NULL);
-    vkDestroyDescriptorPool(m_device->device(), ds_pool_two, NULL);
 }
 
 TEST_F(VkLayerTest, CreateUnknownObject) {
