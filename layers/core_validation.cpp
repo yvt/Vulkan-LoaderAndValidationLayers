@@ -8919,20 +8919,45 @@ VKAPI_ATTR VkResult VKAPI_CALL QueuePresentKHR(VkQueue queue, const VkPresentInf
                         HandleToUint64(pPresentInfo->pSwapchains[i]), __LINE__, DRAWSTATE_SWAPCHAIN_IMAGE_NOT_ACQUIRED, "DS",
                         "vkQueuePresentKHR: Swapchain image index %u has not been acquired.", pPresentInfo->pImageIndices[i]);
                 }
-
+/*
+ * Below is an example of how error codes will have to be updates for some cases where
+ * conditional spec code was previously allowed to exist in the same VUID regardless of
+ * whether the condition was met
+ * Going forward, all conditional code will be self-contained in a separate VUID
+ * Here is an example
+ifndef::VK_KHR_shared_presentable_image[]
+  * [[VUID-VkPresentInfoKHR-pImageIndices-01296]] // VALIDATION_ERROR_11200a20
+    Any given element of pname:pImageIndices must: be the index of a
+    presentable image acquired from the swapchain specified by the
+    corresponding element of the pname:pSwapchains array, and the presented
+    image subresource must: be in the ename:VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+    layout at the time the operation is executed on a sname:VkDevice
+endif::VK_KHR_shared_presentable_image[]
+ifdef::VK_KHR_shared_presentable_image[]
+  * [[VUID-VkPresentInfoKHR-pImageIndices-09876]] // VALIDATION_ERROR_01234567
+    Any given element of pname:pImageIndices must: be the index of a
+    presentable image acquired from the swapchain specified by the
+    corresponding element of the pname:pSwapchains array, and the presented
+    image subresource must: be in the ename:VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+    or ename:VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR layout at the time the
+    operation is executed on a sname:VkDevice
+endif::VK_KHR_shared_presentable_image[]
+ */
                 vector<VkImageLayout> layouts;
                 if (FindLayouts(dev_data, image, layouts)) {
                     for (auto layout : layouts) {
                         if ((layout != VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) &&
                             (!dev_data->extensions.vk_khr_shared_presentable_image ||
                              (layout != VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR))) {
+                            // Select error code based on extension status & use dynamically selected code below
+                            auto error_code = dev_data->extensions.vk_khr_shared_presentable_image ? VALIDATION_ERROR_01234567 : VALIDATION_ERROR_11200a20;
                             skip |=
                                 log_msg(dev_data->report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_QUEUE_EXT,
-                                        HandleToUint64(queue), __LINE__, VALIDATION_ERROR_11200a20, "DS",
+                                        HandleToUint64(queue), __LINE__, error_code, "DS",
                                         "Images passed to present must be in layout "
                                         "VK_IMAGE_LAYOUT_PRESENT_SRC_KHR or VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR but is in %s. %s",
-                                        string_VkImageLayout(layout), validation_error_map[VALIDATION_ERROR_11200a20]);
-                        }
+                                        string_VkImageLayout(layout), validation_error_map[error_code]);
+                         }
                     }
                 }
             }
