@@ -1388,6 +1388,10 @@ void VkCommandBufferObj::Draw(uint32_t vertexCount, uint32_t instanceCount, uint
     vkCmdDraw(handle(), vertexCount, instanceCount, firstVertex, firstInstance);
 }
 
+void VkCommandBufferObj::DrawIndirect(VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) {
+    vkCmdDrawIndirect(handle(), buffer, offset, drawCount, stride);
+}
+
 void VkCommandBufferObj::QueueCommandBuffer(bool checkSuccess) {
     VkFence nullFence = {VK_NULL_HANDLE};
     QueueCommandBuffer(nullFence, checkSuccess);

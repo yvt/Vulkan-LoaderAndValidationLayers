@@ -175,6 +175,7 @@ class VkCommandBufferObj : public vk_testing::CommandBuffer {
     void Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance);
     void DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset,
                      uint32_t firstInstance);
+    void DrawIndirect(VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride);
     void QueueCommandBuffer(bool checkSuccess = true);
     void QueueCommandBuffer(VkFence fence, bool checkSuccess = true);
     void SetViewport(uint32_t firstViewport, uint32_t viewportCount, const VkViewport *pViewports);

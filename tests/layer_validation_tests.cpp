@@ -9608,6 +9608,56 @@ TEST_F(VkLayerTest, UpdateBufferWithinRenderPass) {
     m_errorMonitor->VerifyFound();
 }
 
+TEST_F(VkLayerTest, UpdateBufferPipelineDependency) {
+    // Call CmdUpdateBuffer and use updated buffer w/o a pipeline barrier
+    m_errorMonitor->SetDesiredFailureMsg(
+        VK_DEBUG_REPORT_ERROR_BIT_EXT,
+        "that may not be fully written. You can insert a pipeline dependency to make sure the transfer ");
+
+    ASSERT_NO_FATAL_FAILURE(Init());
+    ASSERT_NO_FATAL_FAILURE(InitRenderTarget());
+
+    // Create PSO to be used for draw-time errors below
+    VkShaderObj vs(m_device, bindStateVertShaderText, VK_SHADER_STAGE_VERTEX_BIT, this);
+    VkShaderObj fs(m_device, bindStateFragShaderText, VK_SHADER_STAGE_FRAGMENT_BIT, this);
+    VkPipelineObj pipe(m_device);
+    pipe.AddShader(&vs);
+    pipe.AddShader(&fs);
+    pipe.AddColorAttachment();
+    VkPipelineLayoutCreateInfo pipeline_layout_ci = {};
+    pipeline_layout_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipeline_layout_ci.pNext = NULL;
+    pipeline_layout_ci.setLayoutCount = 0;
+
+    VkPipelineLayout pipeline_layout;
+    VkResult err = vkCreatePipelineLayout(m_device->device(), &pipeline_layout_ci, NULL, &pipeline_layout);
+    ASSERT_VK_SUCCESS(err);
+    pipe.CreateVKPipeline(pipeline_layout, renderPass());
+
+    m_commandBuffer->begin();
+
+    VkMemoryPropertyFlags reqs = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+    vk_testing::Buffer dstBuffer;
+    dstBuffer.init_as_dst(*m_device, (VkDeviceSize)1024, reqs);
+
+    VkDeviceSize dstOffset = 0;
+    uint32_t Data[] = {1, 2, 3, 4, 5, 6, 7, 8};
+    VkDeviceSize dataSize = sizeof(Data) / sizeof(uint32_t);
+    vkCmdUpdateBuffer(m_commandBuffer->handle(), dstBuffer.handle(), dstOffset, dataSize, &Data);
+    m_commandBuffer->BeginRenderPass(m_renderPassBeginInfo);
+
+    vkCmdBindPipeline(m_commandBuffer->handle(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipe.handle());
+
+    VkViewport viewport = {0, 0, 16, 16, 0, 1};
+    VkRect2D scissor = {{0, 0}, {16, 16}};
+    vkCmdSetViewport(m_commandBuffer->handle(), 0, 1, &viewport);
+    vkCmdSetScissor(m_commandBuffer->handle(), 0, 1, &scissor);
+
+    m_commandBuffer->DrawIndirect(dstBuffer.handle(), 0, 0, 0);
+    m_errorMonitor->VerifyFound();
+    vkDestroyPipelineLayout(m_device->device(), pipeline_layout, NULL);
+}
+
 TEST_F(VkLayerTest, ClearColorImageWithBadRange) {
     TEST_DESCRIPTION("Record clear color with an invalid VkImageSubresourceRange");
 
