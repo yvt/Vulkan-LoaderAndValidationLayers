@@ -628,6 +628,34 @@ struct LAST_BOUND_STATE {
         dynamicOffsets.clear();
     }
 };
+
+enum PIPELINE_TYPE {
+    PIPELINE_TYPE_GRAPHICS = 0,
+    PIPELINE_TYPE_COMPUTE = 1,
+    PIPELINE_TYPE_TRANSFER = 2,
+    PIPELINE_TYPE_HOST = 3,
+    PIPELINE_TYPE_COMMAND_PROCESSING = 4,
+    PIPELINE_TYPE_COUNT = 5,
+};
+
+enum PipelineTypeMask {
+    PIPELINE_MASK_NONE = 0x00,
+    PIPELINE_MASK_GRAPHICS = 0x01,
+    PIPELINE_MASK_COMPUTE = 0x02,
+    PIPELINE_MASK_TRANSFER = 0x04,
+    PIPELINE_MASK_HOST = 0x08,
+    PIPELINE_MASK_COMMAND_PROCESSING = 0x10,
+    PIPELINE_MASK_ALL = 0x1F,
+    // This is a hack for now. Signals detection based on usage bits
+    PIPELINE_MASK_SHADER_GRAPHICS = 0x1000,
+    PIPELINE_MASK_SHADER_COMPUTE = 0x2000,
+};
+
+// Array of object name strings for OBJECT_TYPE enum conversion
+static const char *const pipeline_string[PIPELINE_TYPE_COUNT] = {
+    "graphics", "compute", "transfer", "host", "command processing",
+};
+
 // Cmd Buffer Wrapper Struct - TODO : This desperately needs its own class
 struct GLOBAL_CB_NODE : public BASE_NODE {
     VkCommandBuffer commandBuffer;
@@ -681,6 +709,8 @@ struct GLOBAL_CB_NODE : public BASE_NODE {
     std::unordered_set<VkDeviceMemory> memObjs;
     std::vector<std::function<bool(VkQueue)>> eventUpdates;
     std::vector<std::function<bool(VkQueue)>> queryUpdates;
+    // Track write dependencies per pipeline for this cmd buffer to catch conflicts
+    std::unordered_set<VK_OBJECT> write_dependency[PIPELINE_TYPE_COUNT];
 };
 
 struct SEMAPHORE_WAIT {
@@ -789,8 +819,8 @@ bool ValidateMemoryIsBoundToImage(const layer_data *, const IMAGE_STATE *, const
 void AddCommandBufferBindingSampler(GLOBAL_CB_NODE *, SAMPLER_STATE *);
 void AddCommandBufferBindingImage(const layer_data *, GLOBAL_CB_NODE *, IMAGE_STATE *);
 void AddCommandBufferBindingImageView(const layer_data *, GLOBAL_CB_NODE *, IMAGE_VIEW_STATE *);
-void AddCommandBufferBindingBuffer(const layer_data *, GLOBAL_CB_NODE *, BUFFER_STATE *);
-void AddCommandBufferBindingBufferView(const layer_data *, GLOBAL_CB_NODE *, BUFFER_VIEW_STATE *);
+void AddCommandBufferBindingBuffer(const layer_data *, GLOBAL_CB_NODE *, BUFFER_STATE *, PipelineTypeMask);
+void AddCommandBufferBindingBufferView(const layer_data *, GLOBAL_CB_NODE *, BUFFER_VIEW_STATE *, PipelineTypeMask);
 bool ValidateObjectNotInUse(const layer_data *dev_data, BASE_NODE *obj_node, VK_OBJECT obj_struct, UNIQUE_VALIDATION_ERROR_CODE error_code);
 void invalidateCommandBuffers(const layer_data *dev_data, std::unordered_set<GLOBAL_CB_NODE *> const &cb_nodes, VK_OBJECT obj);
 void RemoveImageMemoryRange(uint64_t handle, DEVICE_MEM_INFO *mem_info);

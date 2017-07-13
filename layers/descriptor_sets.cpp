@@ -724,7 +724,8 @@ void cvdescriptorset::DescriptorSet::PerformCopyUpdate(const VkCopyDescriptorSet
 // Prereq: This should be called for a set that has been confirmed to be active for the given cb_node, meaning it's going
 //   to be used in a draw by the given cb_node
 void cvdescriptorset::DescriptorSet::BindCommandBuffer(GLOBAL_CB_NODE *cb_node,
-                                                       const std::map<uint32_t, descriptor_req> &binding_req_map) {
+                                                       const std::map<uint32_t, descriptor_req> &binding_req_map,
+                                                       VkPipelineBindPoint bind_point) {
     // bind cb to this descriptor set
     cb_bindings.insert(cb_node);
     // Add bindings for descriptor set, the set's pool, and individual objects in the set
@@ -738,7 +739,7 @@ void cvdescriptorset::DescriptorSet::BindCommandBuffer(GLOBAL_CB_NODE *cb_node,
         auto start_idx = p_layout_->GetGlobalStartIndexFromBinding(binding);
         auto end_idx = p_layout_->GetGlobalEndIndexFromBinding(binding);
         for (uint32_t i = start_idx; i <= end_idx; ++i) {
-            descriptors_[i]->BindCommandBuffer(device_data_, cb_node);
+            descriptors_[i]->BindCommandBuffer(device_data_, cb_node, bind_point);
         }
     }
 }
@@ -946,7 +947,8 @@ void cvdescriptorset::SamplerDescriptor::CopyUpdate(const Descriptor *src) {
     updated = true;
 }
 
-void cvdescriptorset::SamplerDescriptor::BindCommandBuffer(const layer_data *dev_data, GLOBAL_CB_NODE *cb_node) {
+void cvdescriptorset::SamplerDescriptor::BindCommandBuffer(const layer_data *dev_data, GLOBAL_CB_NODE *cb_node,
+                                                           VkPipelineBindPoint bind_point) {
     if (!immutable_) {
         auto sampler_state = GetSamplerState(dev_data, sampler_);
         if (sampler_state) core_validation::AddCommandBufferBindingSampler(cb_node, sampler_state);
@@ -983,7 +985,8 @@ void cvdescriptorset::ImageSamplerDescriptor::CopyUpdate(const Descriptor *src) 
     image_layout_ = image_layout;
 }
 
-void cvdescriptorset::ImageSamplerDescriptor::BindCommandBuffer(const layer_data *dev_data, GLOBAL_CB_NODE *cb_node) {
+void cvdescriptorset::ImageSamplerDescriptor::BindCommandBuffer(const layer_data *dev_data, GLOBAL_CB_NODE *cb_node,
+                                                                VkPipelineBindPoint bind_point) {
     // First add binding for any non-immutable sampler
     if (!immutable_) {
         auto sampler_state = GetSamplerState(dev_data, sampler_);
@@ -1018,7 +1021,8 @@ void cvdescriptorset::ImageDescriptor::CopyUpdate(const Descriptor *src) {
     image_layout_ = image_layout;
 }
 
-void cvdescriptorset::ImageDescriptor::BindCommandBuffer(const layer_data *dev_data, GLOBAL_CB_NODE *cb_node) {
+void cvdescriptorset::ImageDescriptor::BindCommandBuffer(const layer_data *dev_data, GLOBAL_CB_NODE *cb_node,
+                                                         VkPipelineBindPoint bind_point) {
     // Add binding for image
     auto iv_state = GetImageViewState(dev_data, image_view_);
     if (iv_state) {
@@ -1055,9 +1059,15 @@ void cvdescriptorset::BufferDescriptor::CopyUpdate(const Descriptor *src) {
     range_ = buff_desc->range_;
 }
 
-void cvdescriptorset::BufferDescriptor::BindCommandBuffer(const layer_data *dev_data, GLOBAL_CB_NODE *cb_node) {
+void cvdescriptorset::BufferDescriptor::BindCommandBuffer(const layer_data *dev_data, GLOBAL_CB_NODE *cb_node,
+                                                          VkPipelineBindPoint bind_point) {
     auto buffer_node = GetBufferState(dev_data, buffer_);
-    if (buffer_node) core_validation::AddCommandBufferBindingBuffer(dev_data, cb_node, buffer_node);
+    // TODO: How to know if buffer is being written or not, and by which pipe?
+    if (buffer_node) {
+        auto pipe_mask =
+            (bind_point == VK_PIPELINE_BIND_POINT_GRAPHICS) ? PIPELINE_MASK_SHADER_GRAPHICS : PIPELINE_MASK_SHADER_COMPUTE;
+        core_validation::AddCommandBufferBindingBuffer(dev_data, cb_node, buffer_node, pipe_mask);
+    }
 }
 
 cvdescriptorset::TexelDescriptor::TexelDescriptor(const VkDescriptorType type) : buffer_view_(VK_NULL_HANDLE), storage_(false) {
@@ -1076,10 +1086,14 @@ void cvdescriptorset::TexelDescriptor::CopyUpdate(const Descriptor *src) {
     buffer_view_ = static_cast<const TexelDescriptor *>(src)->buffer_view_;
 }
 
-void cvdescriptorset::TexelDescriptor::BindCommandBuffer(const layer_data *dev_data, GLOBAL_CB_NODE *cb_node) {
+void cvdescriptorset::TexelDescriptor::BindCommandBuffer(const layer_data *dev_data, GLOBAL_CB_NODE *cb_node,
+                                                         VkPipelineBindPoint bind_point) {
     auto bv_state = GetBufferViewState(dev_data, buffer_view_);
     if (bv_state) {
-        core_validation::AddCommandBufferBindingBufferView(dev_data, cb_node, bv_state);
+        // TODO: How to know if buffer is being written or not, and by which pipe?
+        auto pipe_mask =
+            (bind_point == VK_PIPELINE_BIND_POINT_GRAPHICS) ? PIPELINE_MASK_SHADER_GRAPHICS : PIPELINE_MASK_SHADER_COMPUTE;
+        core_validation::AddCommandBufferBindingBufferView(dev_data, cb_node, bv_state, pipe_mask);
     }
 }
 

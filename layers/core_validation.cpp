@@ -456,7 +456,8 @@ void AddCommandBufferBindingImageView(const layer_data *dev_data, GLOBAL_CB_NODE
 }
 
 // Create binding link between given buffer node and command buffer node
-void AddCommandBufferBindingBuffer(const layer_data *dev_data, GLOBAL_CB_NODE *cb_node, BUFFER_STATE *buffer_state) {
+void AddCommandBufferBindingBuffer(const layer_data *dev_data, GLOBAL_CB_NODE *cb_node, BUFFER_STATE *buffer_state,
+                                   PipelineTypeMask write_pipe_mask) {
     // First update CB binding in MemObj mini CB list
     for (auto mem_binding : buffer_state->GetBoundMemory()) {
         DEVICE_MEM_INFO *pMemInfo = GetMemObjInfo(dev_data, mem_binding);
@@ -467,19 +468,43 @@ void AddCommandBufferBindingBuffer(const layer_data *dev_data, GLOBAL_CB_NODE *c
         }
     }
     // Now update cb binding for buffer
-    cb_node->object_bindings.insert({HandleToUint64(buffer_state->buffer), kVulkanObjectTypeBuffer});
+    VK_OBJECT buf_obj = {HandleToUint64(buffer_state->buffer), kVulkanObjectTypeBuffer};
+    cb_node->object_bindings.insert(buf_obj);
     buffer_state->cb_bindings.insert(cb_node);
+    // If cmd buffer is writing buffer, add a write dependency
+    if (PIPELINE_MASK_SHADER_GRAPHICS == write_pipe_mask) {
+        write_pipe_mask = PIPELINE_MASK_NONE;
+        if (buffer_state->createInfo.usage & (VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)) {
+            write_pipe_mask = PIPELINE_MASK_GRAPHICS;
+        }
+    } else if (PIPELINE_MASK_SHADER_COMPUTE == write_pipe_mask) {
+        write_pipe_mask = PIPELINE_MASK_NONE;
+        if (buffer_state->createInfo.usage & (VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)) {
+            write_pipe_mask = PIPELINE_MASK_COMPUTE;
+        }
+    }
+    if (PIPELINE_MASK_NONE != write_pipe_mask) {
+        PIPELINE_TYPE ptype = PIPELINE_TYPE_GRAPHICS;
+        for (PipelineTypeMask pipe_mask = PIPELINE_MASK_GRAPHICS; pipe_mask <= PIPELINE_MASK_COMMAND_PROCESSING;
+             pipe_mask = (PipelineTypeMask)(pipe_mask << 1)) {
+            if (write_pipe_mask & pipe_mask) {
+                cb_node->write_dependency[ptype].insert(buf_obj);
+            }
+            ptype = (PIPELINE_TYPE)(ptype + 1);
+        }
+    }
 }
 
 // Create binding link between given buffer view node and its buffer with command buffer node
-void AddCommandBufferBindingBufferView(const layer_data *dev_data, GLOBAL_CB_NODE *cb_node, BUFFER_VIEW_STATE *view_state) {
+void AddCommandBufferBindingBufferView(const layer_data *dev_data, GLOBAL_CB_NODE *cb_node, BUFFER_VIEW_STATE *view_state,
+                                       PipelineTypeMask write_pipe_mask) {
     // First add bindings for bufferView
     view_state->cb_bindings.insert(cb_node);
     cb_node->object_bindings.insert({HandleToUint64(view_state->buffer_view), kVulkanObjectTypeBufferView});
     auto buffer_state = GetBufferState(dev_data, view_state->create_info.buffer);
     // Add bindings for buffer within bufferView
     if (buffer_state) {
-        AddCommandBufferBindingBuffer(dev_data, cb_node, buffer_state);
+        AddCommandBufferBindingBuffer(dev_data, cb_node, buffer_state, write_pipe_mask);
     }
 }
 
@@ -1144,7 +1169,7 @@ static void UpdateDrawState(layer_data *dev_data, GLOBAL_CB_NODE *cb_state, cons
             // Pull the set node
             cvdescriptorset::DescriptorSet *descriptor_set = state.boundDescriptorSets[setIndex];
             // Bind this set and its active descriptor resources to the command buffer
-            descriptor_set->BindCommandBuffer(cb_state, set_binding_pair.second);
+            descriptor_set->BindCommandBuffer(cb_state, set_binding_pair.second, bind_point);
             // For given active slots record updated images & buffers
             descriptor_set->GetStorageUpdates(set_binding_pair.second, &cb_state->updateBuffers, &cb_state->updateImages);
         }
@@ -5679,6 +5704,22 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawIndexed(VkCommandBuffer commandBuffer, uint32_
     }
 }
 
+static bool CheckDependency(layer_data *dev_data, GLOBAL_CB_NODE *cb_state, VK_OBJECT object, const char *caller) {
+    bool skip = false;
+    // If write dependency for handle hasn't cleared, flag an error
+    for (uint32_t i = 0; i < PIPELINE_TYPE_COUNT; ++i) {
+        if (cb_state->write_dependency[i].count(object)) {
+            skip |= log_msg(dev_data->report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT, VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_EXT,
+                            object.handle, __LINE__, DRAWSTATE_QUEUE_FORWARD_PROGRESS, "DS",
+                            "Command %s consumes %s 0x%" PRIx64
+                            " that may not be fully written. You can insert a pipeline dependency to make sure the %s pipeline has "
+                            "completed writing this resource prior to calling this command.",
+                            caller, object_string[object.type], object.handle, pipeline_string[i]);
+        }
+    }
+    return skip;
+}
+
 static bool PreCallValidateCmdDrawIndirect(layer_data *dev_data, VkCommandBuffer cmd_buffer, VkBuffer buffer, bool indexed,
                                            VkPipelineBindPoint bind_point, GLOBAL_CB_NODE **cb_state, BUFFER_STATE **buffer_state,
                                            const char *caller) {
@@ -5687,6 +5728,7 @@ static bool PreCallValidateCmdDrawIndirect(layer_data *dev_data, VkCommandBuffer
                             VALIDATION_ERROR_1aa02415, VALIDATION_ERROR_1aa00017, VALIDATION_ERROR_1aa003cc);
     *buffer_state = GetBufferState(dev_data, buffer);
     skip |= ValidateMemoryIsBoundToBuffer(dev_data, *buffer_state, caller, VALIDATION_ERROR_1aa003b4);
+    skip |= CheckDependency(dev_data, *cb_state, {HandleToUint64(buffer), kVulkanObjectTypeBuffer}, caller);
     // TODO: If the drawIndirectFirstInstance feature is not enabled, all the firstInstance members of the
     // VkDrawIndirectCommand structures accessed by this command must be 0, which will require access to the contents of 'buffer'.
     return skip;
@@ -5695,7 +5737,7 @@ static bool PreCallValidateCmdDrawIndirect(layer_data *dev_data, VkCommandBuffer
 static void PostCallRecordCmdDrawIndirect(layer_data *dev_data, GLOBAL_CB_NODE *cb_state, VkPipelineBindPoint bind_point,
                                           BUFFER_STATE *buffer_state) {
     UpdateStateCmdDrawType(dev_data, cb_state, bind_point);
-    AddCommandBufferBindingBuffer(dev_data, cb_state, buffer_state);
+    AddCommandBufferBindingBuffer(dev_data, cb_state, buffer_state, PIPELINE_MASK_NONE);
 }
 
 VKAPI_ATTR void VKAPI_CALL CmdDrawIndirect(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t count,
@@ -5732,7 +5774,7 @@ static bool PreCallValidateCmdDrawIndexedIndirect(layer_data *dev_data, VkComman
 static void PostCallRecordCmdDrawIndexedIndirect(layer_data *dev_data, GLOBAL_CB_NODE *cb_state, VkPipelineBindPoint bind_point,
                                                  BUFFER_STATE *buffer_state) {
     UpdateStateCmdDrawType(dev_data, cb_state, bind_point);
-    AddCommandBufferBindingBuffer(dev_data, cb_state, buffer_state);
+    AddCommandBufferBindingBuffer(dev_data, cb_state, buffer_state, PIPELINE_MASK_NONE);
 }
 
 VKAPI_ATTR void VKAPI_CALL CmdDrawIndexedIndirect(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset,
@@ -5791,7 +5833,7 @@ static bool PreCallValidateCmdDispatchIndirect(layer_data *dev_data, VkCommandBu
 static void PostCallRecordCmdDispatchIndirect(layer_data *dev_data, GLOBAL_CB_NODE *cb_state, VkPipelineBindPoint bind_point,
                                               BUFFER_STATE *buffer_state) {
     UpdateStateCmdDrawDispatchType(dev_data, cb_state, bind_point);
-    AddCommandBufferBindingBuffer(dev_data, cb_state, buffer_state);
+    AddCommandBufferBindingBuffer(dev_data, cb_state, buffer_state, PIPELINE_MASK_NONE);
 }
 
 VKAPI_ATTR void VKAPI_CALL CmdDispatchIndirect(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) {
@@ -5957,7 +5999,7 @@ static bool PreCallCmdUpdateBuffer(layer_data *device_data, const GLOBAL_CB_NODE
 
 static void PostCallRecordCmdUpdateBuffer(layer_data *device_data, GLOBAL_CB_NODE *cb_state, BUFFER_STATE *dst_buffer_state) {
     // Update bindings between buffer and cmd buffer
-    AddCommandBufferBindingBuffer(device_data, cb_state, dst_buffer_state);
+    AddCommandBufferBindingBuffer(device_data, cb_state, dst_buffer_state, PIPELINE_MASK_TRANSFER);
     std::function<bool()> function = [=]() {
         SetBufferMemoryValid(device_data, dst_buffer_state, true);
         return false;
@@ -5981,6 +6023,7 @@ VKAPI_ATTR void VKAPI_CALL CmdUpdateBuffer(VkCommandBuffer commandBuffer, VkBuff
         dev_data->dispatch_table.CmdUpdateBuffer(commandBuffer, dstBuffer, dstOffset, dataSize, pData);
         lock.lock();
         PostCallRecordCmdUpdateBuffer(dev_data, cb_state, dst_buff_state);
+        cb_state->write_dependency[PIPELINE_TYPE_TRANSFER].insert({HandleToUint64(dstBuffer), kVulkanObjectTypeBuffer});
         lock.unlock();
     }
 }
@@ -6475,8 +6518,17 @@ static bool PreCallValidateCmdPipelineBarrier(layer_data *device_data, GLOBAL_CB
 }
 
 static void PreCallRecordCmdPipelineBarrier(layer_data *device_data, GLOBAL_CB_NODE *cb_state, VkCommandBuffer commandBuffer,
-                                            uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier *pImageMemoryBarriers) {
+                                            VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask,
+                                            VkDependencyFlags dependencyFlags, uint32_t mem_barrier_count,
+                                            const VkMemoryBarrier *pMemoryBarriers, uint32_t bufferMemoryBarrierCount,
+                                            const VkBufferMemoryBarrier *pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount,
+                                            const VkImageMemoryBarrier *pImageMemoryBarriers) {
     TransitionImageLayouts(device_data, commandBuffer, imageMemoryBarrierCount, pImageMemoryBarriers);
+    // TODO : This is WIP code to prototype potential write dependency tracking method
+    //  Right now, clear buffer write dependencies for the first synchronization scope
+    for (uint32_t mb = 0; mb < mem_barrier_count; ++mb) {
+        //pMemoryBarriers[mb].srcAccessMask
+    }
 }
 
 VKAPI_ATTR void VKAPI_CALL CmdPipelineBarrier(VkCommandBuffer commandBuffer, VkPipelineStageFlags srcStageMask,
@@ -6493,7 +6545,9 @@ VKAPI_ATTR void VKAPI_CALL CmdPipelineBarrier(VkCommandBuffer commandBuffer, VkP
                                                   memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount,
                                                   pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers);
         if (!skip) {
-            PreCallRecordCmdPipelineBarrier(device_data, cb_state, commandBuffer, imageMemoryBarrierCount, pImageMemoryBarriers);
+            PreCallRecordCmdPipelineBarrier(device_data, cb_state, commandBuffer, srcStageMask, dstStageMask, dependencyFlags,
+                                            memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers,
+                                            imageMemoryBarrierCount, pImageMemoryBarriers);
         }
     } else {
         assert(0);
@@ -6662,7 +6716,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyQueryPoolResults(VkCommandBuffer commandBuffer
 
     lock.lock();
     if (cb_node && dst_buff_state) {
-        AddCommandBufferBindingBuffer(dev_data, cb_node, dst_buff_state);
+        AddCommandBufferBindingBuffer(dev_data, cb_node, dst_buff_state, PIPELINE_MASK_TRANSFER);
         cb_node->validate_functions.emplace_back([=]() {
             SetBufferMemoryValid(dev_data, dst_buff_state, true);
             return false;

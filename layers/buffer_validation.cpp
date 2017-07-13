@@ -3274,14 +3274,15 @@ bool PreCallValidateCmdCopyBuffer(layer_data *device_data, GLOBAL_CB_NODE *cb_no
                                   VK_QUEUE_TRANSFER_BIT | VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, VALIDATION_ERROR_18c02415);
     skip |= ValidateCmd(device_data, cb_node, CMD_COPYBUFFER, "vkCmdCopyBuffer()");
     skip |= insideRenderPass(device_data, cb_node, "vkCmdCopyBuffer()", VALIDATION_ERROR_18c00017);
+    // TODO PIPEDEP: verify no write deps for buffers
     return skip;
 }
 
 void PreCallRecordCmdCopyBuffer(layer_data *device_data, GLOBAL_CB_NODE *cb_node, BUFFER_STATE *src_buffer_state,
                                 BUFFER_STATE *dst_buffer_state) {
     // Update bindings between buffers and cmd buffer
-    AddCommandBufferBindingBuffer(device_data, cb_node, src_buffer_state);
-    AddCommandBufferBindingBuffer(device_data, cb_node, dst_buffer_state);
+    AddCommandBufferBindingBuffer(device_data, cb_node, src_buffer_state, PIPELINE_MASK_NONE);
+    AddCommandBufferBindingBuffer(device_data, cb_node, dst_buffer_state, PIPELINE_MASK_TRANSFER);
 
     std::function<bool()> function = [=]() {
         return ValidateBufferMemoryIsValid(device_data, src_buffer_state, "vkCmdCopyBuffer()");
@@ -3394,7 +3395,7 @@ void PreCallRecordCmdFillBuffer(layer_data *device_data, GLOBAL_CB_NODE *cb_node
     };
     cb_node->validate_functions.push_back(function);
     // Update bindings between buffer and cmd buffer
-    AddCommandBufferBindingBuffer(device_data, cb_node, buffer_state);
+    AddCommandBufferBindingBuffer(device_data, cb_node, buffer_state, PIPELINE_MASK_TRANSFER);
 }
 
 bool ValidateBufferImageCopyData(const debug_report_data *report_data, uint32_t regionCount, const VkBufferImageCopy *pRegions,
@@ -3757,7 +3758,7 @@ void PreCallRecordCmdCopyImageToBuffer(layer_data *device_data, GLOBAL_CB_NODE *
     }
     // Update bindings between buffer/image and cmd buffer
     AddCommandBufferBindingImage(device_data, cb_node, src_image_state);
-    AddCommandBufferBindingBuffer(device_data, cb_node, dst_buffer_state);
+    AddCommandBufferBindingBuffer(device_data, cb_node, dst_buffer_state, PIPELINE_MASK_TRANSFER);
 
     std::function<bool()> function = [=]() {
         return ValidateImageMemoryIsValid(device_data, src_image_state, "vkCmdCopyImageToBuffer()");
@@ -3817,6 +3818,7 @@ bool PreCallValidateCmdCopyBufferToImage(layer_data *device_data, VkImageLayout 
         skip |= ValidateCopyBufferImageTransferGranularityRequirements(device_data, cb_node, dst_image_state, &pRegions[i], i,
                                                                        "vkCmdCopyBufferToImage()");
     }
+    // TODO PIPEDEP: verify write deps are cleared
     return skip;
 }
 
@@ -3827,7 +3829,7 @@ void PreCallRecordCmdCopyBufferToImage(layer_data *device_data, GLOBAL_CB_NODE *
     for (uint32_t i = 0; i < region_count; ++i) {
         SetImageLayout(device_data, cb_node, dst_image_state, regions[i].imageSubresource, dst_image_layout);
     }
-    AddCommandBufferBindingBuffer(device_data, cb_node, src_buffer_state);
+    AddCommandBufferBindingBuffer(device_data, cb_node, src_buffer_state, PIPELINE_MASK_NONE);
     AddCommandBufferBindingImage(device_data, cb_node, dst_image_state);
     std::function<bool()> function = [=]() {
         SetImageMemoryValid(device_data, dst_image_state, true);
