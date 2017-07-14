@@ -6177,12 +6177,12 @@ static bool ValidateBarriers(const char *funcName, VkCommandBuffer cmdBuffer, Vk
                 }
                 if (dst_stage_mask != (sub_dst_mask & dst_stage_mask)) {
                     skip |= log_msg(dev_data->report_data, VK_DEBUG_REPORT_ERROR_BIT_EXT,
-                                    VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_BUFFER_EXT, rp_handle, __LINE__, VALIDATION_ERROR_1b80092a,
+                                    VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_BUFFER_EXT, rp_handle, __LINE__, VALIDATION_ERROR_1b80092c,
                                     "CORE",
                                     "%s: Barrier dstStageMask(0x%X) is not a subset of VkSubpassDependency dstStageMask(0x%X) of "
                                     "subpass %d of renderPass 0x%" PRIx64 ". %s",
                                     funcName, src_stage_mask, sub_src_mask, pCB->activeSubpass, rp_handle,
-                                    validation_error_map[VALIDATION_ERROR_1b80092a]);
+                                    validation_error_map[VALIDATION_ERROR_1b80092c]);
                 }
             }
         }
