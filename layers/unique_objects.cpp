@@ -713,7 +713,7 @@ VKAPI_ATTR VkResult VKAPI_CALL DebugMarkerSetObjectTagEXT(VkDevice device, const
         }
     }
     VkResult result = device_data->dispatch_table.DebugMarkerSetObjectTagEXT(
-        device, reinterpret_cast<VkDebugMarkerObjectTagInfoEXT *>(local_tag_info));
+        device, local_tag_info->ptr());
     return result;
 }
 
@@ -728,7 +728,7 @@ VKAPI_ATTR VkResult VKAPI_CALL DebugMarkerSetObjectNameEXT(VkDevice device, cons
         }
     }
     VkResult result = device_data->dispatch_table.DebugMarkerSetObjectNameEXT(
-        device, reinterpret_cast<VkDebugMarkerObjectNameInfoEXT *>(local_name_info));
+        device, local_name_info->ptr());
     return result;
 }
 

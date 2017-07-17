@@ -540,6 +540,12 @@ func_struct_id_map = {
 'vkGetImageSparseMemoryRequirements2KHR' : 484,
 'VkPhysicalDevice16BitStorageFeaturesKHR' : 485,
 'VkPhysicalDeviceVariablePointerFeaturesKHR' : 486,
+'VkValidationCacheCreateInfoEXT' : 487,
+'VkShaderModuleValidationCacheCreateInfoEXT' : 488,
+'vkCreateValidationCacheEXT' : 489,
+'vkGetValidationCacheDataEXT': 490,
+'vkDestroyValidationCacheEXT': 491,
+'vkMergeValidationCachesEXT': 492,
 ### ADD New func/struct mappings above this line
 }
 # Mapping of params to unique IDs
@@ -1017,6 +1023,8 @@ implicit_param_map = {
 'basePipelineHandle' : 470,
 'pImmutableSamplers' : 471,
 'pTexelBufferView' : 472,
+'pValidationCache' : 473,
+'validationCache' : 474,
 ### ADD New implicit param mappings above this line
 }
 

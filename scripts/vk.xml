@@ -243,6 +243,7 @@ private version is maintained in the 1.0 branch of the member gitlab server.
         <type                                             category="bitmask">typedef <type>VkFlags</type> <name>VkPipelineDiscardRectangleStateCreateFlagsEXT</name>;</type>
         <type                                             category="bitmask">typedef <type>VkFlags</type> <name>VkPipelineCoverageToColorStateCreateFlagsNV</name>;</type>
         <type                                             category="bitmask">typedef <type>VkFlags</type> <name>VkPipelineCoverageModulationStateCreateFlagsNV</name>;</type>
+        <type                                             category="bitmask">typedef <type>VkFlags</type> <name>VkValidationCacheCreateFlagsEXT</name>;</type>     <!-- creation flags (no bits yet) -->
 
             <comment>Types which can be void pointers or class pointers, selected at compile time</comment>
         <type category="handle"><type>VK_DEFINE_HANDLE</type>(<name>VkInstance</name>)</type>
@@ -273,6 +274,7 @@ private version is maintained in the 1.0 branch of the member gitlab server.
         <type category="handle" parent="VkDevice"><type>VK_DEFINE_NON_DISPATCHABLE_HANDLE</type>(<name>VkObjectTableNVX</name>)</type>
         <type category="handle" parent="VkDevice"><type>VK_DEFINE_NON_DISPATCHABLE_HANDLE</type>(<name>VkIndirectCommandsLayoutNVX</name>)</type>
         <type category="handle" parent="VkDevice"><type>VK_DEFINE_NON_DISPATCHABLE_HANDLE</type>(<name>VkDescriptorUpdateTemplateKHR</name>)</type>
+        <type category="handle" parent="VkDevice"><type>VK_DEFINE_NON_DISPATCHABLE_HANDLE</type>(<name>VkValidationCacheEXT</name>)</type>
 
             <comment>WSI extensions</comment>
         <type category="handle"><type>VK_DEFINE_NON_DISPATCHABLE_HANDLE</type>(<name>VkDisplayKHR</name>)</type>
@@ -380,6 +382,7 @@ private version is maintained in the 1.0 branch of the member gitlab server.
         <type name="VkDiscardRectangleModeEXT" category="enum"/>
         <type name="VkSubpassDescriptionFlagBits" category="enum"/>
         <type name="VkCoverageModulationModeNV" category="enum"/>
+        <type name="VkValidationCacheHeaderVersionEXT" category="enum"/>
 
             <comment>WSI extensions</comment>
         <type name="VkColorSpaceKHR" category="enum"/>
@@ -2472,6 +2475,18 @@ private version is maintained in the 1.0 branch of the member gitlab server.
             <member><type>uint32_t</type>                                                                         <name>coverageModulationTableCount</name></member>
             <member noautovalidity="true" optional="true" len="coverageModulationTableCount">const <type>float</type>* <name>pCoverageModulationTable</name></member>
         </type>
+        <type category="struct" name="VkValidationCacheCreateInfoEXT">
+            <member values="VK_STRUCTURE_TYPE_VALIDATION_CACHE_CREATE_INFO_EXT"><type>VkStructureType</type> <name>sType</name></member>
+            <member>const <type>void</type>*            <name>pNext</name></member>                          <!-- Pointer to next structure -->
+            <member optional="true"><type>VkValidationCacheCreateFlagsEXT</type>    <name>flags</name></member>                   <!-- Reserved -->
+            <member optional="true"><type>size_t</type>                 <name>initialDataSize</name></member>                <!-- Size of initial data to populate cache, in bytes -->
+            <member len="initialDataSize">const <type>void</type>*            <name>pInitialData</name></member>                    <!-- Initial data to populate cache -->
+        </type>
+        <type category="struct" name="VkShaderModuleValidationCacheCreateInfoEXT" structextends="VkShaderModuleCreateInfo">
+            <member values="VK_STRUCTURE_TYPE_SHADER_MODULE_VALIDATION_CACHE_CREATE_INFO_EXT"><type>VkStructureType</type> <name>sType</name></member>
+            <member>const <type>void</type>*            <name>pNext</name></member>                          <!-- Pointer to next structure -->
+            <member><type>VkValidationCacheEXT</type>    <name>validationCache</name></member>               <!-- Validation cache handle -->
+        </type>
     </types>
 
     <comment>Vulkan enumerant (token) definitions</comment>
@@ -3317,6 +3332,7 @@ private version is maintained in the 1.0 branch of the member gitlab server.
         <enum value="30" name="VK_DEBUG_REPORT_OBJECT_TYPE_DISPLAY_MODE_KHR_EXT"/>
         <enum value="31" name="VK_DEBUG_REPORT_OBJECT_TYPE_OBJECT_TABLE_NVX_EXT"/>
         <enum value="32" name="VK_DEBUG_REPORT_OBJECT_TYPE_INDIRECT_COMMANDS_LAYOUT_NVX_EXT"/>
+	<enum value="33" name="VK_DEBUG_REPORT_OBJECT_TYPE_VALIDATION_CACHE_EXT"/>
     </enums>
     <enums name="VkRasterizationOrderAMD" type="enum">
         <enum value="0" name="VK_RASTERIZATION_ORDER_STRICT_AMD"/>
@@ -3470,6 +3486,9 @@ private version is maintained in the 1.0 branch of the member gitlab server.
         <enum value="1"     name="VK_COVERAGE_MODULATION_MODE_RGB_NV"/>
         <enum value="2"     name="VK_COVERAGE_MODULATION_MODE_ALPHA_NV"/>
         <enum value="3"     name="VK_COVERAGE_MODULATION_MODE_RGBA_NV"/>
+    </enums>
+    <enums name="VkValidationCacheHeaderVersionEXT" type="enum">
+        <enum value="1"     name="VK_VALIDATION_CACHE_HEADER_VERSION_ONE_EXT"/>
     </enums>
 
     <commands comment="Vulkan command definitions">
@@ -5138,6 +5157,33 @@ private version is maintained in the 1.0 branch of the member gitlab server.
             <param>const <type>VkImageSparseMemoryRequirementsInfo2KHR</type>* <name>pInfo</name></param>
             <param optional="false,true"><type>uint32_t</type>* <name>pSparseMemoryRequirementCount</name></param>
             <param optional="true" len="pSparseMemoryRequirementCount"><type>VkSparseImageMemoryRequirements2KHR</type>* <name>pSparseMemoryRequirements</name></param>
+        </command>
+        <command successcodes="VK_SUCCESS" errorcodes="VK_ERROR_OUT_OF_HOST_MEMORY,VK_ERROR_OUT_OF_DEVICE_MEMORY">
+            <proto><type>VkResult</type> <name>vkCreateValidationCacheEXT</name></proto>
+            <param><type>VkDevice</type> <name>device</name></param>
+            <param>const <type>VkValidationCacheCreateInfoEXT</type>* <name>pCreateInfo</name></param>
+            <param optional="true">const <type>VkAllocationCallbacks</type>* <name>pAllocator</name></param>
+            <param><type>VkValidationCacheEXT</type>* <name>pValidationCache</name></param>
+        </command>
+        <command>
+            <proto><type>void</type> <name>vkDestroyValidationCacheEXT</name></proto>
+            <param><type>VkDevice</type> <name>device</name></param>
+            <param optional="true" externsync="true"><type>VkValidationCacheEXT</type> <name>validationCache</name></param>
+            <param optional="true">const <type>VkAllocationCallbacks</type>* <name>pAllocator</name></param>
+        </command>
+        <command successcodes="VK_SUCCESS,VK_INCOMPLETE" errorcodes="VK_ERROR_OUT_OF_HOST_MEMORY,VK_ERROR_OUT_OF_DEVICE_MEMORY">
+            <proto><type>VkResult</type> <name>vkGetValidationCacheDataEXT</name></proto>
+            <param><type>VkDevice</type> <name>device</name></param>
+            <param><type>VkValidationCacheEXT</type> <name>validationCache</name></param>
+            <param optional="false,true"><type>size_t</type>* <name>pDataSize</name></param>
+            <param optional="true" len="pDataSize"><type>void</type>* <name>pData</name></param>
+        </command>
+        <command successcodes="VK_SUCCESS" errorcodes="VK_ERROR_OUT_OF_HOST_MEMORY,VK_ERROR_OUT_OF_DEVICE_MEMORY">
+            <proto><type>VkResult</type> <name>vkMergeValidationCachesEXT</name></proto>
+            <param><type>VkDevice</type> <name>device</name></param>
+            <param externsync="true"><type>VkValidationCacheEXT</type> <name>dstCache</name></param>
+            <param><type>uint32_t</type> <name>srcCacheCount</name></param>
+            <param len="srcCacheCount">const <type>VkValidationCacheEXT</type>* <name>pSrcCaches</name></param>
         </command>
     </commands>
 
@@ -6910,10 +6956,21 @@ private version is maintained in the 1.0 branch of the member gitlab server.
                 <enum value="&quot;VK_EXT_extension_160&quot;"           name="VK_EXT_EXTENSION_160_EXTENSION_NAME"/>
             </require>
         </extension>
-        <extension name="VK_EXT_extension_161" number="161" author="GOOGLE" contact="Cort Stratton @cdwfs" supported="disabled">
+        <extension name="VK_EXT_validation_cache" number="161" type="device" author="GOOGLE" contact="Cort Stratton @cdwfs" supported="vulkan">
             <require>
-                <enum value="0"                                          name="VK_EXT_EXTENSION_161_SPEC_VERSION"/>
-                <enum value="&quot;VK_EXT_extension_161&quot;"           name="VK_EXT_EXTENSION_161_EXTENSION_NAME"/>
+                <enum value="1"                                         name="VK_EXT_VALIDATION_CACHE_SPEC_VERSION"/>
+                <enum value="&quot;VK_EXT_validation_cache&quot;"       name="VK_EXT_VALIDATION_CACHE_EXTENSION_NAME"/>
+                <enum offset="0" extends="VkStructureType"              name="VK_STRUCTURE_TYPE_VALIDATION_CACHE_CREATE_INFO_EXT"/>
+                <enum offset="1" extends="VkStructureType"              name="VK_STRUCTURE_TYPE_SHADER_MODULE_VALIDATION_CACHE_CREATE_INFO_EXT"/>
+                <type name="VkValidationCacheEXT"/>
+                <type name="VkValidationCacheCreateInfoEXT"/>
+                <type name="VkShaderModuleValidationCacheCreateInfoEXT"/>
+                <type name="VkValidationCacheHeaderVersionEXT"/>
+                <type name="VkValidationCacheCreateFlagsEXT"/>
+                <command name="vkCreateValidationCacheEXT"/>
+                <command name="vkDestroyValidationCacheEXT"/>
+                <command name="vkMergeValidationCachesEXT"/>
+                <command name="vkGetValidationCacheDataEXT"/>
             </require>
         </extension>
     </extensions>

@@ -5694,6 +5694,72 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfaceCapabilities2EXT(VkPhysic
     return result;
 }
 
+// Definitions for the VK_EXT_validation_cache extension
+
+VKAPI_ATTR VkResult VKAPI_CALL CreateValidationCacheEXT(VkDevice device, const VkValidationCacheCreateInfoEXT *pCreateInfo,
+                                                        const VkAllocationCallbacks *pAllocator,
+                                                        VkValidationCacheEXT *pValidationCache) {
+    VkResult result = VK_ERROR_VALIDATION_FAILED_EXT;
+    auto my_data = GetLayerDataPtr(get_dispatch_key(device), layer_data_map);
+    assert(my_data != nullptr);
+    bool skip = false;
+    skip |= parameter_validation_vkCreateValidationCacheEXT(my_data, pCreateInfo, pAllocator, pValidationCache);
+    if (!skip) {
+        result = my_data->dispatch_table.CreateValidationCacheEXT(device, pCreateInfo, pAllocator, pValidationCache);
+        validate_result(my_data->report_data, "vkCreateValidationCacheEXT", {}, result);
+    }
+    return result;
+}
+
+VKAPI_ATTR void VKAPI_CALL DestroyValidationCacheEXT(VkDevice device, VkValidationCacheEXT validationCache,
+  const VkAllocationCallbacks *pAllocator) {
+  bool skip = false;
+  layer_data *my_data = GetLayerDataPtr(get_dispatch_key(device), layer_data_map);
+  assert(my_data != NULL);
+
+  skip |= parameter_validation_vkDestroyValidationCacheEXT(my_data, validationCache, pAllocator);
+
+  if (!skip) {
+    my_data->dispatch_table.DestroyValidationCacheEXT(device, validationCache, pAllocator);
+  }
+}
+
+VKAPI_ATTR VkResult VKAPI_CALL GetValidationCacheDataEXT(VkDevice device, VkValidationCacheEXT validationCache, size_t *pDataSize,
+  void *pData) {
+  VkResult result = VK_ERROR_VALIDATION_FAILED_EXT;
+  bool skip = false;
+  layer_data *my_data = GetLayerDataPtr(get_dispatch_key(device), layer_data_map);
+  assert(my_data != NULL);
+
+  skip |= parameter_validation_vkGetValidationCacheDataEXT(my_data, validationCache, pDataSize, pData);
+
+  if (!skip) {
+    result = my_data->dispatch_table.GetValidationCacheDataEXT(device, validationCache, pDataSize, pData);
+
+    validate_result(my_data->report_data, "vkGetValidationCacheDataEXT", {}, result);
+  }
+
+  return result;
+}
+
+VKAPI_ATTR VkResult VKAPI_CALL MergeValidationCachesEXT(VkDevice device, VkValidationCacheEXT dstCache, uint32_t srcCacheCount,
+  const VkValidationCacheEXT *pSrcCaches) {
+  VkResult result = VK_ERROR_VALIDATION_FAILED_EXT;
+  bool skip = false;
+  layer_data *my_data = GetLayerDataPtr(get_dispatch_key(device), layer_data_map);
+  assert(my_data != NULL);
+
+  skip |= parameter_validation_vkMergeValidationCachesEXT(my_data, dstCache, srcCacheCount, pSrcCaches);
+
+  if (!skip) {
+    result = my_data->dispatch_table.MergeValidationCachesEXT(device, dstCache, srcCacheCount, pSrcCaches);
+
+    validate_result(my_data->report_data, "vkMergeValidationCachesEXT", {}, result);
+  }
+
+  return result;
+}
+
 // Definitions for the VK_NV_clip_space_w_scaling Extension
 
 VKAPI_ATTR void VKAPI_CALL CmdSetViewportWScalingNV(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount,
