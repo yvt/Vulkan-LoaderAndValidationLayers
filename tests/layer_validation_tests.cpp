@@ -2705,6 +2705,19 @@ TEST_F(VkLayerTest, ExceedMemoryAllocationCount) {
         (PFN_vkSetPhysicalDeviceLimitsEXT)vkGetInstanceProcAddr(instance(), "vkSetPhysicalDeviceLimitsEXT");
     PFN_vkGetOriginalPhysicalDeviceLimitsEXT fpvkGetOriginalPhysicalDeviceLimitsEXT =
         (PFN_vkGetOriginalPhysicalDeviceLimitsEXT)vkGetInstanceProcAddr(instance(), "vkGetOriginalPhysicalDeviceLimitsEXT");
+    PFN_vkSetPhysicalDeviceFormatPropertiesEXT fpvkSetPhysicalDeviceFormatPropertiesEXT =
+        (PFN_vkSetPhysicalDeviceFormatPropertiesEXT)vkGetInstanceProcAddr(instance(), "vkSetPhysicalDeviceFormatPropertiesEXT");
+    PFN_vkGetOriginalPhysicalDeviceFormatPropertiesEXT fpvkGetOriginalPhysicalDeviceFormatPropertiesEXT =
+        (PFN_vkGetOriginalPhysicalDeviceFormatPropertiesEXT)vkGetInstanceProcAddr(instance(), "vkGetOriginalPhysicalDeviceFormatPropertiesEXT");
+
+    VkFormatProperties formatProps;
+    fpvkGetOriginalPhysicalDeviceFormatPropertiesEXT(gpu(), VK_FORMAT_B8G8R8A8_UNORM, &formatProps);
+    assert(!(formatProps.bufferFeatures & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT));
+    formatProps.bufferFeatures |= VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT;
+    fpvkSetPhysicalDeviceFormatPropertiesEXT(gpu(), VK_FORMAT_B8G8R8A8_UNORM, formatProps);
+    memset(&formatProps, 0, sizeof(formatProps));
+    vkGetPhysicalDeviceFormatProperties(gpu(), VK_FORMAT_B8G8R8A8_UNORM, &formatProps);
+    assert(formatProps.bufferFeatures & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT);
 
     if (!(fpvkSetPhysicalDeviceLimitsEXT) || !(fpvkGetOriginalPhysicalDeviceLimitsEXT)) {
         printf("             Can't find device_profile_api functions; skipped.\n");
@@ -13684,6 +13697,103 @@ TEST_F(VkLayerTest, CreateImageViewBreaksParameterCompatibilityRequirements) {
 
     // Clean up
     vkDestroyImage(m_device->device(), imageSparse, nullptr);
+}
+
+TEST_F(VkLayerTest, CreateImageViewFormatFeatureMismatch) {
+    TEST_DESCRIPTION("TO BE WRITTEN");
+
+    if (InstanceLayerSupported("VK_LAYER_LUNARG_device_profile_api")) {
+        m_instance_layer_names.push_back("VK_LAYER_LUNARG_device_profile_api");
+    }
+    else {
+        printf("             Did not find VK_LAYER_LUNARG_device_profile_api layer; skipped.\n");
+        return;
+    }
+
+    ASSERT_NO_FATAL_FAILURE(InitFramework(myDbgFunc, m_errorMonitor));
+
+    PFN_vkSetPhysicalDeviceFormatPropertiesEXT fpvkSetPhyiscalDeviceFormatPropertiesEXT = (PFN_vkSetPhysicalDeviceFormatPropertiesEXT)vkGetInstanceProcAddr(instance(), "vkSetPhysicalDeviceFormatPropertiesEXT");
+    PFN_vkGetOriginalPhysicalDeviceFormatPropertiesEXT fpvkGetOriginalPhysicalDeviceFormatPropertiesEXT = (PFN_vkGetOriginalPhysicalDeviceFormatPropertiesEXT)vkGetInstanceProcAddr(instance(), "vkGetOriginalPhysicalDeviceFormatPropertiesEXT");
+
+    printf("%d and %d\n", !(fpvkSetPhyiscalDeviceFormatPropertiesEXT), !(fpvkGetOriginalPhysicalDeviceFormatPropertiesEXT));
+
+    if (!(fpvkSetPhyiscalDeviceFormatPropertiesEXT) || !(fpvkGetOriginalPhysicalDeviceFormatPropertiesEXT)) {
+        printf("             Can't find device_profile_api functions; skipped.\n");
+        return;
+    }
+
+    VkImageTiling tiles[] = {VK_IMAGE_TILING_LINEAR, VK_IMAGE_TILING_OPTIMAL};
+    uint32_t tile_count = 2;
+    VkFormatFeatureFlagBits features[] = {VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT, VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT, VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT};
+    uint32_t feature_count = 4;
+    VkImageUsageFlags usages[] = {VK_IMAGE_USAGE_SAMPLED_BIT, VK_IMAGE_USAGE_STORAGE_BIT, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT};
+    UNIQUE_VALIDATION_ERROR_CODE linear_error_codes[] = {
+        VALIDATION_ERROR_0ac007e0, VALIDATION_ERROR_0ac007e2,
+        VALIDATION_ERROR_0ac007e4, VALIDATION_ERROR_0ac007e6,
+    };
+    UNIQUE_VALIDATION_ERROR_CODE optimal_error_codes[] = {
+        VALIDATION_ERROR_0ac007ea, VALIDATION_ERROR_0ac007ec,
+        VALIDATION_ERROR_0ac007ee, VALIDATION_ERROR_0ac007f0,
+    };
+    UNIQUE_VALIDATION_ERROR_CODE *error_codes[] = {linear_error_codes, optimal_error_codes};
+
+    for (uint32_t i = 0; i < tile_count; i++) {
+        VkFormatProperties formatProps;
+        VkFormatFeatureFlags *feature_flags_to_set = &formatProps.linearTilingFeatures;
+        if (i == 1) {
+            feature_flags_to_set = &formatProps.optimalTilingFeatures;
+        }
+
+        for (uint32_t j = 0; j < feature_count; j++) {
+            fpvkGetOriginalPhysicalDeviceFormatPropertiesEXT(gpu(), VK_FORMAT_R64G64B64_UINT, &formatProps);
+            *feature_flags_to_set |= features[j];
+            fpvkSetPhyiscalDeviceFormatPropertiesEXT(gpu(), VK_FORMAT_R64G64B64_UINT, formatProps);
+
+            memset(&formatProps, 0, sizeof(formatProps));
+
+            fpvkGetOriginalPhysicalDeviceFormatPropertiesEXT(gpu(), VK_FORMAT_R64G64B64_SINT, &formatProps);
+            *feature_flags_to_set |= features[(j+1)%feature_count];
+            fpvkSetPhyiscalDeviceFormatPropertiesEXT(gpu(), VK_FORMAT_R64G64B64_SINT, formatProps);
+
+            VkImageCreateInfo imgInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+                nullptr,
+                VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT,
+                VK_IMAGE_TYPE_2D,
+                VK_FORMAT_R64G64B64_SINT,
+                { 1, 1, 1 },
+                1,
+                1,
+                VK_SAMPLE_COUNT_1_BIT,
+                tiles[i],
+                usages[j],
+                VK_SHARING_MODE_EXCLUSIVE,
+                0,
+                nullptr,
+                VK_IMAGE_LAYOUT_UNDEFINED };
+            VkImageObj image(m_device);
+            image.init(&imgInfo);
+            ASSERT_TRUE(image.initialized());
+
+            VkImageView imageView;
+
+            // Initialize VkImageViewCreateInfo with mismatched viewType
+            VkImageViewCreateInfo ivci = {};
+            ivci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            ivci.image = image.handle();
+            ivci.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            ivci.format = VK_FORMAT_R64G64B64_UINT;
+            ivci.subresourceRange.layerCount = 1;
+            ivci.subresourceRange.baseMipLevel = 0;
+            ivci.subresourceRange.levelCount = 1;
+            ivci.subresourceRange.baseArrayLayer = 0;
+            ivci.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+
+            // Test for error message
+            m_errorMonitor->SetDesiredFailureMsg(VK_DEBUG_REPORT_ERROR_BIT_EXT, error_codes[i][j]);
+            vkCreateImageView(m_device->device(), &ivci, NULL, &imageView);
+            m_errorMonitor->VerifyFound();
+        }
+    }
 }
 
 TEST_F(VkLayerTest, ImageViewInUseDestroyedSignaled) {
