@@ -116,8 +116,22 @@ public:
     }
 
     void Write(size_t *pDataSize, void *pData) {
-        // TODO: write actual content.
-        *pDataSize = 0;
+        if (!pData) {
+            *pDataSize = good_shader_hashes.size() * sizeof(uint32_t);
+            return;
+        }
+
+        uint32_t *out = (uint32_t *)pData;
+        size_t actualSize = 0;
+        auto it = good_shader_hashes.begin();
+
+        for (;
+             it != good_shader_hashes.end() && actualSize < *pDataSize;
+             it++, actualSize += sizeof(uint32_t)) {
+            *out++ = *it;
+        }
+
+        *pDataSize = actualSize;
     }
 
     void Merge(ValidationCache const *other) {
