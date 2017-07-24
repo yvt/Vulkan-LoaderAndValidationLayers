@@ -4375,26 +4375,6 @@ VKAPI_ATTR VkResult VKAPI_CALL MergePipelineCaches(VkDevice device, VkPipelineCa
     return result;
 }
 
-class ValidationCache {
-    ValidationCache() {}
-
-public:
-    static VkValidationCacheEXT Create(VkValidationCacheCreateInfoEXT const *pCreateInfo) {
-        // TODO: use the initial data.
-        // TODO: fail if pCreateInfo is bogus
-        return VkValidationCacheEXT(new ValidationCache());
-    }
-
-    void Write(size_t *pDataSize, void *pData) {
-        // TODO: write actual content.
-        *pDataSize = 0;
-    }
-
-    void Merge(ValidationCache const *other) {
-        // TODO: merge content.
-    }
-};
-
 // Validation cache:
 // CV is the bottommost implementor of this extension. Don't pass calls down.
 VKAPI_ATTR VkResult VKAPI_CALL CreateValidationCacheEXT(VkDevice device, const VkValidationCacheCreateInfoEXT *pCreateInfo,

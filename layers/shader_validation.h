@@ -100,6 +100,42 @@ struct shader_module {
     void build_def_index();
 };
 
+class ValidationCache {
+    // hashes of shaders that have passed validation before, and can be skipped.
+    // we don't store negative results, as we would have to also store what was
+    // wrong with them; also, we expect they will get fixed, so we're less
+    // likely to see them again.
+    std::unordered_set<uint32_t> good_shader_hashes;
+    ValidationCache() {}
+
+public:
+    static VkValidationCacheEXT Create(VkValidationCacheCreateInfoEXT const *pCreateInfo) {
+        // TODO: use the initial data.
+        // TODO: fail if pCreateInfo is bogus
+        return VkValidationCacheEXT(new ValidationCache());
+    }
+
+    void Write(size_t *pDataSize, void *pData) {
+        // TODO: write actual content.
+        *pDataSize = 0;
+    }
+
+    void Merge(ValidationCache const *other) {
+        for (auto h : other->good_shader_hashes)
+            good_shader_hashes.insert(h);
+    }
+
+    static uint32_t MakeShaderHash(VkShaderModuleCreateInfo const *smci);
+
+    bool Contains(uint32_t hash) {
+        return good_shader_hashes.count(hash) != 0;
+    }
+
+    void Insert(uint32_t hash) {
+        good_shader_hashes.insert(hash);
+    }
+};
+
 bool validate_and_capture_pipeline_shader_state(layer_data *dev_data, PIPELINE_STATE *pPipeline);
 bool validate_compute_pipeline(layer_data *dev_data, PIPELINE_STATE *pPipeline);
 typedef std::pair<unsigned, unsigned> descriptor_slot_t;
