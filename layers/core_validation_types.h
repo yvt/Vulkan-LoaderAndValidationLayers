@@ -678,6 +678,7 @@ struct GLOBAL_CB_NODE : public BASE_NODE {
     // If primary, the secondary command buffers we will call.
     // If secondary, the primary command buffers we will be called by.
     std::unordered_set<GLOBAL_CB_NODE *> linkedCommandBuffers;
+    // Validate functions that are called at cmd buffer submit time
     std::vector<std::function<bool()>> validate_functions;
     std::unordered_set<VkDeviceMemory> memObjs;
     std::vector<std::function<bool(VkQueue)>> eventUpdates;

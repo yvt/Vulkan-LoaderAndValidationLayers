@@ -6760,12 +6760,11 @@ VKAPI_ATTR void VKAPI_CALL CmdWaitEvents(VkCommandBuffer commandBuffer, uint32_t
                                                imageMemoryBarrierCount, pImageMemoryBarriers);
 }
 
-static bool PreCallValidateCmdPipelineBarrier(layer_data *device_data, GLOBAL_CB_NODE const *cb_state,
-                                              VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask,
-                                              VkDependencyFlags dependencyFlags, uint32_t memoryBarrierCount,
-                                              const VkMemoryBarrier *pMemoryBarriers, uint32_t bufferMemoryBarrierCount,
-                                              const VkBufferMemoryBarrier *pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount,
-                                              const VkImageMemoryBarrier *pImageMemoryBarriers) {
+static bool PreCallValidateCmdPipelineBarrier(layer_data *device_data, GLOBAL_CB_NODE *cb_state, VkPipelineStageFlags srcStageMask,
+                                              VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags,
+                                              uint32_t memoryBarrierCount, const VkMemoryBarrier *pMemoryBarriers,
+                                              uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier *pBufferMemoryBarriers,
+                                              uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier *pImageMemoryBarriers) {
     bool skip = false;
     skip |= ValidateStageMasksAgainstQueueCapabilities(device_data, cb_state, srcStageMask, dstStageMask, "vkCmdPipelineBarrier",
                                                        VALIDATION_ERROR_1b80093e);
@@ -6777,10 +6776,20 @@ static bool PreCallValidateCmdPipelineBarrier(layer_data *device_data, GLOBAL_CB
     skip |= ValidateStageMaskGsTsEnables(device_data, dstStageMask, "vkCmdPipelineBarrier()", VALIDATION_ERROR_1b800922,
                                          VALIDATION_ERROR_1b800926);
     if (cb_state->activeRenderPass) {
-        skip |= ValidateRenderPassPipelineBarriers(device_data, "vkCmdPipelineBarrier()", cb_state, srcStageMask, dstStageMask,
-                                                   dependencyFlags, memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount,
-                                                   pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers);
-        if (skip) return true;  // Early return to avoid redundant errors from below calls
+        // Delay validation of secondary cmd buffers w/o a FB bound
+        if ((VK_COMMAND_BUFFER_LEVEL_SECONDARY == cb_state->createInfo.level) && (!cb_state->activeFramebuffer)) {
+            cb_state->validate_functions.emplace_back([=]() {
+                return ValidateRenderPassPipelineBarriers(device_data, "vkCmdPipelineBarrier()", cb_state, srcStageMask,
+                                                          dstStageMask, dependencyFlags, memoryBarrierCount, pMemoryBarriers,
+                                                          bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount,
+                                                          pImageMemoryBarriers);
+            });
+        } else {
+            skip |= ValidateRenderPassPipelineBarriers(
+                device_data, "vkCmdPipelineBarrier()", cb_state, srcStageMask, dstStageMask, dependencyFlags, memoryBarrierCount,
+                pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers);
+            if (skip) return true;  // Early return to avoid redundant errors from below calls
+        }
     }
     skip |=
         ValidateBarriersToImages(device_data, cb_state, imageMemoryBarrierCount, pImageMemoryBarriers, "vkCmdPipelineBarrier()");
@@ -8265,6 +8274,13 @@ VKAPI_ATTR void VKAPI_CALL CmdExecuteCommands(VkCommandBuffer commandBuffer, uin
                         }
                         //  If framebuffer for secondary CB is not NULL, then it must match active FB from primaryCB
                         skip |= validateFramebuffer(dev_data, commandBuffer, pCB, pCommandBuffers[i], pSubCB);
+                        if (!pSubCB->activeFramebuffer) {
+                            // This is a state update during validation which is not ideal
+                            pSubCB->activeFramebuffer = pCB->activeFramebuffer;
+                            for (auto &function : pSubCB->validate_functions) {
+                                skip |= function();
+                            }
+                        }
                     }
                     string errorString = "";
                     // secondaryCB must have been created w/ RP compatible w/ primaryCB active renderpass
