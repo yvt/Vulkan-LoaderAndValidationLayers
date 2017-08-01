@@ -124,26 +124,26 @@ def makeGenOpts(extensions = [], removeExtensions = [], protect = True, director
         ]
 
     # Options for parameter validation layer
-    genOpts['parameter_validation.h'] = [
-          ParamCheckerOutputGenerator,
-          ParamCheckerGeneratorOptions(
-            filename          = 'parameter_validation.h',
-            directory         = directory,
-            apiname           = 'vulkan',
-            profile           = None,
-            versions          = allVersions,
-            emitversions      = allVersions,
-            defaultExtensions = 'vulkan',
-            addExtensions     = addExtensions,
-            removeExtensions  = removeExtensions,
-            prefixText        = prefixStrings + vkPrefixStrings,
-            protectFeature    = False,
-            apicall           = 'VKAPI_ATTR ',
-            apientry          = 'VKAPI_CALL ',
-            apientryp         = 'VKAPI_PTR *',
-            alignFuncParam    = 48)
-        ]
-
+#    genOpts['parameter_validation.h'] = [
+#          ParamCheckerOutputGenerator,
+#          ParamCheckerGeneratorOptions(
+#            filename          = 'parameter_validation.h',
+#            directory         = directory,
+#            apiname           = 'vulkan',
+#            profile           = None,
+#            versions          = allVersions,
+#            emitversions      = allVersions,
+#            defaultExtensions = 'vulkan',
+#            addExtensions     = addExtensions,
+#            removeExtensions  = removeExtensions,
+#            prefixText        = prefixStrings + vkPrefixStrings,
+#            protectFeature    = False,
+#            apicall           = 'VKAPI_ATTR ',
+#            apientry          = 'VKAPI_CALL ',
+#            apientryp         = 'VKAPI_PTR *',
+#            alignFuncParam    = 48)
+#        ]
+#
     # Options for parameter validation layer
     genOpts['parameter_validation.cpp'] = [
           ParameterValidationOutputGenerator,
