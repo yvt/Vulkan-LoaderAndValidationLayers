@@ -4436,8 +4436,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateGraphicsPipelines(VkDevice device, VkPipeli
 
     for (i = 0; i < count; i++) {
         pipe_state[i] = new PIPELINE_STATE;
-        pipe_state[i]->initGraphicsPipeline(&pCreateInfos[i]);
         pipe_state[i]->render_pass_ci.initialize(GetRenderPassState(dev_data, pCreateInfos[i].renderPass)->createInfo.ptr());
+        pipe_state[i]->initGraphicsPipeline(&pCreateInfos[i]);
         pipe_state[i]->pipeline_layout = *getPipelineLayout(dev_data, pCreateInfos[i].layout);
     }
 

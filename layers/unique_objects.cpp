@@ -328,7 +328,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateGraphicsPipelines(VkDevice device, VkPipeli
         local_pCreateInfos = new safe_VkGraphicsPipelineCreateInfo[createInfoCount];
         std::lock_guard<std::mutex> lock(global_lock);
         for (uint32_t idx0 = 0; idx0 < createInfoCount; ++idx0) {
-            local_pCreateInfos[idx0].initialize(&pCreateInfos[idx0]);
+            // Should not need pDepthStencilState and pColorBlendState here unless extended in future -> passing false, false
+            local_pCreateInfos[idx0].initialize(&pCreateInfos[idx0], false, false);
             if (pCreateInfos[idx0].basePipelineHandle) {
                 local_pCreateInfos[idx0].basePipelineHandle = Unwrap(device_data, pCreateInfos[idx0].basePipelineHandle);
             }

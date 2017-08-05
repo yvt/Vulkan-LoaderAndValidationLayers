@@ -2165,8 +2165,21 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateGraphicsPipelines(VkDevice device, VkPipeli
                     }
                 }
 
-                // TODO: Conditional NULL check based on subpass depth/stencil attachment
-                if (pCreateInfos[i].pDepthStencilState != nullptr) {
+                bool uses_color_attachment = false;
+                bool uses_depthstencil_attachment = false;
+                {
+                    const auto subpasses_uses_it = device_data->renderpasses_states.find(pCreateInfos[i].renderPass);
+                    if (subpasses_uses_it != device_data->renderpasses_states.end()) {
+                        const auto &subpasses_uses = subpasses_uses_it->second;
+                        if (subpasses_uses.subpasses_using_color_attachment.count(pCreateInfos[i].subpass))
+                            uses_color_attachment = true;
+                        if (subpasses_uses.subpasses_using_depthstencil_attachment.count(pCreateInfos[i].subpass))
+                            uses_depthstencil_attachment = true;
+                    }
+                }
+
+                // furthermore pDepthStencilState is ignored if subpass uses no depth/stencil attachment
+                if (pCreateInfos[i].pDepthStencilState != nullptr && uses_depthstencil_attachment) {
                     skip |= validate_struct_pnext(
                         report_data, "vkCreateGraphicsPipelines",
                         ParameterName("pCreateInfos[%i].pDepthStencilState->pNext", ParameterName::IndexVector{i}), NULL,
@@ -2260,8 +2273,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateGraphicsPipelines(VkDevice device, VkPipeli
                     }
                 }
 
-                // TODO: Conditional NULL check based on subpass color attachment
-                if (pCreateInfos[i].pColorBlendState != nullptr) {
+                // furthermore pColorBlendState is ignored if subpass uses no color attachment
+                if (pCreateInfos[i].pColorBlendState != nullptr && uses_color_attachment) {
                     skip |= validate_struct_pnext(
                         report_data, "vkCreateGraphicsPipelines",
                         ParameterName("pCreateInfos[%i].pColorBlendState->pNext", ParameterName::IndexVector{i}), NULL,
@@ -2905,6 +2918,24 @@ static bool PreCreateRenderPass(layer_data *dev_data, const VkRenderPassCreateIn
     return skip;
 }
 
+static void PostCallCreateRenderPass(layer_data *dev_data, const VkRenderPassCreateInfo *pCreateInfo, VkRenderPass renderPass) {
+    auto &renderpass_state = dev_data->renderpasses_states[renderPass];
+
+    for (uint32_t subpass = 0; subpass < pCreateInfo->subpassCount; ++subpass) {
+        bool uses_color = false;
+        for (uint32_t i = 0; i < pCreateInfo->pSubpasses[subpass].colorAttachmentCount && !uses_color; ++i)
+            if (pCreateInfo->pSubpasses[subpass].pColorAttachments[i].attachment != VK_ATTACHMENT_UNUSED) uses_color = true;
+
+        bool uses_depthstencil = false;
+        if (pCreateInfo->pSubpasses[subpass].pDepthStencilAttachment)
+            if (pCreateInfo->pSubpasses[subpass].pDepthStencilAttachment->attachment != VK_ATTACHMENT_UNUSED)
+                uses_depthstencil = true;
+
+        if (uses_color) renderpass_state.subpasses_using_color_attachment.insert(subpass);
+        if (uses_depthstencil) renderpass_state.subpasses_using_depthstencil_attachment.insert(subpass);
+    }
+}
+
 VKAPI_ATTR VkResult VKAPI_CALL CreateRenderPass(VkDevice device, const VkRenderPassCreateInfo *pCreateInfo,
                                                 const VkAllocationCallbacks *pAllocator, VkRenderPass *pRenderPass) {
     VkResult result = VK_ERROR_VALIDATION_FAILED_EXT;
@@ -2919,9 +2950,15 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateRenderPass(VkDevice device, const VkRenderP
         result = my_data->dispatch_table.CreateRenderPass(device, pCreateInfo, pAllocator, pRenderPass);
 
         validate_result(my_data->report_data, "vkCreateRenderPass", {}, result);
+
+        if (result == VK_SUCCESS) PostCallCreateRenderPass(my_data, pCreateInfo, *pRenderPass);
     }
 
     return result;
+}
+
+static void PostCallDestroyRenderPass(layer_data *dev_data, VkRenderPass renderPass) {
+    dev_data->renderpasses_states.erase(renderPass);
 }
 
 VKAPI_ATTR void VKAPI_CALL DestroyRenderPass(VkDevice device, VkRenderPass renderPass, const VkAllocationCallbacks *pAllocator) {
@@ -2933,6 +2970,8 @@ VKAPI_ATTR void VKAPI_CALL DestroyRenderPass(VkDevice device, VkRenderPass rende
 
     if (!skip) {
         my_data->dispatch_table.DestroyRenderPass(device, renderPass, pAllocator);
+
+        PostCallDestroyRenderPass(my_data, renderPass);
     }
 }
 
